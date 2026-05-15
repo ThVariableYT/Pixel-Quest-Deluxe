@@ -39,7 +39,8 @@
             width: 100%;
             height: 100%;
             object-fit: contain; /* Letterbox if screen ratio doesn't match */
-        box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), 0 0 100px rgba(52, 152, 219, 0.3), 0 0 150px rgba(155, 89, 182, 0.2);                    filter: contrast(1.05) brightness(1.05) saturate(1.1);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), 0 0 100px rgba(52, 152, 219, 0.3), 0 0 150px rgba(155, 89, 182, 0.2);                    
+            filter: contrast(1.05) brightness(1.05) saturate(1.1);
         }
 
         .overlay {
@@ -59,6 +60,19 @@
             padding: 20px;
             box-sizing: border-box;
             transition: opacity 0.3s;
+        }
+
+        /* Cinematic Screen Transition Overlay */
+        #transition-screen {
+            background-color: #000;
+            z-index: 50;
+            pointer-events: none; /* Lets clicks pass through when invisible */
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        #transition-screen.active {
+            opacity: 1;
+            pointer-events: all;
         }
 
         .hidden {
@@ -278,6 +292,10 @@
             text-shadow: 2px 2px 0 #000;
             display: none;
             pointer-events: none;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.2);
         }
 
         .dash-bar-container {
@@ -438,12 +456,14 @@
     <div id="game-container">
         <!-- Post-processing Overlays -->
         <div class="vignette"></div>
+        <div id="transition-screen" class="overlay active"></div>
 
         <!-- HUD -->
         <div id="hud">
-            <div id="level-display" class="text-white mb-2">Level 1: Whispering Woods</div>
-            <div id="crystal-display" class="text-yellow-400 mb-2">Crystals: 0/3</div>
-            <div class="text-blue-300 text-[0.6rem]">DASH</div>
+            <div id="level-display" class="text-white mb-2" style="font-size: 0.6rem; color:#bdc3c7;">Area 1</div>
+            <div id="timer-display" class="text-white mb-2" style="font-size: 0.6rem; color:#bdc3c7;">Time: 0.00s</div>
+            <div id="crystal-display" class="text-yellow-400 mb-2 mt-2" style="font-size: 0.8rem;">Crystals: 0/3</div>
+            <div class="text-blue-300 text-[0.6rem] mt-3">DASH</div>
             <div class="dash-bar-container"><div id="dash-bar"></div></div>
         </div>
 
@@ -545,6 +565,7 @@
         <div id="level-screen" class="overlay hidden">
             <h1 id="level-title">Area Cleared!</h1>
             <p id="level-desc">Crystals secured. Power returning.</p>
+            <p id="level-time" style="color: #3498db; margin-top: -10px; margin-bottom: 20px;">Time: 0.00s</p>
             <button id="next-level-btn">Proceed</button>
         </div>
 
@@ -600,9 +621,11 @@
         };
         const hud = document.getElementById('hud');
         const levelDisplay = document.getElementById('level-display');
+        const timerDisplay = document.getElementById('timer-display');
         const crystalDisplay = document.getElementById('crystal-display');
         const dashBar = document.getElementById('dash-bar');
         const mobileControls = document.getElementById('mobile-controls');
+        const transitionScreen = document.getElementById('transition-screen');
 
         // Audio Engine (Retro Synth)
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -824,8 +847,11 @@
         let interactables = [];
         let particles = [];
         let ambientParticles = [];
+        let weatherParticles = [];
+        let floatingTexts = [];
         let screenShake = 0;
         let floatingTime = 0; // Global time for animations
+        let levelTimer = 0;   // Speedrun timer
 
         // Story & Dialogue Variables
         let activeDialogue = null;
@@ -1402,95 +1428,125 @@
         }
 
         function loadLevel(index) {
-            if (index >= levels.length) {
-                showScreen('victory');
-                return;
-            }
+            transitionScreen.classList.add('active'); // Fade out
 
-            const levelData = levels[index];
-            document.getElementById('level-display').innerText = `Level ${index + 1}: ${levelData.name}`;
-            
-            mapGrid = [];
-            interactables = [];
-            particles = [];
-            ambientParticles = [];
-            crystalsCollected = 0;
-            totalCrystalsInLevel = 0;
-            player.history = [];
+            setTimeout(() => {
+                if (index >= levels.length) {
+                    showScreen('victory');
+                    transitionScreen.classList.remove('active');
+                    return;
+                }
 
-            const grid = levelData.grid;
-            mapHeight = grid.length * TILE_SIZE;
-            mapWidth = grid[0].length * TILE_SIZE;
+                const levelData = levels[index];
+                document.getElementById('level-display').innerText = `Area ${index + 1}: ${levelData.name}`;
+                
+                mapGrid = [];
+                interactables = [];
+                particles = [];
+                ambientParticles = [];
+                weatherParticles = [];
+                floatingTexts = [];
+                crystalsCollected = 0;
+                totalCrystalsInLevel = 0;
+                player.history = [];
+                levelTimer = 0;
 
-            // Prepare Map Canvas
-            mapCanvas.width = mapWidth;
-            mapCanvas.height = mapHeight;
-            mapCtx.clearRect(0, 0, mapWidth, mapHeight);
+                const grid = levelData.grid;
+                mapHeight = grid.length * TILE_SIZE;
+                mapWidth = grid[0].length * TILE_SIZE;
 
-            for (let y = 0; y < grid.length; y++) {
-                let row = [];
-                for (let x = 0; x < grid[y].length; x++) {
-                    const char = grid[y][x];
-                    const px = x * TILE_SIZE;
-                    const py = y * TILE_SIZE;
+                // Prepare Map Canvas
+                mapCanvas.width = mapWidth;
+                mapCanvas.height = mapHeight;
+                mapCtx.clearRect(0, 0, mapWidth, mapHeight);
 
-                    if (char === '#') {
-                        row.push(1);
-                        const isTop = (y === 0 || grid[y-1][x] !== '#');
-                        generateTileTexture(mapCtx, px, py, levelData.theme, isTop);
-                    } else {
-                        row.push(0);
-                        if (char === 'P') {
-                            player.x = px + (TILE_SIZE - player.width)/2;
-                            player.y = py + (TILE_SIZE - player.height);
-                        } else if (char === 'C') {
-                            interactables.push({ type: 'crystal', x: px + 8, y: py + 8, w: 16, h: 16, collected: false });
-                            totalCrystalsInLevel++;
-                        } else if (char === 'G') {
-                            interactables.push({ type: 'goal', x: px, y: py, w: TILE_SIZE, h: TILE_SIZE });
-                        } else if (char === 'S') {
-                            interactables.push({ type: 'spike', x: px, y: py + 16, w: TILE_SIZE, h: 16 });
-                        } else if (char === '~') {
-                            interactables.push({ type: 'lava', x: px, y: py + 10, w: TILE_SIZE, h: 22 });
-                        } else if (char === '^') {
-                            interactables.push({ type: 'spring', x: px, y: py + 16, w: TILE_SIZE, h: 16 });
-                            // Draw spring base on map
-                            mapCtx.fillStyle = '#7f8c8d';
-                            mapCtx.fillRect(px + 4, py + 26, TILE_SIZE - 8, 6);
+                for (let y = 0; y < grid.length; y++) {
+                    let row = [];
+                    for (let x = 0; x < grid[y].length; x++) {
+                        const char = grid[y][x];
+                        const px = x * TILE_SIZE;
+                        const py = y * TILE_SIZE;
+
+                        if (char === '#') {
+                            row.push(1);
+                            const isTop = (y === 0 || grid[y-1][x] !== '#');
+                            generateTileTexture(mapCtx, px, py, levelData.theme, isTop);
+                        } else {
+                            row.push(0);
+                            if (char === 'P') {
+                                player.x = px + (TILE_SIZE - player.width)/2;
+                                player.y = py + (TILE_SIZE - player.height);
+                            } else if (char === 'C') {
+                                interactables.push({ type: 'crystal', x: px + 8, y: py + 8, w: 16, h: 16, collected: false });
+                                totalCrystalsInLevel++;
+                            } else if (char === 'G') {
+                                interactables.push({ type: 'goal', x: px, y: py, w: TILE_SIZE, h: TILE_SIZE });
+                            } else if (char === 'S') {
+                                interactables.push({ type: 'spike', x: px, y: py + 16, w: TILE_SIZE, h: 16 });
+                            } else if (char === '~') {
+                                interactables.push({ type: 'lava', x: px, y: py + 10, w: TILE_SIZE, h: 22 });
+                            } else if (char === '^') {
+                                interactables.push({ type: 'spring', x: px, y: py + 16, w: TILE_SIZE, h: 16 });
+                                // Draw spring base on map
+                                mapCtx.fillStyle = '#7f8c8d';
+                                mapCtx.fillRect(px + 4, py + 26, TILE_SIZE - 8, 6);
+                            }
                         }
                     }
+                    mapGrid.push(row);
                 }
-                mapGrid.push(row);
-            }
 
-            // Reset Player State
-            player.vx = 0; player.vy = 0;
-            player.isDashing = false; player.canDash = true;
-            player.dashCooldownTimer = 0;
-            player.wallSliding = false;
-            
-            // Set Camera Instantly
-            camera.x = camera.targetX = player.x - GAME_WIDTH / 2;
-            camera.y = camera.targetY = player.y - GAME_HEIGHT / 2;
+                // Reset Player State
+                player.vx = 0; player.vy = 0;
+                player.isDashing = false; player.canDash = true;
+                player.dashCooldownTimer = 0;
+                player.wallSliding = false;
+                
+                // Set Camera Instantly
+                camera.x = camera.targetX = player.x - GAME_WIDTH / 2;
+                camera.y = camera.targetY = player.y - GAME_HEIGHT / 2;
 
-            // Generate Ambient Background Particles
-            for(let i=0; i<40; i++) {
-                ambientParticles.push({
-                    x: Math.random() * mapWidth,
-                    y: Math.random() * mapHeight,
-                    size: Math.random() * 2 + 1,
-                    speed: Math.random() * 10 + 5,
-                    offset: Math.random() * Math.PI * 2
-                });
-            }
+                // Generate Ambient Background Particles
+                for(let i=0; i<40; i++) {
+                    ambientParticles.push({
+                        x: Math.random() * mapWidth,
+                        y: Math.random() * mapHeight,
+                        size: Math.random() * 2 + 1,
+                        speed: Math.random() * 10 + 5,
+                        offset: Math.random() * Math.PI * 2
+                    });
+                }
 
-            playAmbientMusic(levelData.theme);
+                // Initialize Weather System Based on Theme
+                let weatherCount = 0;
+                if(levelData.theme === 'forest') weatherCount = 30;
+                if(levelData.theme === 'volcano' || levelData.theme === 'core') weatherCount = 50;
+                if(levelData.theme === 'ice') weatherCount = 60;
+                if(levelData.theme === 'swamp') weatherCount = 25;
 
-            updateHUD();
-            gameState = 'playing';
-            updateHUDVisibility();
-            lastTime = performance.now();
-            if(!animationFrameId) gameLoop(lastTime);
+                for(let i=0; i<weatherCount; i++) {
+                    weatherParticles.push({
+                        x: Math.random() * mapWidth,
+                        y: Math.random() * mapHeight,
+                        size: Math.random() * 2 + 2,
+                        speedX: (Math.random() - 0.5) * 50,
+                        speedY: Math.random() * 50 + 20,
+                        sway: Math.random() * Math.PI * 2,
+                        life: Math.random()
+                    });
+                }
+
+                playAmbientMusic(levelData.theme);
+
+                updateHUD();
+                gameState = 'playing';
+                updateHUDVisibility();
+                lastTime = performance.now();
+                if(!animationFrameId) gameLoop(lastTime);
+                
+                // Fade In
+                transitionScreen.classList.remove('active');
+            }, 500); // Wait for fade out to complete
         }
 
         function spawnParticles(x, y, color, count, speed=100) {
@@ -1507,7 +1563,17 @@
             }
         }
 
+        function spawnFloatingText(x, y, text, color) {
+            floatingTexts.push({
+                x: x, y: y,
+                text: text, color: color,
+                life: 1.0, maxLife: 1.0,
+                vy: -40
+            });
+        }
+
         function updateAndDrawParticles(dt) {
+            // Standard Physics Particles
             for(let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i];
                 p.x += p.vx * dt;
@@ -1520,11 +1586,83 @@
                 } else {
                     ctx.fillStyle = p.color;
                     ctx.globalAlpha = Math.max(0, p.life);
-                    // Integer coordinates for pixel perfection
                     ctx.fillRect(Math.round(p.x - camera.x), Math.round(p.y - camera.y), Math.round(p.size), Math.round(p.size));
                 }
             }
+
             ctx.globalAlpha = 1.0;
+        }
+
+        function updateAndDrawWeather(dt, theme) {
+            if(weatherParticles.length === 0) return;
+
+            ctx.save();
+            weatherParticles.forEach(p => {
+                p.sway += dt * 2;
+                
+                // Behavior based on theme
+                if (theme === 'forest') { // Leaves
+                    p.y += p.speedY * dt;
+                    p.x += (p.speedX + Math.sin(p.sway) * 30) * dt;
+                    ctx.fillStyle = p.life > 0.5 ? '#27ae60' : '#8c603a';
+                } 
+                else if (theme === 'volcano' || theme === 'core') { // Embers
+                    p.y -= p.speedY * dt * 1.5; // Rise up
+                    p.x += (p.speedX + Math.sin(p.sway) * 20) * dt;
+                    ctx.fillStyle = Math.random() > 0.1 ? '#e74c3c' : '#f1c40f';
+                }
+                else if (theme === 'ice') { // Snow
+                    p.y += p.speedY * dt * 0.8;
+                    p.x += (Math.sin(p.sway) * 40) * dt;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.globalAlpha = 0.8;
+                }
+                else if (theme === 'swamp') { // Spores
+                    p.y -= p.speedY * dt * 0.5;
+                    p.x += Math.sin(p.sway) * 15 * dt;
+                    ctx.fillStyle = '#2ecc71';
+                    ctx.globalAlpha = 0.6;
+                }
+
+                // Wrap around logic based on camera
+                if (p.y > camera.y + GAME_HEIGHT + 20) p.y = camera.y - 20;
+                if (p.y < camera.y - 20) p.y = camera.y + GAME_HEIGHT + 20;
+                if (p.x > camera.x + GAME_WIDTH + 20) p.x = camera.x - 20;
+                if (p.x < camera.x - 20) p.x = camera.x + GAME_WIDTH + 20;
+
+                let px = Math.round(p.x - camera.x);
+                let py = Math.round(p.y - camera.y);
+                ctx.fillRect(px, py, Math.round(p.size), Math.round(p.size));
+            });
+            ctx.restore();
+        }
+
+        function updateAndDrawFloatingText(dt) {
+            ctx.save();
+            ctx.font = '8px "Press Start 2P"';
+            ctx.textAlign = 'center';
+            for(let i = floatingTexts.length - 1; i >= 0; i--) {
+                let t = floatingTexts[i];
+                t.y += t.vy * dt;
+                t.life -= dt;
+                
+                if(t.life <= 0) {
+                    floatingTexts.splice(i, 1);
+                } else {
+                    let alpha = Math.max(0, t.life / t.maxLife);
+                    let drawX = Math.round(t.x - camera.x);
+                    let drawY = Math.round(t.y - camera.y);
+                    
+                    ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+                    ctx.fillText(t.text, drawX + 1, drawY + 1); // Shadow
+                    ctx.fillStyle = t.color.replace(')', `, ${alpha})`).replace('rgb', 'rgba'); // Hacky color transform if needed, assuming hex or named usually. Let's force rgba
+                    
+                    // Standard color map for floating text
+                    ctx.fillStyle = `rgba(241, 196, 15, ${alpha})`; // Yellow for crystals
+                    ctx.fillText(t.text, drawX, drawY);
+                }
+            }
+            ctx.restore();
         }
 
         function getTile(x, y) {
@@ -1618,6 +1756,7 @@
                 player.vy = 0; // Stop vertical movement
                 playSound('dash');
                 spawnParticles(player.x + player.width/2, player.y + player.height/2, player.colorParticle, 20, 200);
+                screenShake = 0.1; // Small shake on dash
             }
 
             if (player.isDashing) {
@@ -1626,11 +1765,11 @@
                 player.dashTimer -= dt;
                 
                 // Trail effect
-                if(Math.random() > 0.5) {
+                if(Math.random() > 0.3) {
                     particles.push({
                         x: player.x + Math.random() * player.width,
                         y: player.y + Math.random() * player.height,
-                        vx: 0, vy: 0, life: 0.5, decay: 2, color: player.colorParticle, size: 4
+                        vx: 0, vy: 0, life: 0.6, decay: 2, color: player.colorParticle, size: 5
                     });
                 }
 
@@ -1755,7 +1894,11 @@
                 return; 
             }
 
-            updatePlayer(dt);
+            if (gameState === 'playing') {
+                levelTimer += dt;
+                timerDisplay.innerText = `Time: ${levelTimer.toFixed(2)}s`;
+                updatePlayer(dt);
+            }
 
             // Bounds check (Death)
             if (gameState === 'playing' && player.y > mapHeight + 100) die();
@@ -1773,6 +1916,7 @@
                         crystalsCollected++;
                         playSound('crystal');
                         spawnParticles(item.x + 8, item.y + 8, '#f1c40f', 30);
+                        spawnFloatingText(item.x + 8, item.y - 10, "+1 Crystal", "#f1c40f");
                         updateHUD();
                     }
                 }
@@ -1789,7 +1933,7 @@
                             player.grounded = false;
                             player.isDashing = false; // Cancel dash on spring
                             if(player.dashCooldownTimer <= 0) player.canDash = true; // Refill dash
-                            screenShake = 0.2; // Add dramatic screen shake
+                            screenShake = 0.3; // Add dramatic screen shake
                             playSound('bounce');
                             spawnParticles(item.x + item.w/2, item.y, '#e67e22', 15);
                         }
@@ -2050,16 +2194,20 @@
                 Math.round(camera.x), Math.round(camera.y), GAME_WIDTH, GAME_HEIGHT, 
                 0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-            // 3. Interactables
+            // 3. Dynamic Weather (rendered behind interactables but in front of map)
+            updateAndDrawWeather(0.016, levelData.theme);
+
+            // 4. Interactables
             drawInteractables();
 
-            // 4. Player & Scarf
+            // 5. Player & Scarf
             drawPlayer();
 
-            // 5. Particles
+            // 6. Particles & Floating Text
             updateAndDrawParticles(0.016); // Assuming ~60fps for drawing step
+            updateAndDrawFloatingText(0.016);
 
-            // Draw floating ambient particles
+            // Draw floating ambient particles (Front layer)
             ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
             ambientParticles.forEach(p => {
                 p.y -= p.speed * 0.016;
@@ -2073,7 +2221,7 @@
                 }
             });
 
-            // 6. Lighting Overlay
+            // 7. Lighting Overlay
             drawLighting(levelData);
 
             ctx.restore();
@@ -2126,11 +2274,18 @@
         function levelComplete() {
             if (gameState === 'gameOver' || gameState === 'levelClear' || gameState === 'victory') return;
             gameState = 'levelClear';
-            document.getElementById('level-desc').innerText = `Recovered ${crystalsCollected} / ${totalCrystalsInLevel} Crystals.`;
-            playSound('crystal');
             
-            // Trigger storytelling sequence after level clears
+            // Fade out the screen for cinematic effect
+            transitionScreen.classList.add('active');
+
             setTimeout(() => {
+                transitionScreen.classList.remove('active');
+                
+                document.getElementById('level-desc').innerText = `Recovered ${crystalsCollected} / ${totalCrystalsInLevel} Crystals.`;
+                document.getElementById('level-time').innerText = `Time: ${levelTimer.toFixed(2)}s`;
+                playSound('crystal');
+                
+                // Trigger storytelling sequence after level clears
                 let storyKey = `level${currentLevelIndex + 1}_clear`;
                 if(currentLevelIndex >= levels.length - 1) storyKey = 'ending';
                 
@@ -2144,7 +2299,7 @@
                         gameState = 'levelClear';
                     }
                 });
-            }, 500);
+            }, 600); // Wait for screen fade to black
         }
 
         // Event Listeners for UI
@@ -2173,19 +2328,6 @@
 
         document.getElementById('play-again-btn').addEventListener('click', () => {
             currentLevelIndex = 0;
-            showScreen('none');
-            loadLevel(currentLevelIndex);
-        });
-
-        document.getElementById('restart-btn').addEventListener('click', () => {
-            hud.style.display = 'block';
-            showScreen('none');
-            loadLevel(currentLevelIndex);
-        });
-
-        document.getElementById('play-again-btn').addEventListener('click', () => {
-            currentLevelIndex = 0;
-            hud.style.display = 'block';
             showScreen('none');
             loadLevel(currentLevelIndex);
         });
@@ -2339,7 +2481,6 @@
              if (!document.webkitFullscreenElement && !isCssFullscreen) fullscreenBtn.innerText = '⛶';
         });
 
-
         function initMenuBackground() {
             const levelData = levels[0];
             currentLevelIndex = 0;
@@ -2379,6 +2520,11 @@
                 });
             }
             
+            // Fade in start menu
+            setTimeout(() => {
+                transitionScreen.classList.remove('active');
+            }, 100);
+
             // Spawn player safely offscreen for menus
             player.x = 0;
             player.y = 0;
