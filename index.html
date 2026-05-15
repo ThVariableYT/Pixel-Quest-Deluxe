@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Epic Pixel Quest Deluxe</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -65,21 +65,79 @@
             display: none !important;
         }
 
-        .game-title {
-            font-size: 3.5rem;
-            margin-bottom: 40px;
-            text-align: center;
-            background: linear-gradient(to bottom, #f1c40f, #e67e22, #c0392b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0px 4px 10px rgba(192, 57, 43, 0.8), 0px 8px 0px #333;
-            letter-spacing: 2px;
-            animation: titlePulse 2.5s ease-in-out infinite alternate;
+        /* Stunning Logo Styles */
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+            position: relative;
+            animation: logoFloat 3s ease-in-out infinite alternate;
         }
 
-        @keyframes titlePulse {
-            0% { transform: scale(1) translateY(0); filter: drop-shadow(0 0 10px rgba(241, 196, 15, 0.3)); }
-            100% { transform: scale(1.05) translateY(-5px); filter: drop-shadow(0 0 20px rgba(241, 196, 15, 0.8)); }
+        @keyframes logoFloat {
+            0% { transform: scale(1) translateY(0); filter: drop-shadow(0 0 10px rgba(52, 152, 219, 0.2)); }
+            100% { transform: scale(1.05) translateY(-5px); filter: drop-shadow(0 0 25px rgba(52, 152, 219, 0.6)); }
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            margin-bottom: -20px;
+            z-index: 10;
+            filter: drop-shadow(0 0 15px rgba(52, 152, 219, 0.8));
+        }
+
+        .game-title {
+            margin: 0;
+            text-align: center;
+            line-height: 1;
+            z-index: 11;
+            position: relative;
+            text-shadow: none; /* override generic h1 */
+            animation: none;   
+            color: transparent;
+        }
+
+        .title-pixel {
+            font-size: 3.5rem;
+            display: block;
+            background: linear-gradient(to bottom, #ffffff 0%, #bdc3c7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0px 4px 0px #5d6d7e) drop-shadow(0px 4px 10px rgba(0,0,0,0.5));
+            letter-spacing: 4px;
+            transform: skewX(-5deg);
+        }
+
+        .title-quest {
+            font-size: 5rem;
+            display: block;
+            background: linear-gradient(180deg, #ffeaa7 0%, #fdcb6e 40%, #e17055 60%, #d63031 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0px 6px 0px #8e1515) drop-shadow(0px 10px 15px rgba(0,0,0,0.8));
+            letter-spacing: 2px;
+            margin-top: -5px;
+            transform: skewX(-5deg);
+        }
+
+        .title-deluxe {
+            display: inline-block;
+            background: linear-gradient(to bottom, #9b59b6, #8e44ad);
+            -webkit-text-fill-color: #fff; 
+            color: #fff;
+            font-size: 1.4rem;
+            padding: 5px 20px;
+            border: 4px solid #fff;
+            border-radius: 4px;
+            box-shadow: 0 6px 0 #4a235a, 0 0 20px rgba(155, 89, 182, 0.8);
+            letter-spacing: 12px;
+            padding-right: 8px; 
+            margin-top: 15px;
+            transform: rotate(-3deg);
+            position: relative;
+            z-index: 12;
         }
 
         h1 {
@@ -133,6 +191,8 @@
             text-transform: uppercase;
             box-shadow: 0 10px 0 #1e8449, 0 15px 20px rgba(0,0,0,0.5);
             margin-top: 10px;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         button:hover {
@@ -198,6 +258,7 @@
             color: white;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             backdrop-filter: blur(2px);
+            -webkit-tap-highlight-color: transparent;
         }
         
         .btn-control:active {
@@ -265,6 +326,7 @@
             line-height: 1.6;
             cursor: pointer;
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+            -webkit-tap-highlight-color: transparent;
         }
         
         #dialogue-box.hidden {
@@ -348,6 +410,7 @@
             padding: 0;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             margin: 0;
+            -webkit-tap-highlight-color: transparent;
         }
 
         #fullscreen-btn:hover {
@@ -356,7 +419,11 @@
         }
 
         @media (max-width: 768px) {
-            .game-title { font-size: 2.5rem; }
+            .title-pixel { font-size: 2.2rem; }
+            .title-quest { font-size: 3.2rem; margin-top: -2px; }
+            .title-deluxe { font-size: 0.9rem; padding: 4px 12px; letter-spacing: 6px; padding-right: 2px; margin-top: 10px; border-width: 2px;}
+            .logo-icon { width: 60px; height: 60px; margin-bottom: -15px; }
+            
             h1 { font-size: 1.8rem; }
             p { font-size: 0.6rem; margin-bottom: 10px; }
             button { font-size: 0.8rem; padding: 12px 24px; border-width: 3px; }
@@ -398,7 +465,39 @@
         <!-- UI Screens -->
         <div id="start-screen" class="overlay">
             <button id="fullscreen-btn" title="Toggle Fullscreen">⛶</button>
-            <h1 class="game-title">PIXEL QUEST<br><span style="-webkit-text-fill-color: #fff; text-shadow: none; font-size: 1.5rem; letter-spacing: 10px;">DELUXE</span></h1>
+            
+            <div class="logo-container">
+                <svg class="logo-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+                    <!-- Shadow/Outline -->
+                    <rect x="7" y="0" width="2" height="16" fill="#111" />
+                    <rect x="5" y="1" width="6" height="14" fill="#111" />
+                    <rect x="3" y="3" width="10" height="10" fill="#111" />
+                    <rect x="1" y="5" width="14" height="6" fill="#111" />
+                    
+                    <!-- Base Color (Cyan) -->
+                    <rect x="7" y="1" width="2" height="14" fill="#0984e3" />
+                    <rect x="5" y="2" width="6" height="12" fill="#0984e3" />
+                    <rect x="3" y="4" width="10" height="8" fill="#0984e3" />
+                    <rect x="2" y="6" width="12" height="4" fill="#0984e3" />
+
+                    <!-- Inner Shadow (Dark Blue) -->
+                    <rect x="9" y="3" width="2" height="10" fill="#0652dd" />
+                    <rect x="11" y="5" width="2" height="6" fill="#0652dd" />
+
+                    <!-- Highlights (Light Blue) -->
+                    <rect x="5" y="3" width="2" height="10" fill="#74b9ff" />
+                    <rect x="3" y="5" width="2" height="6" fill="#74b9ff" />
+
+                    <!-- Core Sparkle (White) -->
+                    <rect x="7" y="3" width="2" height="4" fill="#fff" />
+                    <rect x="5" y="4" width="2" height="2" fill="#fff" />
+                </svg>
+                <h1 class="game-title">
+                    <span class="title-pixel">PIXEL</span>
+                    <span class="title-quest">QUEST</span>
+                    <span class="title-deluxe">DELUXE</span>
+                </h1>
+            </div>
             
             <div class="main-menu-buttons">
                 <button id="start-btn">Play</button>
