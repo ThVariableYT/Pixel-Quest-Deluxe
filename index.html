@@ -209,13 +209,13 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        button:hover {
+        button:hover:not(:disabled) {
             transform: translateY(4px);
             box-shadow: 0 6px 0 #1e8449, 0 10px 15px rgba(0,0,0,0.5);
             filter: brightness(1.1);
         }
 
-        button:active {
+        button:active:not(:disabled) {
             transform: translateY(10px);
             box-shadow: 0 0 0 #1e8449;
         }
@@ -376,12 +376,12 @@
         .portrait-hero::after { content: ''; position: absolute; top: 20px; left: 20px; width: 24px; height: 12px; background: #3498db; box-shadow: 0 -8px 0 #e74c3c; }
         .portrait-eldor { background: #5b2c6f; }
         .portrait-eldor::after { content: ''; position: absolute; top: 15px; left: 15px; width: 34px; height: 34px; background: rgba(255,255,255,0.2); border-radius: 50%; border: 4px solid #9b59b6; }
-        
         .portrait-ninja { background: #111111; }
         .portrait-ninja::after { content: ''; position: absolute; top: 20px; left: 20px; width: 24px; height: 12px; background: #e74c3c; box-shadow: 0 -8px 0 #000000; }
-        
         .portrait-mage { background: #341f3e; }
         .portrait-mage::after { content: ''; position: absolute; top: 20px; left: 20px; width: 24px; height: 12px; background: #f1c40f; box-shadow: 0 -8px 0 #8e44ad; }
+        .portrait-scout { background: #145a32; }
+        .portrait-scout::after { content: ''; position: absolute; top: 20px; left: 20px; width: 24px; height: 12px; background: #f1c40f; box-shadow: 0 -8px 0 #2ecc71; }
         
         .dialogue-content { flex-grow: 1; position: relative; }
         #dialogue-speaker { color: #f1c40f; font-weight: bold; margin-bottom: 5px; font-size: 0.8rem; text-shadow: 2px 2px 0 #000; }
@@ -484,6 +484,12 @@
         <!-- Post-processing Overlays -->
         <div class="vignette"></div>
         <div id="transition-screen" class="overlay active"></div>
+        
+        <!-- Cinematic Level Banner -->
+        <div id="level-intro-banner" class="absolute top-1/4 w-full text-center pointer-events-none opacity-0 transition-opacity duration-1000 z-40">
+            <h2 id="level-intro-title" class="text-4xl text-yellow-400 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] tracking-widest">AREA 1</h2>
+            <p id="level-intro-subtitle" class="text-sm text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] mt-3">The Green Valley</p>
+        </div>
 
         <!-- HUD -->
         <button id="pause-btn-mobile" title="Pause Game">⏸</button>
@@ -575,7 +581,8 @@
         </div>
 
         <div id="level-select-screen" class="overlay hidden">
-            <h1 style="font-size: 2rem;">SELECT LEVEL</h1>
+            <h1 style="font-size: 2rem; margin-bottom: 10px;">SELECT LEVEL</h1>
+            <p style="color: #95a5a6; font-size: 0.6rem; margin-bottom: 20px;">Complete levels to unlock new areas</p>
             <div id="level-grid" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; max-width: 600px; margin-bottom: 20px;">
                 <!-- Populated via JS -->
             </div>
@@ -643,10 +650,12 @@
         lightCanvas.height = GAME_HEIGHT;
         const lightCtx = lightCanvas.getContext('2d');
 
-        // Local Storage for Best Times
+        // Local Storage for Best Times & Progression
         let bestTimes = {};
+        let unlockedLevel = 0;
         try {
             bestTimes = JSON.parse(localStorage.getItem('pixelQuestBestTimes')) || {};
+            unlockedLevel = parseInt(localStorage.getItem('pixelQuestUnlockedLevel')) || 0;
         } catch(e) {
             console.warn('LocalStorage not available');
         }
@@ -670,6 +679,10 @@
         const mobileControls = document.getElementById('mobile-controls');
         const pauseBtnMobile = document.getElementById('pause-btn-mobile');
         const transitionScreen = document.getElementById('transition-screen');
+
+        const introBanner = document.getElementById('level-intro-banner');
+        const introTitle = document.getElementById('level-intro-title');
+        const introSubtitle = document.getElementById('level-intro-subtitle');
 
         // Audio Engine (Retro Synth)
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -744,7 +757,7 @@
             function createPing(freqBase) {
                 ambientInterval = setInterval(() => {
                     if (gameState !== 'playing' && gameState !== 'start' && gameState !== 'dialogue') return;
-                    if (!ambientGain) return; // FIX: Ensure ambientGain exists before connecting
+                    if (!ambientGain) return; // Ensure ambientGain exists before connecting
                     let osc = audioCtx.createOscillator();
                     let gain = audioCtx.createGain();
                     osc.type = 'sine';
@@ -884,7 +897,7 @@
         let lastTime = 0;
         let mapWidth = 0;
         let mapHeight = 0;
-        let camera = { x: 0, y: 0, targetX: 0, targetY: 0 };
+        let camera = { x: 0, y: 0, targetX: 0, targetY: 0, currentLookAhead: 0 };
         let menuPanDir = 1;
         
         let mapGrid = [];
@@ -906,9 +919,10 @@
         let typewriterTimer = 0;
 
         const characters = [
-            { id: 'hero', name: 'Knight', desc: 'Balanced Stats', speed: 220, jumpForce: -400, maxFallSpeed: 450, dashSpeed: 500, dashDuration: 0.25, dashCooldown: 0.8, colorBody: '#ecf0f1', colorEye: '#3498db', colorBand: '#e74c3c', colorParticle: '#3498db', portrait: 'portrait-hero' },
-            { id: 'ninja', name: 'Ninja', desc: 'Fast & High Jump', speed: 250, jumpForce: -450, maxFallSpeed: 500, dashSpeed: 400, dashDuration: 0.2, dashCooldown: 0.6, colorBody: '#2c3e50', colorEye: '#e74c3c', colorBand: '#000000', colorParticle: '#e74c3c', portrait: 'portrait-ninja' },
-            { id: 'mage', name: 'Mage', desc: 'Long Dash, Slower', speed: 185, jumpForce: -365, maxFallSpeed: 400, dashSpeed: 565, dashDuration: 0.35, dashCooldown: 0.5, colorBody: '#9b59b6', colorEye: '#f1c40f', colorBand: '#8e44ad', colorParticle: '#9b59b6', portrait: 'portrait-mage' }
+            { id: 'hero', name: 'Knight', desc: 'Balanced Stats', speed: 220, jumpForce: -400, maxFallSpeed: 450, dashSpeed: 500, dashDuration: 0.25, dashCooldown: 0.8, colorBody: '#ecf0f1', colorEye: '#3498db', colorBand: '#e74c3c', colorParticle: '#3498db', portrait: 'portrait-hero', maxJumps: 1, canGlide: false },
+            { id: 'ninja', name: 'Ninja', desc: 'Double Jump & Fast', speed: 250, jumpForce: -450, maxFallSpeed: 500, dashSpeed: 400, dashDuration: 0.2, dashCooldown: 0.6, colorBody: '#2c3e50', colorEye: '#e74c3c', colorBand: '#000000', colorParticle: '#e74c3c', portrait: 'portrait-ninja', maxJumps: 2, canGlide: false },
+            { id: 'mage', name: 'Mage', desc: 'Long Dash, Slower', speed: 185, jumpForce: -365, maxFallSpeed: 400, dashSpeed: 565, dashDuration: 0.35, dashCooldown: 0.5, colorBody: '#9b59b6', colorEye: '#f1c40f', colorBand: '#8e44ad', colorParticle: '#9b59b6', portrait: 'portrait-mage', maxJumps: 1, canGlide: false },
+            { id: 'scout', name: 'Scout', desc: 'Hold JUMP to Glide', speed: 230, jumpForce: -380, maxFallSpeed: 450, dashSpeed: 450, dashDuration: 0.2, dashCooldown: 0.7, colorBody: '#27ae60', colorEye: '#f1c40f', colorBand: '#f39c12', colorParticle: '#2ecc71', portrait: 'portrait-scout', maxJumps: 1, canGlide: true }
         ];
         let selectedCharacter = characters[0];
 
@@ -928,12 +942,15 @@
             facingRight: true,
             
             // Movement fluidity
-            accel: 25,
-            airAccel: 12,
+            accel: 20,
+            airAccel: 10,
             coyoteTime: 0.15,
             coyoteTimer: 0,
             jumpBufferTime: 0.2,
             jumpBufferTimer: 0,
+            maxJumps: 1,
+            jumpCount: 0,
+            canGlide: false,
             
             // Complex Mechanics
             wallSliding: false,
@@ -947,6 +964,7 @@
             dashTimer: 0,
             dashCooldown: 0.8,
             dashCooldownTimer: 0,
+            dashGhosts: [],
             
             wallJumpTimer: 0,
             
@@ -973,6 +991,8 @@
             player.colorEye = selectedCharacter.colorEye;
             player.colorBand = selectedCharacter.colorBand;
             player.colorParticle = selectedCharacter.colorParticle;
+            player.maxJumps = selectedCharacter.maxJumps || 1;
+            player.canGlide = selectedCharacter.canGlide || false;
         }
 
         const storySegments = {
@@ -1522,6 +1542,8 @@
                 crystalsCollected = 0;
                 totalCrystalsInLevel = 0;
                 player.history = [];
+                player.dashGhosts = [];
+                player.jumpCount = 0;
                 levelTimer = 0;
 
                 const grid = levelData.grid;
@@ -1578,6 +1600,7 @@
                 // Set Camera Instantly
                 camera.x = camera.targetX = player.x - GAME_WIDTH / 2;
                 camera.y = camera.targetY = player.y - GAME_HEIGHT / 2;
+                camera.currentLookAhead = 0;
 
                 // Generate Ambient Background Particles
                 for(let i=0; i<40; i++) {
@@ -1617,6 +1640,15 @@
                 lastTime = performance.now();
                 if(!animationFrameId) gameLoop(lastTime);
                 
+                // Trigger Level Banner 
+                introTitle.innerText = `AREA ${index + 1}`;
+                introSubtitle.innerText = levelData.name;
+                introBanner.classList.remove('opacity-0');
+                
+                setTimeout(() => {
+                    introBanner.classList.add('opacity-0');
+                }, 3000);
+
                 // Fade In
                 transitionScreen.classList.remove('active');
             }, 500); // Wait for fade out to complete
@@ -1803,6 +1835,7 @@
                     nextY = Math.floor(boxBottom / TILE_SIZE) * TILE_SIZE - player.height - 0.1;
                     player.vy = 0;
                     player.grounded = true;
+                    player.jumpCount = 0; // Reset jump count on ground
                     player.coyoteTimer = player.coyoteTime; // Reset coyote time on land
                     // Reset Dash & Scarf on landing
                     if(player.dashCooldownTimer <= 0) player.canDash = true;
@@ -1856,7 +1889,17 @@
                 player.vx = player.facingRight ? player.dashSpeed : -player.dashSpeed;
                 player.dashTimer -= dt;
                 
-                // Trail effect
+                // Ghost Trail Effect
+                if (player.dashTimer % 0.05 < dt) {
+                    player.dashGhosts.unshift({
+                        x: player.x, y: player.y, 
+                        facingRight: player.facingRight, 
+                        frame: player.frame, 
+                        life: 1.0
+                    });
+                }
+                
+                // Extra Particles
                 if(Math.random() > 0.3) {
                     particles.push({
                         x: player.x + Math.random() * player.width,
@@ -1889,7 +1932,7 @@
                     
                     let currentAccel = player.grounded ? player.accel : player.airAccel;
                     if (targetVx === 0) {
-                        player.vx += (targetVx - player.vx) * (currentAccel * 1.5) * dt; // Extra friction for snappy stop
+                        player.vx += (targetVx - player.vx) * (currentAccel * 1.2) * dt; // Extra friction for snappy stop
                     } else {
                         player.vx += (targetVx - player.vx) * currentAccel * dt;
                     }
@@ -1898,14 +1941,22 @@
                     if (Math.abs(player.vx) < 5 && targetVx === 0) player.vx = 0;
                 }
                 
-                // Variable Jump Height: Fall faster if jump is released early
+                // Variable Jump Height / Gliding
                 if (!keys.up && player.vy < 0) {
-                    player.vy *= 0.85; 
+                    player.vy *= Math.pow(0.85, dt * 60); // Frame-rate independent drag for PC monitors
+                } else if (player.canGlide && keys.up && player.vy > 0 && !player.wallSliding) {
+                    // Glide mechanics
+                    player.vy = player.maxFallSpeed * 0.25; // Slow down vertical fall significantly
+                    if (Math.random() > 0.7) {
+                        spawnParticles(player.x + player.width/2, player.y + player.height, '#ecf0f1', 1, 20);
+                    }
                 }
                 
                 // Gravity
-                player.vy += player.gravity * dt;
-                if (player.vy > player.maxFallSpeed) player.vy = player.maxFallSpeed;
+                if (!(player.canGlide && keys.up && player.vy > 0 && !player.wallSliding)) {
+                    player.vy += player.gravity * dt;
+                    if (player.vy > player.maxFallSpeed) player.vy = player.maxFallSpeed;
+                }
             }
 
             // Physics Step
@@ -1918,6 +1969,7 @@
                 if ((hitWall === 1 && keys.right) || (hitWall === -1 && keys.left)) {
                     player.wallSliding = true;
                     player.wallFacing = hitWall;
+                    player.jumpCount = 0; // Reset jumps on wall grab
                     if(player.vy > player.wallSlideSpeed) player.vy = player.wallSlideSpeed;
                     
                     // Dust particles while sliding
@@ -1927,26 +1979,43 @@
                 }
             }
 
-            // Jump Execution using Buffer and Coyote Time
+            // Jump Execution using Buffer and Multi-jump check
             if (player.jumpBufferTimer > 0) {
-                if (player.coyoteTimer > 0) {
-                    // Normal Jump
-                    player.vy = player.jumpForce;
-                    player.coyoteTimer = 0;
-                    player.jumpBufferTimer = 0;
-                    playSound('jump');
-                    spawnParticles(player.x + player.width/2, player.y + player.height, '#fff', 10);
-                } else if (player.wallSliding) {
-                    // Fluid Wall Jump
+                if (player.wallSliding) {
+                    // Fluid Wall Jump (Prioritized over double jump)
                     player.vy = player.jumpForce * 0.9;
                     player.vx = -player.wallFacing * player.speed * 1.5; // Stronger kick off wall
                     player.wallJumpTimer = 0.25; // Lock normal movement briefly for fluid arc
                     player.jumpBufferTimer = 0;
+                    player.jumpCount = 1; // Consumes the primary jump
                     playSound('jump');
                     spawnParticles(player.wallFacing === 1 ? player.x + player.width : player.x, player.y + player.height, '#fff', 15);
                     // Temporarily prevent immediate re-sticking
                     player.facingRight = player.wallFacing === -1;
+                } else if (player.coyoteTimer > 0 || player.jumpCount < player.maxJumps) {
+                    let isDoubleJump = player.coyoteTimer <= 0;
+                    
+                    // Execute Jump
+                    player.vy = player.jumpForce;
+                    player.coyoteTimer = 0;
+                    player.jumpBufferTimer = 0;
+                    player.jumpCount++;
+                    
+                    playSound('jump');
+                    
+                    if (isDoubleJump) {
+                        spawnParticles(player.x + player.width/2, player.y + player.height, player.colorParticle, 15, 150);
+                        shockwaves.push({ x: player.x + player.width/2, y: player.y + player.height, radius: 0, life: 0.8 });
+                    } else {
+                        spawnParticles(player.x + player.width/2, player.y + player.height, '#fff', 10);
+                    }
                 }
+            }
+
+            // Update Dash Ghosts
+            for(let i = player.dashGhosts.length - 1; i >= 0; i--) {
+                player.dashGhosts[i].life -= dt * 3;
+                if(player.dashGhosts[i].life <= 0) player.dashGhosts.splice(i, 1);
             }
 
             // Determine Animation State
@@ -2004,7 +2073,6 @@
             if (gameState === 'playing' && player.y > mapHeight + 100) die();
 
             // Interactables
-            // FIX: Using 'width' and 'height' instead of 'w' and 'h' to match checkAABB property expectations
             let pBox = { x: player.x, y: player.y, width: player.width, height: player.height };
             
             interactables.forEach(item => {
@@ -2034,6 +2102,7 @@
                             player.grounded = false;
                             player.isDashing = false; // Cancel dash on spring
                             if(player.dashCooldownTimer <= 0) player.canDash = true; // Refill dash
+                            player.jumpCount = 0; // Restore jumps on spring bounce
                             screenShake = 0.3; // Add dramatic screen shake
                             playSound('bounce');
                             spawnParticles(item.x + item.w/2, item.y, '#e67e22', 15);
@@ -2052,15 +2121,22 @@
             dashBar.style.width = `${Math.max(0, Math.min(100, dashPercent))}%`;
             dashBar.style.background = player.canDash ? '#3498db' : '#e74c3c';
 
-            // Smooth Camera
-            camera.targetX = player.x + player.width/2 - GAME_WIDTH / 2;
-            camera.targetY = player.y + player.height/2 - GAME_HEIGHT / 2 + 75; // Look slightly down
+            // Dynamic Smooth Camera Look-Ahead
+            let targetLookAhead = 0;
+            if (player.vx > 20) targetLookAhead = 60;
+            else if (player.vx < -20) targetLookAhead = -60;
+            
+            // Lerp the look-ahead specifically to eliminate snapping
+            camera.currentLookAhead += (targetLookAhead - camera.currentLookAhead) * 2 * dt;
+
+            camera.targetX = player.x + player.width/2 - GAME_WIDTH / 2 + camera.currentLookAhead;
+            camera.targetY = player.y + player.height/2 - GAME_HEIGHT / 2 + 50; // Look slightly down
             
             // Clamp Target
             camera.targetX = Math.max(0, Math.min(camera.targetX, mapWidth - GAME_WIDTH));
             camera.targetY = Math.max(0, Math.min(camera.targetY, mapHeight - GAME_HEIGHT));
             
-            // Lerp
+            // Lerp Overall Camera
             camera.x += (camera.targetX - camera.x) * 8 * dt;
             camera.y += (camera.targetY - camera.y) * 8 * dt;
 
@@ -2070,6 +2146,48 @@
 
         function drawPlayer() {
             ctx.save();
+
+            // 1. Draw Dash Ghosts (Fading trail behind player)
+            player.dashGhosts.forEach(g => {
+                ctx.save();
+                let gDrawX = Math.round(g.x - camera.x);
+                let gDrawY = Math.round(g.y - camera.y);
+                ctx.translate(gDrawX + player.width/2, gDrawY + player.height/2);
+                if (!g.facingRight) ctx.scale(-1, 1);
+                
+                let yOffsetGhost = (player.state === 'run') ? (g.frame % 2 === 0 ? -2 : 0) : 0;
+                
+                ctx.globalAlpha = g.life * 0.4;
+                ctx.fillStyle = player.colorParticle;
+                // Draw simplified block for the ghost outline
+                ctx.fillRect(-player.width/2, -player.height/2 + yOffsetGhost, player.width, player.height);
+                ctx.restore();
+            });
+
+            // 2. Draw Drop Shadow
+            // Calculate a simple shadow based on distance to ground
+            let shadowY = player.y + player.height;
+            let foundGround = false;
+            for (let i = 0; i < 15; i++) { // Scan downward up to 15 tiles
+                let testY = shadowY + i * TILE_SIZE;
+                if (getTile(player.x + player.width/2, testY) === 1) {
+                    shadowY = Math.floor(testY / TILE_SIZE) * TILE_SIZE;
+                    foundGround = true;
+                    break;
+                }
+            }
+            if (foundGround) {
+                let dist = Math.max(0, shadowY - (player.y + player.height));
+                let shadowScale = Math.max(0.2, 1 - (dist / 200));
+                let shadowAlpha = Math.max(0.1, 0.5 - (dist / 400));
+                
+                ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
+                ctx.beginPath();
+                ctx.ellipse(Math.round(player.x + player.width/2 - camera.x), Math.round(shadowY - camera.y), player.width * shadowScale, 4 * shadowScale, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 3. Draw Actual Player
             // Snap translation to integer to avoid pixel blurring
             let drawX = Math.round(player.x - camera.x);
             let drawY = Math.round(player.y - camera.y);
@@ -2112,7 +2230,7 @@
 
             ctx.restore();
 
-            // Draw Scarf (Trail)
+            // 4. Draw Scarf (Trail)
             if(player.history.length > 1) {
                 ctx.beginPath();
                 ctx.moveTo(Math.round(player.history[0].x - camera.x), Math.round(player.history[0].y - camera.y));
@@ -2318,7 +2436,7 @@
             // 5. Interactables
             drawInteractables();
 
-            // 6. Player & Scarf
+            // 6. Player, Scarf & Ghosts
             drawPlayer();
 
             // 7. Particles & Floating Text
@@ -2404,6 +2522,14 @@
             if (gameState === 'gameOver' || gameState === 'levelClear' || gameState === 'victory') return;
             gameState = 'levelClear';
             
+            // Progression System: Unlock Next Level
+            if (currentLevelIndex >= unlockedLevel) {
+                unlockedLevel = currentLevelIndex + 1;
+                try {
+                    localStorage.setItem('pixelQuestUnlockedLevel', unlockedLevel);
+                } catch(e) {}
+            }
+
             // Check for Best Time / Speedrun Record
             let isNewRecord = false;
             if (!bestTimes[currentLevelIndex] || levelTimer < bestTimes[currentLevelIndex]) {
@@ -2492,13 +2618,18 @@
             grid.innerHTML = '';
             levels.forEach((lvl, idx) => {
                 const btn = document.createElement('button');
-                btn.style.cssText = 'background: rgba(0,0,0,0.5); font-size: 0.7rem; padding: 10px; width: 100%; max-width: 200px; border: 2px solid #fff; border-radius: 4px; color: white; cursor: pointer; text-align: center;';
+                let isLocked = idx > unlockedLevel;
+                
+                btn.style.cssText = `background: rgba(0,0,0,0.5); font-size: 0.7rem; padding: 10px; width: 100%; max-width: 200px; border: 2px solid ${isLocked ? '#555' : '#fff'}; border-radius: 4px; color: ${isLocked ? '#777' : 'white'}; cursor: ${isLocked ? 'not-allowed' : 'pointer'}; text-align: center; position: relative;`;
                 
                 let bestTime = bestTimes[idx];
-                let timeText = bestTime ? `<br><span style="color:#f1c40f; font-size:0.5rem; text-shadow:none;">Best: ${bestTime.toFixed(2)}s</span>` : '';
+                let timeText = bestTime && !isLocked ? `<br><span style="color:#f1c40f; font-size:0.5rem; text-shadow:none;">Best: ${bestTime.toFixed(2)}s</span>` : '';
+                let lockIcon = isLocked ? '<br><span style="font-size:0.8rem;">🔒 Locked</span>' : '';
                 
-                btn.innerHTML = `${idx + 1}. ${lvl.name}${timeText}`;
+                btn.innerHTML = `${idx + 1}. ${lvl.name}${timeText}${lockIcon}`;
+                
                 btn.addEventListener('click', () => {
+                    if (isLocked) return;
                     initAudio();
                     currentLevelIndex = idx;
                     showScreen('none');
