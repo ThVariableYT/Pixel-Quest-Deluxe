@@ -462,6 +462,16 @@
             background: rgba(255, 255, 255, 0.4);
             transform: scale(1.1);
         }
+        
+        #reset-progress-btn {
+            background: transparent; 
+            color: #95a5a6; 
+            border: 2px dashed #555; 
+            padding: 10px 20px; 
+            font-size: 0.6rem; 
+            margin-top: 15px; 
+            box-shadow: none;
+        }
 
         @media (max-width: 768px) {
             .title-pixel { font-size: 2.2rem; }
@@ -558,6 +568,7 @@
                 <button id="char-select-btn" style="background: linear-gradient(to bottom, #f39c12, #d35400); border-color: #fff;">Select Hero</button>
                 <button id="level-select-btn" style="background: linear-gradient(to bottom, #3498db, #2980b9); border-color: #fff;">Level Select</button>
                 <button id="controls-btn" style="background: linear-gradient(to bottom, #9b59b6, #8e44ad); border-color: #fff;">Controls</button>
+                <button id="reset-progress-btn">Reset Progress</button>
             </div>
         </div>
 
@@ -607,13 +618,13 @@
             <h1 id="level-title">Area Cleared!</h1>
             <p id="level-desc">Crystals secured. Power returning.</p>
             <p id="level-time" style="color: #3498db; margin-top: -10px; margin-bottom: 20px;">Time: 0.00s</p>
-            <button id="next-level-btn">Proceed</button>
+            <button id="next-level-btn">Proceed [ENTER]</button>
         </div>
 
         <div id="game-over-screen" class="overlay hidden">
             <h1 class="text-red-600 text-shadow-none" style="text-shadow: 3px 3px 0 #550000;">YOU DIED</h1>
             <p>The darkness consumes you...</p>
-            <button id="restart-btn">Resurrect</button>
+            <button id="restart-btn">Resurrect [R]</button>
         </div>
 
         <div id="victory-screen" class="overlay hidden">
@@ -897,7 +908,7 @@
         let lastTime = 0;
         let mapWidth = 0;
         let mapHeight = 0;
-        let camera = { x: 0, y: 0, targetX: 0, targetY: 0, currentLookAhead: 0 };
+        let camera = { x: 0, y: 0, targetX: 0, targetY: 0, currentLookAhead: 0, zoom: 1.0, targetZoom: 1.0 };
         let menuPanDir = 1;
         
         let mapGrid = [];
@@ -1252,6 +1263,23 @@
                     return;
                 }
 
+                let isUp = customKeys.up ? (e.code === customKeys.up) : (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW');
+                let isLeft = customKeys.left ? (e.code === customKeys.left) : (e.code === 'ArrowLeft' || e.code === 'KeyA');
+                let isRight = customKeys.right ? (e.code === customKeys.right) : (e.code === 'ArrowRight' || e.code === 'KeyD');
+                let isDash = customKeys.dash ? (e.code === customKeys.dash) : (e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'KeyZ' || e.code === 'KeyX');
+
+                // Quick Resurrection Keybinds
+                if (gameState === 'gameOver' && (e.code === 'KeyR' || isUp || e.code === 'Enter')) {
+                    document.getElementById('restart-btn').click();
+                    return;
+                }
+
+                // Quick Next Level Keybind
+                if (gameState === 'levelClear' && (e.code === 'Enter' || isUp)) {
+                    document.getElementById('next-level-btn').click();
+                    return;
+                }
+
                 // Pause Toggle System
                 if (e.code === 'Escape' || e.code === 'KeyP') {
                     if (gameState === 'playing') {
@@ -1268,11 +1296,6 @@
                 if(gameState !== 'playing' && gameState !== 'dialogue') return;
                 initAudio();
                 
-                let isUp = customKeys.up ? (e.code === customKeys.up) : (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW');
-                let isLeft = customKeys.left ? (e.code === customKeys.left) : (e.code === 'ArrowLeft' || e.code === 'KeyA');
-                let isRight = customKeys.right ? (e.code === customKeys.right) : (e.code === 'ArrowRight' || e.code === 'KeyD');
-                let isDash = customKeys.dash ? (e.code === customKeys.dash) : (e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'KeyZ' || e.code === 'KeyX');
-
                 if (isUp) {
                     if (gameState === 'dialogue') {
                         advanceDialogue();
@@ -1601,6 +1624,8 @@
                 camera.x = camera.targetX = player.x - GAME_WIDTH / 2;
                 camera.y = camera.targetY = player.y - GAME_HEIGHT / 2;
                 camera.currentLookAhead = 0;
+                camera.zoom = 1.0;
+                camera.targetZoom = 1.0;
 
                 // Generate Ambient Background Particles
                 for(let i=0; i<40; i++) {
@@ -1881,7 +1906,7 @@
                 player.vy = 0; // Stop vertical movement
                 playSound('dash');
                 spawnParticles(player.x + player.width/2, player.y + player.height/2, player.colorParticle, 20, 200);
-                screenShake = 0.1; // Small shake on dash
+                screenShake = 0.2; // Increase shake on dash for more juice
             }
 
             if (player.isDashing) {
@@ -2129,6 +2154,10 @@
             // Lerp the look-ahead specifically to eliminate snapping
             camera.currentLookAhead += (targetLookAhead - camera.currentLookAhead) * 2 * dt;
 
+            // FOV Zoom Out Effect during dash
+            if (player.isDashing) camera.targetZoom = 0.95;
+            else camera.targetZoom = 1.0;
+
             camera.targetX = player.x + player.width/2 - GAME_WIDTH / 2 + camera.currentLookAhead;
             camera.targetY = player.y + player.height/2 - GAME_HEIGHT / 2 + 50; // Look slightly down
             
@@ -2139,6 +2168,7 @@
             // Lerp Overall Camera
             camera.x += (camera.targetX - camera.x) * 8 * dt;
             camera.y += (camera.targetY - camera.y) * 8 * dt;
+            camera.zoom += (camera.targetZoom - camera.zoom) * 8 * dt;
 
             // Decay screen shake
             if (screenShake > 0) screenShake -= dt;
@@ -2412,11 +2442,15 @@
             const levelData = levels[currentLevelIndex];
 
             ctx.save();
-            // Apply Screen Shake
+            
+            // Action Camera System: Apply Screen Shake & FOV Zoom
+            ctx.translate(GAME_WIDTH / 2, GAME_HEIGHT / 2);
             if (screenShake > 0) {
                 let intensity = screenShake * 20;
                 ctx.translate((Math.random() - 0.5) * intensity, (Math.random() - 0.5) * intensity);
             }
+            ctx.scale(camera.zoom, camera.zoom);
+            ctx.translate(-GAME_WIDTH / 2, -GAME_HEIGHT / 2);
 
             // 1. Background (Parallax)
             drawParallax(levelData);
@@ -2461,16 +2495,30 @@
                 }
             });
 
-            // 8. Lighting Overlay
+            // 8. Dash Speed Lines (Anime Effect overlay)
+            if (player.isDashing && gameState !== 'paused') {
+                ctx.fillStyle = player.colorParticle;
+                ctx.globalAlpha = 0.5;
+                for(let i=0; i<15; i++) {
+                    let sx = camera.x + Math.random() * GAME_WIDTH;
+                    let sy = camera.y + Math.random() * GAME_HEIGHT;
+                    let sLen = Math.random() * 150 + 50;
+                    let sHeight = Math.random() * 2 + 1;
+                    ctx.fillRect(sx, sy, sLen, sHeight);
+                }
+                ctx.globalAlpha = 1.0;
+            }
+
+            // 9. Lighting Overlay
             drawLighting(levelData);
 
-            // 9. Damage Flash Overlay
+            ctx.restore(); // Restore Zoom and Shake transforms
+
+            // 10. Damage Flash Overlay (Drawn over everything)
             if (damageFlash > 0) {
                 ctx.fillStyle = `rgba(231, 76, 60, ${damageFlash})`;
                 ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
             }
-
-            ctx.restore();
         }
 
         function gameLoop(timestamp) {
@@ -2511,9 +2559,15 @@
             gameState = 'gameOver';
             stopAmbientMusic();
             playSound('die');
+            
+            // Dramatic Multi-Layer Explosion
             screenShake = 0.5;
             damageFlash = 1.0;
-            spawnParticles(player.x + player.width/2, player.y + player.height/2, '#e74c3c', 50, 300);
+            spawnParticles(player.x + player.width/2, player.y + player.height/2, '#e74c3c', 50, 300); // Core explosion
+            spawnParticles(player.x + player.width/2, player.y + player.height/2, '#f1c40f', 30, 150); // Inner fire
+            spawnParticles(player.x + player.width/2, player.y + player.height/2, '#ffffff', 15, 400); // Fast shrapnel
+            shockwaves.push({ x: player.x + player.width/2, y: player.y + player.height/2, radius: 0, life: 1.5 });
+            
             draw(); // Draw final frame with explosion
             setTimeout(() => showScreen('gameOver'), 500);
         }
@@ -2595,6 +2649,41 @@
             currentLevelIndex = 0;
             showScreen('none');
             loadLevel(currentLevelIndex);
+        });
+
+        // Reset Progress Logic
+        let resetTimeout;
+        document.getElementById('reset-progress-btn').addEventListener('click', function(e) {
+            initAudio();
+            if (this.innerText === "CONFIRM RESET?") {
+                try {
+                    localStorage.removeItem('pixelQuestBestTimes');
+                    localStorage.removeItem('pixelQuestUnlockedLevel');
+                } catch(err) {}
+                bestTimes = {};
+                unlockedLevel = 0;
+                
+                this.innerText = "PROGRESS CLEARED!";
+                this.style.borderColor = '#2ecc71';
+                this.style.color = '#2ecc71';
+                
+                setTimeout(() => {
+                    this.innerText = "Reset Progress";
+                    this.style.borderColor = '#555';
+                    this.style.color = '#95a5a6';
+                }, 2000);
+            } else {
+                this.innerText = "CONFIRM RESET?";
+                this.style.borderColor = '#e74c3c';
+                this.style.color = '#e74c3c';
+                
+                clearTimeout(resetTimeout);
+                resetTimeout = setTimeout(() => {
+                    this.innerText = "Reset Progress";
+                    this.style.borderColor = '#555';
+                    this.style.color = '#95a5a6';
+                }, 3000);
+            }
         });
 
         // Pause Menu Listeners
