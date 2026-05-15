@@ -1,7 +1,7 @@
 <div align="center">
 
 # 🎮 Pixel Quest Deluxe
-
+<img width="2816" height="1536" alt="logo" src="https://github.com/user-attachments/assets/9d8cddbf-3830-4bc8-921c-efbc5b7fe0b9" />
 **A pixel-art style RPG platformer, playable entirely in your browser.**
 
 [![Play Now](https://img.shields.io/badge/▶%20Play%20Now-Live%20Demo-brightgreen?style=for-the-badge)](https://thvariableyt.github.io/Pixel-Quest-Deluxe/)
