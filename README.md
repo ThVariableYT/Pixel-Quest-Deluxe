@@ -52,6 +52,9 @@ The game runs entirely in the browser using a single HTML file with no external 
 | ⛶ Fullscreen Mode | Native Fullscreen API with CSS fallback |
 | 🌊 Particle Effects | Jump dust, dash trails, crystal sparkles, and ambient particles |
 | 🏃 Advanced Movement | Coyote time, jump buffering, wall sliding, wall jumping, and air dashing |
+| ⏸️ Pause Menu | Press Esc or P to pause/resume; mobile pause button included with Resume and Quit-to-Menu options |
+| 🏆 Best Time Tracking | Speedrun timer per level; personal bests saved to localStorage and shown on level select |
+| ✨ Visual Effects | Damage flash on death, shockwave on crystal collect, and enhanced crystal/vortex animations |
 
 ---
 
@@ -266,6 +269,21 @@ open index.html
 - `b69282e` — General index.html update and stability improvements.
 - `69c5944` — Further refinements and bug fixes.
 - `4a49d37` — Final polish update.
+
+- ### v1.7.0 – Speedrun Timer & Visual Polish *(May 16, 2026)*
+- `c040db0` – Added **speedrun timer** that tracks level completion time.
+  - Timer displayed in the HUD during gameplay.
+  - Level transition effect added between stages.
+  - Enhanced canvas particle effects (crystal sparkles, ambient particles).
+
+### v1.8.0 – Pause System & Best Time Tracking *(May 16, 2026)*
+- `1a22dd2` – Added **pause menu** and **personal best time** tracking.
+  - Press **Esc** or **P** to pause; mobile pause button also added.
+  - Pause screen includes Resume and Quit to Menu options.
+  - Speedrun best times saved to `localStorage` and displayed on level select.
+  - **Damage flash** (red overlay) effect when the player dies.
+  - **Shockwave** visual effect when collecting crystals.
+  - Improved crystal inner pulse animation and vortex/goal rendering.
 
 ---
 
