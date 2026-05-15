@@ -271,6 +271,12 @@
         .portrait-eldor { background: #5b2c6f; }
         .portrait-eldor::after { content: ''; position: absolute; top: 15px; left: 15px; width: 34px; height: 34px; background: rgba(255,255,255,0.2); border-radius: 50%; border: 4px solid #9b59b6; }
         
+        .portrait-ninja { background: #111111; }
+        .portrait-ninja::after { content: ''; position: absolute; top: 20px; left: 20px; width: 24px; height: 12px; background: #e74c3c; box-shadow: 0 -8px 0 #000000; }
+        
+        .portrait-mage { background: #341f3e; }
+        .portrait-mage::after { content: ''; position: absolute; top: 20px; left: 20px; width: 24px; height: 12px; background: #f1c40f; box-shadow: 0 -8px 0 #8e44ad; }
+        
         .dialogue-content { flex-grow: 1; position: relative; }
         #dialogue-speaker { color: #f1c40f; font-weight: bold; margin-bottom: 5px; font-size: 0.8rem; text-shadow: 2px 2px 0 #000; }
         .dialogue-prompt { position: absolute; bottom: 0; right: 0; color: #7f8c8d; font-size: 0.5rem; animation: blink 1s infinite; }
@@ -329,6 +335,7 @@
             
             <div class="main-menu-buttons">
                 <button id="start-btn">Play</button>
+                <button id="char-select-btn" style="background: linear-gradient(to bottom, #f39c12, #d35400); border-color: #fff;">Select Hero</button>
                 <button id="level-select-btn" style="background: linear-gradient(to bottom, #3498db, #2980b9); border-color: #fff;">Level Select</button>
                 <button id="controls-btn" style="background: linear-gradient(to bottom, #9b59b6, #8e44ad); border-color: #fff;">Controls</button>
             </div>
@@ -350,6 +357,14 @@
                 <!-- Populated via JS -->
             </div>
             <button id="back-to-start-btn" style="background: linear-gradient(to bottom, #e74c3c, #c0392b);">Back</button>
+        </div>
+
+        <div id="char-select-screen" class="overlay hidden">
+            <h1 style="font-size: 2.5rem; color: #f1c40f; text-shadow: 2px 2px 0 #fff; margin-bottom: 20px;">CHOOSE HERO</h1>
+            <div id="char-grid" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-bottom: 30px; max-width: 800px;">
+                <!-- Populated via JS -->
+            </div>
+            <button id="back-to-start-btn-char" style="background: linear-gradient(to bottom, #e74c3c, #c0392b);">Back</button>
         </div>
 
         <div id="level-screen" class="overlay hidden">
@@ -386,9 +401,9 @@
         const ctx = canvas.getContext('2d');
         
         // Internal Resolution (16:9)
-        const GAME_WIDTH = 640;
-        const GAME_HEIGHT = 360;
-        const TILE_SIZE = 32;
+        const GAME_WIDTH = 960;
+        const GAME_HEIGHT = 540;
+        const TILE_SIZE = 48;
 
         // Offscreen canvases for performance and lighting
         const mapCanvas = document.createElement('canvas');
@@ -403,6 +418,7 @@
             start: document.getElementById('start-screen'),
             controls: document.getElementById('controls-screen'),
             levelSelect: document.getElementById('level-select-screen'),
+            charSelect: document.getElementById('char-select-screen'),
             level: document.getElementById('level-screen'),
             gameOver: document.getElementById('game-over-screen'),
             victory: document.getElementById('victory-screen')
@@ -505,24 +521,31 @@
         let typewriterText = "";
         let typewriterTimer = 0;
 
+        const characters = [
+            { id: 'hero', name: 'Knight', desc: 'Balanced Stats', speed: 330, jumpForce: -600, maxFallSpeed: 675, dashSpeed: 750, dashDuration: 0.25, dashCooldown: 0.8, colorBody: '#ecf0f1', colorEye: '#3498db', colorBand: '#e74c3c', colorParticle: '#3498db', portrait: 'portrait-hero' },
+            { id: 'ninja', name: 'Ninja', desc: 'Fast & High Jump', speed: 380, jumpForce: -680, maxFallSpeed: 750, dashSpeed: 600, dashDuration: 0.2, dashCooldown: 0.6, colorBody: '#2c3e50', colorEye: '#e74c3c', colorBand: '#000000', colorParticle: '#e74c3c', portrait: 'portrait-ninja' },
+            { id: 'mage', name: 'Mage', desc: 'Long Dash, Slower', speed: 280, jumpForce: -550, maxFallSpeed: 600, dashSpeed: 850, dashDuration: 0.35, dashCooldown: 0.5, colorBody: '#9b59b6', colorEye: '#f1c40f', colorBand: '#8e44ad', colorParticle: '#9b59b6', portrait: 'portrait-mage' }
+        ];
+        let selectedCharacter = characters[0];
+
         const keys = { left: false, right: false, up: false, dash: false };
         let jumpPressedThisFrame = false;
         let dashPressedThisFrame = false;
 
         const player = {
             x: 0, y: 0,
-            width: 20, height: 28,
+            width: 30, height: 42,
             vx: 0, vy: 0,
-            speed: 220, // slightly faster base speed
-            maxFallSpeed: 450,
-            jumpForce: -400,
-            gravity: 1000,
+            speed: 330, 
+            maxFallSpeed: 675,
+            jumpForce: -600,
+            gravity: 1500,
             grounded: false,
             facingRight: true,
             
             // Movement fluidity
-            accel: 15,
-            airAccel: 8,
+            accel: 22.5,
+            airAccel: 12,
             coyoteTime: 0.1,
             coyoteTimer: 0,
             jumpBufferTime: 0.15,
@@ -530,25 +553,43 @@
             
             // Complex Mechanics
             wallSliding: false,
-            wallFacing: 0, // 1 for touching right wall, -1 for left
-            wallSlideSpeed: 60,
+            wallFacing: 0, 
+            wallSlideSpeed: 90,
             
             canDash: true,
             isDashing: false,
-            dashSpeed: 500,
+            dashSpeed: 750,
             dashDuration: 0.25,
             dashTimer: 0,
-            dashCooldown: 0.8, // seconds before next dash
+            dashCooldown: 0.8,
             dashCooldownTimer: 0,
             
             wallJumpTimer: 0,
             
             // Animation & Visuals
-            state: 'idle', // idle, run, jump, fall, wall, dash
+            state: 'idle', 
             frame: 0,
             animTimer: 0,
-            history: [] // For the trailing scarf
+            history: [], 
+            
+            colorBody: '#ecf0f1',
+            colorEye: '#3498db',
+            colorBand: '#e74c3c',
+            colorParticle: '#3498db'
         };
+        
+        function applyCharacterStats() {
+            player.speed = selectedCharacter.speed;
+            player.jumpForce = selectedCharacter.jumpForce;
+            player.maxFallSpeed = selectedCharacter.maxFallSpeed;
+            player.dashSpeed = selectedCharacter.dashSpeed;
+            player.dashDuration = selectedCharacter.dashDuration;
+            player.dashCooldown = selectedCharacter.dashCooldown;
+            player.colorBody = selectedCharacter.colorBody;
+            player.colorEye = selectedCharacter.colorEye;
+            player.colorBand = selectedCharacter.colorBand;
+            player.colorParticle = selectedCharacter.colorParticle;
+        }
 
         const storySegments = {
             intro: [
@@ -643,14 +684,14 @@
                     "................................................................................",
                     "............................................................................G...",
                     "..........................................#####...........................#####.",
-                    ".....................C........................................C.................",
-                    "....................###........C.............................###................",
-                    "..P..........................#####...................#####......................",
-                    "#####.........###..........................S.......................S............",
-                    "#####.........................S##..##S...###...C.............S##..##S...###.....",
-                    "#####...C....................####..###..####..###...........####..###..####.....",
-                    "#####..###..........^........####..###..####........^.......####..###..####.....",
-                    "#####S~~~~S#######~###~#######~~~~~###S#####~~~###~~~#####~~~###~~~##S#####.....",
+                    ".....................C........................................C...........#####.",
+                    "....................###........C.............................###..........#####.",
+                    "..P..........................#####...................#####................#####.",
+                    "#####.........###..........................S.......................S......#####.",
+                    "#####.........................S##..##S...###...C.............S##..##S...#######.",
+                    "#####...C....................####..###..####..###...........####..###..########.",
+                    "#####..###..........^........####..###..####........^.......####..###..########.",
+                    "#####S~~~~S#######~###~#######~~~~~###S#####~~~###~~~#####~~~###~~~##S#########.",
                     "################################################################################"
                 ]
             },
@@ -849,8 +890,8 @@
 
         function prepareDialogueLine() {
             const line = activeDialogue.sequence[dialogueIndex];
-            document.getElementById('dialogue-speaker').innerText = line.speaker;
-            document.getElementById('dialogue-portrait').className = line.portrait;
+            document.getElementById('dialogue-speaker').innerText = line.speaker === "Hero" ? selectedCharacter.name : line.speaker;
+            document.getElementById('dialogue-portrait').className = line.speaker === "Hero" ? selectedCharacter.portrait : line.portrait;
             document.getElementById('dialogue-text').innerText = "";
             typewriterText = line.text;
             typewriterTimer = 0;
@@ -918,11 +959,10 @@
             
             // Procedural noise/bricks
             ctx.fillStyle = dark;
-            // Draw a few random-looking but deterministic rects based on coordinates
             let seed = (x * 13 + y * 37) % 100;
-            if(seed < 30) ctx.fillRect(4, 4, 12, 8);
-            if(seed > 60) ctx.fillRect(18, 16, 10, 10);
-            if(seed % 2 === 0) ctx.fillRect(8, 20, 8, 8);
+            if(seed < 30) ctx.fillRect(6, 6, 18, 12);
+            if(seed > 60) ctx.fillRect(27, 24, 15, 15);
+            if(seed % 2 === 0) ctx.fillRect(12, 30, 12, 12);
 
             // Border
             ctx.strokeStyle = '#111';
@@ -931,23 +971,23 @@
 
             // Bevel effect for depth
             ctx.fillStyle = 'rgba(255,255,255,0.1)';
-            ctx.fillRect(1, 1, TILE_SIZE - 2, 2);
+            ctx.fillRect(1, 1, TILE_SIZE - 2, 3);
             ctx.fillStyle = 'rgba(0,0,0,0.2)';
-            ctx.fillRect(1, TILE_SIZE - 3, TILE_SIZE - 2, 2);
+            ctx.fillRect(1, TILE_SIZE - 4, TILE_SIZE - 2, 3);
 
             // Top surface
             if(isTop) {
                 ctx.fillStyle = top;
-                ctx.fillRect(0, 0, TILE_SIZE, 8);
+                ctx.fillRect(0, 0, TILE_SIZE, 12);
                 // Blades/Highlights
                 ctx.fillStyle = highlight;
-                ctx.fillRect(4, 0, 4, 10);
-                ctx.fillRect(16, 0, 6, 8);
-                ctx.fillRect(24, 0, 4, 11);
+                ctx.fillRect(6, 0, 6, 15);
+                ctx.fillRect(24, 0, 9, 12);
+                ctx.fillRect(36, 0, 6, 16);
                 
                 // Shadow under the grass
                 ctx.fillStyle = 'rgba(0,0,0,0.3)';
-                ctx.fillRect(0, 8, TILE_SIZE, 3);
+                ctx.fillRect(0, 12, TILE_SIZE, 4);
             }
 
             ctx.restore();
@@ -996,19 +1036,19 @@
                             player.x = px + (TILE_SIZE - player.width)/2;
                             player.y = py + (TILE_SIZE - player.height);
                         } else if (char === 'C') {
-                            interactables.push({ type: 'crystal', x: px + 8, y: py + 8, w: 16, h: 16, collected: false });
+                            interactables.push({ type: 'crystal', x: px + 12, y: py + 12, w: 24, h: 24, collected: false });
                             totalCrystalsInLevel++;
                         } else if (char === 'G') {
                             interactables.push({ type: 'goal', x: px, y: py, w: TILE_SIZE, h: TILE_SIZE });
                         } else if (char === 'S') {
-                            interactables.push({ type: 'spike', x: px, y: py + 16, w: TILE_SIZE, h: 16 });
+                            interactables.push({ type: 'spike', x: px, y: py + 24, w: TILE_SIZE, h: 24 });
                         } else if (char === '~') {
-                            interactables.push({ type: 'lava', x: px, y: py + 10, w: TILE_SIZE, h: 22 });
+                            interactables.push({ type: 'lava', x: px, y: py + 15, w: TILE_SIZE, h: 33 });
                         } else if (char === '^') {
-                            interactables.push({ type: 'spring', x: px, y: py + 16, w: TILE_SIZE, h: 16 });
+                            interactables.push({ type: 'spring', x: px, y: py + 24, w: TILE_SIZE, h: 24 });
                             // Draw spring base on map
                             mapCtx.fillStyle = '#7f8c8d';
-                            mapCtx.fillRect(px + 4, py + 26, TILE_SIZE - 8, 6);
+                            mapCtx.fillRect(px + 6, py + 39, TILE_SIZE - 12, 9);
                         }
                     }
                 }
@@ -1051,7 +1091,7 @@
                     life: 1.0,
                     decay: 1.5 + Math.random(),
                     color: color,
-                    size: Math.random() * 3 + 1
+                    size: Math.random() * 4.5 + 1.5
                 });
             }
         }
@@ -1061,7 +1101,7 @@
                 let p = particles[i];
                 p.x += p.vx * dt;
                 p.y += p.vy * dt;
-                p.vy += 500 * dt; // Gravity for particles
+                p.vy += 750 * dt; // Gravity for particles
                 p.life -= p.decay * dt;
                 
                 if(p.life <= 0) {
@@ -1166,7 +1206,7 @@
                 player.dashTimer = player.dashDuration;
                 player.vy = 0; // Stop vertical movement
                 playSound('dash');
-                spawnParticles(player.x + player.width/2, player.y + player.height/2, '#3498db', 20, 200);
+                spawnParticles(player.x + player.width/2, player.y + player.height/2, player.colorParticle, 20, 200);
             }
 
             if (player.isDashing) {
@@ -1179,7 +1219,7 @@
                     particles.push({
                         x: player.x + Math.random() * player.width,
                         y: player.y + Math.random() * player.height,
-                        vx: 0, vy: 0, life: 0.5, decay: 2, color: '#2980b9', size: 4
+                        vx: 0, vy: 0, life: 0.5, decay: 2, color: player.colorParticle, size: 4
                     });
                 }
 
@@ -1192,8 +1232,8 @@
                 if (player.wallJumpTimer > 0) {
                     player.wallJumpTimer -= dt;
                     // Reduced air control during wall jump stun for arc fluidity
-                    if (keys.left) player.vx = Math.max(player.vx - 1500 * dt, -player.speed * 1.3);
-                    else if (keys.right) player.vx = Math.min(player.vx + 1500 * dt, player.speed * 1.3);
+                    if (keys.left) player.vx = Math.max(player.vx - 2250 * dt, -player.speed * 1.3);
+                    else if (keys.right) player.vx = Math.min(player.vx + 2250 * dt, player.speed * 1.3);
                 } else {
                     // Normal Horizontal Movement with acceleration/friction
                     let targetVx = 0;
@@ -1320,8 +1360,8 @@
                 else if (item.type === 'spring') {
                     if (checkAABB(pBox, {x: item.x, y: item.y, w: item.w, h: item.h})) {
                         // Only bounce if falling on it
-                        if(player.vy > 0 && player.y + player.height - player.vy*dt <= item.y + 5) {
-                            player.vy = -750; // Huge boost
+                        if(player.vy > 0 && player.y + player.height - player.vy*dt <= item.y + 7.5) {
+                            player.vy = -1125; // Huge boost
                             player.grounded = false;
                             player.isDashing = false; // Cancel dash on spring
                             if(player.dashCooldownTimer <= 0) player.canDash = true; // Refill dash
@@ -1345,7 +1385,7 @@
 
             // Smooth Camera
             camera.targetX = player.x + player.width/2 - GAME_WIDTH / 2;
-            camera.targetY = player.y + player.height/2 - GAME_HEIGHT / 2 + 50; // Look slightly down
+            camera.targetY = player.y + player.height/2 - GAME_HEIGHT / 2 + 75; // Look slightly down
             
             // Clamp Target
             camera.targetX = Math.max(0, Math.min(camera.targetX, mapWidth - GAME_WIDTH));
@@ -1374,31 +1414,31 @@
             if (player.state !== 'wall' && player.state !== 'dash') ctx.scale(squash, stretch);
             
             // Bobbing based on state
-            let yOffset = (player.state === 'run') ? (player.frame % 2 === 0 ? -1 : 0) : 0;
+            let yOffset = (player.state === 'run') ? (player.frame % 2 === 0 ? -2 : 0) : 0;
 
             // Player Glow / Dash Indicator
-            ctx.shadowColor = '#3498db';
-            ctx.shadowBlur = (player.canDash && player.state === 'idle') ? 10 + Math.sin(floatingTime*5)*5 : 0;
+            ctx.shadowColor = player.colorParticle;
+            ctx.shadowBlur = (player.canDash && player.state === 'idle') ? 15 + Math.sin(floatingTime*5)*8 : 0;
 
             // Body
-            ctx.fillStyle = '#ecf0f1';
+            ctx.fillStyle = player.colorBody;
             ctx.fillRect(-player.width/2, -player.height/2 + yOffset, player.width, player.height);
             
             ctx.shadowBlur = 0; // Reset shadow
 
             // Eye
             ctx.fillStyle = '#2c3e50';
-            ctx.fillRect(player.width/4 - 2, -player.height/4 + yOffset, 6, 6);
-            ctx.fillStyle = '#3498db'; // Glowing eye center
-            ctx.fillRect(player.width/4, -player.height/4 + 2 + yOffset, 2, 2);
+            ctx.fillRect(player.width/4 - 3, -player.height/4 + yOffset, 9, 9);
+            ctx.fillStyle = player.colorEye; // Glowing eye center
+            ctx.fillRect(player.width/4, -player.height/4 + 3 + yOffset, 3, 3);
             // Headband
-            ctx.fillStyle = '#e74c3c';
-            ctx.fillRect(-player.width/2, -player.height/2 + 4 + yOffset, player.width, 4);
+            ctx.fillStyle = player.colorBand;
+            ctx.fillRect(-player.width/2, -player.height/2 + 6 + yOffset, player.width, 6);
 
             // Wall slide specific graphics
             if(player.state === 'wall') {
                 ctx.fillStyle = '#bdc3c7';
-                ctx.fillRect(player.width/2, -4, 2, 8); // Hands on wall
+                ctx.fillRect(player.width/2, -6, 3, 12); // Hands on wall
             }
 
             ctx.restore();
@@ -1409,11 +1449,11 @@
                 ctx.moveTo(Math.round(player.history[0].x - camera.x), Math.round(player.history[0].y - camera.y));
                 for(let i=1; i<player.history.length; i++) {
                     // Add sine wave flutter to tail
-                    let flutter = Math.sin(floatingTime * 10 + i) * 2;
+                    let flutter = Math.sin(floatingTime * 10 + i) * 3;
                     ctx.lineTo(Math.round(player.history[i].x - camera.x), Math.round(player.history[i].y - camera.y + flutter));
                 }
-                ctx.strokeStyle = '#e74c3c';
-                ctx.lineWidth = 3;
+                ctx.strokeStyle = player.colorBand;
+                ctx.lineWidth = 4.5;
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
                 ctx.stroke();
@@ -1426,17 +1466,17 @@
                 let drawY = Math.round(item.y - camera.y);
 
                 if (item.type === 'crystal' && !item.collected) {
-                    let floatY = drawY + Math.sin(floatingTime * 3) * 4;
+                    let floatY = drawY + Math.sin(floatingTime * 3) * 6;
                     ctx.fillStyle = '#f1c40f';
                     ctx.beginPath();
-                    ctx.moveTo(drawX + 8, floatY);
-                    ctx.lineTo(drawX + 16, floatY + 8);
-                    ctx.lineTo(drawX + 8, floatY + 16);
-                    ctx.lineTo(drawX, floatY + 8);
+                    ctx.moveTo(drawX + 12, floatY);
+                    ctx.lineTo(drawX + 24, floatY + 12);
+                    ctx.lineTo(drawX + 12, floatY + 24);
+                    ctx.lineTo(drawX, floatY + 12);
                     ctx.fill();
                     // White core
                     ctx.fillStyle = '#fff';
-                    ctx.fillRect(drawX + 6, floatY + 6, 4, 4);
+                    ctx.fillRect(drawX + 9, floatY + 9, 6, 6);
                 } 
                 else if (item.type === 'spike') {
                     ctx.fillStyle = '#bdc3c7';
@@ -1450,28 +1490,28 @@
                 }
                 else if (item.type === 'spring') {
                     // Animated top part of spring
-                    let bounceOffset = (player.state === 'jump' && player.vy < -600 && Math.abs(player.x - item.x) < 40 && Math.abs(player.y - item.y) < 40) ? 8 : 0;
+                    let bounceOffset = (player.state === 'jump' && player.vy < -900 && Math.abs(player.x - item.x) < 60 && Math.abs(player.y - item.y) < 60) ? 12 : 0;
                     ctx.fillStyle = '#e67e22';
-                    ctx.fillRect(drawX + 4, drawY + bounceOffset, item.w - 8, item.h - bounceOffset);
+                    ctx.fillRect(drawX + 6, drawY + bounceOffset, item.w - 12, item.h - bounceOffset);
                 }
                 else if (item.type === 'lava') {
                     // Animated Lava
                     ctx.fillStyle = '#e74c3c';
                     ctx.fillRect(drawX, drawY, item.w, item.h);
                     ctx.fillStyle = '#f1c40f';
-                    let wave = Math.sin(floatingTime * 5 + item.x) * 3;
-                    ctx.fillRect(drawX, drawY + wave, item.w, 4);
+                    let wave = Math.sin(floatingTime * 5 + item.x) * 4.5;
+                    ctx.fillRect(drawX, drawY + wave, item.w, 6);
                 }
                 else if (item.type === 'goal') {
                     let active = crystalsCollected >= totalCrystalsInLevel;
                     ctx.fillStyle = active ? '#9b59b6' : '#34495e';
                     ctx.beginPath();
-                    ctx.arc(drawX + item.w/2, drawY + item.h/2, item.w/2 - 2, 0, Math.PI * 2);
+                    ctx.arc(drawX + item.w/2, drawY + item.h/2, item.w/2 - 3, 0, Math.PI * 2);
                     ctx.fill();
                     if(active) {
                         ctx.fillStyle = '#e056fd';
                         ctx.beginPath();
-                        ctx.arc(drawX + item.w/2, drawY + item.h/2, item.w/4 + Math.sin(floatingTime*10)*2, 0, Math.PI * 2);
+                        ctx.arc(drawX + item.w/2, drawY + item.h/2, item.w/4 + Math.sin(floatingTime*10)*3, 0, Math.PI * 2);
                         ctx.fill();
                     }
                 }
@@ -1524,37 +1564,37 @@
             // Player Light
             let px = Math.round(player.x + player.width/2 - camera.x);
             let py = Math.round(player.y + player.height/2 - camera.y);
-            let pulse = Math.sin(floatingTime * 4) * 10;
+            let pulse = Math.sin(floatingTime * 4) * 15;
             
-            let pGrad = lightCtx.createRadialGradient(px, py, 10, px, py, 120 + pulse);
+            let pGrad = lightCtx.createRadialGradient(px, py, 15, px, py, 180 + pulse);
             pGrad.addColorStop(0, 'rgba(0,0,0,1)');
             pGrad.addColorStop(1, 'rgba(0,0,0,0)');
             lightCtx.fillStyle = pGrad;
             lightCtx.beginPath();
-            lightCtx.arc(px, py, 120 + pulse, 0, Math.PI*2);
+            lightCtx.arc(px, py, 180 + pulse, 0, Math.PI*2);
             lightCtx.fill();
 
             // Crystal Lights
             interactables.forEach(item => {
                 if (item.type === 'crystal' && !item.collected) {
-                    let cx = Math.round(item.x + 8 - camera.x);
-                    let cy = Math.round(item.y + 8 - camera.y + Math.sin(floatingTime * 3) * 4);
-                    let cGrad = lightCtx.createRadialGradient(cx, cy, 0, cx, cy, 50);
+                    let cx = Math.round(item.x + 12 - camera.x);
+                    let cy = Math.round(item.y + 12 - camera.y + Math.sin(floatingTime * 3) * 6);
+                    let cGrad = lightCtx.createRadialGradient(cx, cy, 0, cx, cy, 75);
                     cGrad.addColorStop(0, 'rgba(0,0,0,0.8)');
                     cGrad.addColorStop(1, 'rgba(0,0,0,0)');
                     lightCtx.fillStyle = cGrad;
                     lightCtx.beginPath();
-                    lightCtx.arc(cx, cy, 50, 0, Math.PI*2);
+                    lightCtx.arc(cx, cy, 75, 0, Math.PI*2);
                     lightCtx.fill();
                 } else if (item.type === 'lava') {
                     // Lava glow
                     let lx = Math.round(item.x + item.w/2 - camera.x);
                     let ly = Math.round(item.y - camera.y);
-                    let lGrad = lightCtx.createRadialGradient(lx, ly, 0, lx, ly, 60);
+                    let lGrad = lightCtx.createRadialGradient(lx, ly, 0, lx, ly, 90);
                     lGrad.addColorStop(0, 'rgba(0,0,0,0.5)');
                     lGrad.addColorStop(1, 'rgba(0,0,0,0)');
                     lightCtx.fillStyle = lGrad;
-                    lightCtx.fillRect(lx - 60, ly - 60, 120, 120);
+                    lightCtx.fillRect(lx - 90, ly - 90, 180, 180);
                 }
             });
 
@@ -1685,6 +1725,7 @@
         // Event Listeners for UI
         document.getElementById('start-btn').addEventListener('click', () => {
             initAudio();
+            applyCharacterStats();
             showScreen('none');
             
             // Play introductory dialogue
@@ -1736,11 +1777,49 @@
 
         document.getElementById('level-select-btn').addEventListener('click', () => {
             initAudio();
+            applyCharacterStats();
             populateLevelSelect();
             showScreen('levelSelect');
         });
 
         document.getElementById('back-to-start-btn').addEventListener('click', () => {
+            initAudio();
+            showScreen('start');
+        });
+
+        function populateCharSelect() {
+            const grid = document.getElementById('char-grid');
+            grid.innerHTML = '';
+            characters.forEach(c => {
+                const card = document.createElement('div');
+                card.style.cssText = `
+                    background: rgba(0,0,0,0.7); border: 4px solid ${c === selectedCharacter ? '#f1c40f' : '#555'}; 
+                    border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; width: 150px;
+                    transition: transform 0.1s; display: flex; flex-direction: column; align-items: center;
+                `;
+                card.innerHTML = `
+                    <div class="${c.portrait}" style="width:64px; height:64px; margin-bottom: 10px; border-radius:4px; border:2px solid #fff; position:relative; overflow:hidden;"></div>
+                    <div style="font-size:0.8rem; color:${c.colorEye}; margin-bottom:5px; text-shadow:1px 1px 0 #000;">${c.name}</div>
+                    <div style="font-size:0.5rem; color:#aaa; line-height:1.4;">${c.desc}</div>
+                `;
+                card.addEventListener('mouseover', () => card.style.transform = 'scale(1.05)');
+                card.addEventListener('mouseout', () => card.style.transform = 'scale(1)');
+                card.addEventListener('click', () => {
+                    initAudio();
+                    selectedCharacter = c;
+                    populateCharSelect();
+                });
+                grid.appendChild(card);
+            });
+        }
+
+        document.getElementById('char-select-btn').addEventListener('click', () => {
+            initAudio();
+            populateCharSelect();
+            showScreen('charSelect');
+        });
+
+        document.getElementById('back-to-start-btn-char').addEventListener('click', () => {
             initAudio();
             showScreen('start');
         });
