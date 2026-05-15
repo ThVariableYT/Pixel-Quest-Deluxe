@@ -252,8 +252,17 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
             font-size: 0.7rem;
             line-height: 1.6;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
         }
         
+        #dialogue-box.hidden {
+            transform: translateX(-50%) translateY(30px) scale(0.95) !important;
+            opacity: 0 !important;
+            display: flex !important; /* Keep block layout to animate smoothly */
+            pointer-events: none;
+        }
+
         #dialogue-portrait {
             width: 64px;
             height: 64px;
@@ -264,6 +273,12 @@
             overflow: hidden;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
         }
+
+        @keyframes portraitBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+        .talking { animation: portraitBounce 0.15s infinite; }
         
         /* Procedural pixel art portraits using CSS */
         .portrait-hero { background: #2c3e50; }
@@ -295,8 +310,9 @@
             h1 { font-size: 1.8rem; }
             p { font-size: 0.6rem; margin-bottom: 10px; }
             button { font-size: 0.8rem; padding: 12px 24px; border-width: 3px; }
-            .btn-control { width: 55px; height: 55px; font-size: 1.2rem; }
+            .btn-control { width: 55px; height: 55px; font-size: 1.2rem; touch-action: manipulation; }
             .controls-text { display: none; } /* Hide complex kb controls on mobile */
+            #mobile-controls { bottom: max(20px, env(safe-area-inset-bottom)); }
         }
     </style>
 </head>
@@ -400,10 +416,10 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         
-        // Internal Resolution (16:9)
-        const GAME_WIDTH = 960;
-        const GAME_HEIGHT = 540;
-        const TILE_SIZE = 48;
+        // Internal Resolution (Original Retro Size)
+        const GAME_WIDTH = 640;
+        const GAME_HEIGHT = 360;
+        const TILE_SIZE = 32;
 
         // Offscreen canvases for performance and lighting
         const mapCanvas = document.createElement('canvas');
@@ -507,6 +523,7 @@
         let mapWidth = 0;
         let mapHeight = 0;
         let camera = { x: 0, y: 0, targetX: 0, targetY: 0 };
+        let menuPanDir = 1;
         
         let mapGrid = [];
         let interactables = [];
@@ -522,9 +539,9 @@
         let typewriterTimer = 0;
 
         const characters = [
-            { id: 'hero', name: 'Knight', desc: 'Balanced Stats', speed: 330, jumpForce: -600, maxFallSpeed: 675, dashSpeed: 750, dashDuration: 0.25, dashCooldown: 0.8, colorBody: '#ecf0f1', colorEye: '#3498db', colorBand: '#e74c3c', colorParticle: '#3498db', portrait: 'portrait-hero' },
-            { id: 'ninja', name: 'Ninja', desc: 'Fast & High Jump', speed: 380, jumpForce: -680, maxFallSpeed: 750, dashSpeed: 600, dashDuration: 0.2, dashCooldown: 0.6, colorBody: '#2c3e50', colorEye: '#e74c3c', colorBand: '#000000', colorParticle: '#e74c3c', portrait: 'portrait-ninja' },
-            { id: 'mage', name: 'Mage', desc: 'Long Dash, Slower', speed: 280, jumpForce: -550, maxFallSpeed: 600, dashSpeed: 850, dashDuration: 0.35, dashCooldown: 0.5, colorBody: '#9b59b6', colorEye: '#f1c40f', colorBand: '#8e44ad', colorParticle: '#9b59b6', portrait: 'portrait-mage' }
+            { id: 'hero', name: 'Knight', desc: 'Balanced Stats', speed: 220, jumpForce: -400, maxFallSpeed: 450, dashSpeed: 500, dashDuration: 0.25, dashCooldown: 0.8, colorBody: '#ecf0f1', colorEye: '#3498db', colorBand: '#e74c3c', colorParticle: '#3498db', portrait: 'portrait-hero' },
+            { id: 'ninja', name: 'Ninja', desc: 'Fast & High Jump', speed: 250, jumpForce: -450, maxFallSpeed: 500, dashSpeed: 400, dashDuration: 0.2, dashCooldown: 0.6, colorBody: '#2c3e50', colorEye: '#e74c3c', colorBand: '#000000', colorParticle: '#e74c3c', portrait: 'portrait-ninja' },
+            { id: 'mage', name: 'Mage', desc: 'Long Dash, Slower', speed: 185, jumpForce: -365, maxFallSpeed: 400, dashSpeed: 565, dashDuration: 0.35, dashCooldown: 0.5, colorBody: '#9b59b6', colorEye: '#f1c40f', colorBand: '#8e44ad', colorParticle: '#9b59b6', portrait: 'portrait-mage' }
         ];
         let selectedCharacter = characters[0];
 
@@ -534,18 +551,18 @@
 
         const player = {
             x: 0, y: 0,
-            width: 30, height: 42,
+            width: 20, height: 28,
             vx: 0, vy: 0,
-            speed: 330, 
-            maxFallSpeed: 675,
-            jumpForce: -600,
-            gravity: 1500,
+            speed: 220, 
+            maxFallSpeed: 450,
+            jumpForce: -400,
+            gravity: 1000,
             grounded: false,
             facingRight: true,
             
             // Movement fluidity
-            accel: 22.5,
-            airAccel: 12,
+            accel: 15,
+            airAccel: 8,
             coyoteTime: 0.1,
             coyoteTimer: 0,
             jumpBufferTime: 0.15,
@@ -554,11 +571,11 @@
             // Complex Mechanics
             wallSliding: false,
             wallFacing: 0, 
-            wallSlideSpeed: 90,
+            wallSlideSpeed: 60,
             
             canDash: true,
             isDashing: false,
-            dashSpeed: 750,
+            dashSpeed: 500,
             dashDuration: 0.25,
             dashTimer: 0,
             dashCooldown: 0.8,
@@ -797,6 +814,18 @@
             }
         ];
 
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        
+        function updateHUDVisibility() {
+            if (gameState === 'playing') {
+                hud.style.display = 'block';
+                if (isTouchDevice) mobileControls.style.display = 'flex';
+            } else {
+                hud.style.display = 'none';
+                mobileControls.style.display = 'none';
+            }
+        }
+
         function setupInputs() {
             window.addEventListener('keydown', (e) => {
                 if(gameState !== 'playing' && gameState !== 'dialogue') return;
@@ -830,8 +859,7 @@
             });
 
             // Touch Controls
-            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-                mobileControls.style.display = 'flex';
+            if (isTouchDevice) {
                 const bindTouch = (id, keyName, isEdge) => {
                     const btn = document.getElementById(id);
                     btn.addEventListener('touchstart', (e) => {
@@ -843,7 +871,9 @@
                         }
                         keys[keyName] = true;
                     });
-                    btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyName] = false; });
+                    const release = (e) => { e.preventDefault(); keys[keyName] = false; };
+                    btn.addEventListener('touchend', release);
+                    btn.addEventListener('touchcancel', release);
                 };
 
                 bindTouch('btn-left', 'left', false);
@@ -860,10 +890,17 @@
                     if(!keys.up) jumpPressedThisFrame = true;
                     keys.up = true;
                 });
-                btnJump.addEventListener('touchend', (e) => { e.preventDefault(); keys.up = false; });
+                const releaseJump = (e) => { e.preventDefault(); keys.up = false; };
+                btnJump.addEventListener('touchend', releaseJump);
+                btnJump.addEventListener('touchcancel', releaseJump);
                 
                 bindTouch('btn-dash', 'dash', true);
             }
+
+            // Universal dialogue tap-to-continue
+            const db = document.getElementById('dialogue-box');
+            db.addEventListener('click', advanceDialogue);
+            db.addEventListener('touchstart', (e) => { e.preventDefault(); advanceDialogue(); });
         }
 
         // Storytelling Engine Functions
@@ -879,7 +916,7 @@
             dialogueIndex = 0;
             gameState = 'dialogue';
             document.getElementById('dialogue-box').classList.remove('hidden');
-            hud.style.display = 'none'; // Hide HUD during dialogue
+            updateHUDVisibility(); // Hide HUD and mobile controls during dialogue
             
             // Stop player movement
             keys.left = keys.right = keys.up = keys.dash = false;
@@ -915,8 +952,8 @@
                 if(cb) {
                     cb(); 
                 } else {
-                    hud.style.display = 'block';
                     gameState = 'playing';
+                    updateHUDVisibility();
                 }
             } else {
                 prepareDialogueLine();
@@ -926,6 +963,7 @@
         function updateDialogue(dt) {
             if(!activeDialogue) return;
             const textElement = document.getElementById('dialogue-text');
+            const portraitElement = document.getElementById('dialogue-portrait');
             let currentLen = textElement.innerText.length;
             
             if (currentLen < typewriterText.length) {
@@ -935,6 +973,9 @@
                     textElement.innerText = typewriterText.substring(0, currentLen + 1);
                     if(currentLen % 2 === 0) playSound('blip'); // Tiny blip sound for speech
                 }
+                portraitElement.classList.add('talking');
+            } else {
+                portraitElement.classList.remove('talking');
             }
         }
 
@@ -1036,19 +1077,19 @@
                             player.x = px + (TILE_SIZE - player.width)/2;
                             player.y = py + (TILE_SIZE - player.height);
                         } else if (char === 'C') {
-                            interactables.push({ type: 'crystal', x: px + 12, y: py + 12, w: 24, h: 24, collected: false });
+                            interactables.push({ type: 'crystal', x: px + 8, y: py + 8, w: 16, h: 16, collected: false });
                             totalCrystalsInLevel++;
                         } else if (char === 'G') {
                             interactables.push({ type: 'goal', x: px, y: py, w: TILE_SIZE, h: TILE_SIZE });
                         } else if (char === 'S') {
-                            interactables.push({ type: 'spike', x: px, y: py + 24, w: TILE_SIZE, h: 24 });
+                            interactables.push({ type: 'spike', x: px, y: py + 16, w: TILE_SIZE, h: 16 });
                         } else if (char === '~') {
-                            interactables.push({ type: 'lava', x: px, y: py + 15, w: TILE_SIZE, h: 33 });
+                            interactables.push({ type: 'lava', x: px, y: py + 10, w: TILE_SIZE, h: 22 });
                         } else if (char === '^') {
-                            interactables.push({ type: 'spring', x: px, y: py + 24, w: TILE_SIZE, h: 24 });
+                            interactables.push({ type: 'spring', x: px, y: py + 16, w: TILE_SIZE, h: 16 });
                             // Draw spring base on map
                             mapCtx.fillStyle = '#7f8c8d';
-                            mapCtx.fillRect(px + 6, py + 39, TILE_SIZE - 12, 9);
+                            mapCtx.fillRect(px + 4, py + 26, TILE_SIZE - 8, 6);
                         }
                     }
                 }
@@ -1078,6 +1119,7 @@
 
             updateHUD();
             gameState = 'playing';
+            updateHUDVisibility();
             lastTime = performance.now();
             if(!animationFrameId) gameLoop(lastTime);
         }
@@ -1232,8 +1274,8 @@
                 if (player.wallJumpTimer > 0) {
                     player.wallJumpTimer -= dt;
                     // Reduced air control during wall jump stun for arc fluidity
-                    if (keys.left) player.vx = Math.max(player.vx - 2250 * dt, -player.speed * 1.3);
-                    else if (keys.right) player.vx = Math.min(player.vx + 2250 * dt, player.speed * 1.3);
+                    if (keys.left) player.vx = Math.max(player.vx - 1500 * dt, -player.speed * 1.3);
+                    else if (keys.right) player.vx = Math.min(player.vx + 1500 * dt, player.speed * 1.3);
                 } else {
                     // Normal Horizontal Movement with acceleration/friction
                     let targetVx = 0;
@@ -1318,23 +1360,32 @@
             }
 
             // Scarf Physics Trail
-            player.history.unshift({x: player.x + (player.facingRight ? 4 : player.width - 4), y: player.y + 6});
+            player.history.unshift({x: player.x + (player.facingRight ? 2 : player.width - 2), y: player.y + 4});
             if(player.history.length > 8) player.history.pop();
         }
 
         function update(dt) {
+            floatingTime += dt;
+
             if (gameState === 'dialogue') {
                 updateDialogue(dt);
                 return; // Freeze game logic while story is playing
             }
-            if (gameState !== 'playing') return;
-
-            floatingTime += dt;
+            
+            if (gameState !== 'playing' && gameState !== 'levelClear' && gameState !== 'gameOver' && gameState !== 'victory') {
+                // Cinematic Background Pan for menus
+                camera.x += 20 * dt * menuPanDir;
+                if (camera.x > mapWidth - GAME_WIDTH) menuPanDir = -1;
+                if (camera.x < 0) menuPanDir = 1;
+                
+                updateAndDrawParticles(dt);
+                return; 
+            }
 
             updatePlayer(dt);
 
             // Bounds check (Death)
-            if (player.y > mapHeight + 100) die();
+            if (gameState === 'playing' && player.y > mapHeight + 100) die();
 
             // Interactables
             // FIX: Using 'width' and 'height' instead of 'w' and 'h' to match checkAABB property expectations
@@ -1355,13 +1406,13 @@
                 else if (item.type === 'spike' || item.type === 'lava') {
                     // Forgiving hitbox (smaller than visuals)
                     let hazardBox = {x: item.x + 4, y: item.y + 8, w: item.w - 8, h: item.h - 8};
-                    if (checkAABB(pBox, hazardBox)) die();
+                    if (gameState === 'playing' && checkAABB(pBox, hazardBox)) die();
                 }
                 else if (item.type === 'spring') {
                     if (checkAABB(pBox, {x: item.x, y: item.y, w: item.w, h: item.h})) {
                         // Only bounce if falling on it
                         if(player.vy > 0 && player.y + player.height - player.vy*dt <= item.y + 7.5) {
-                            player.vy = -1125; // Huge boost
+                            player.vy = -750; // Huge boost
                             player.grounded = false;
                             player.isDashing = false; // Cancel dash on spring
                             if(player.dashCooldownTimer <= 0) player.canDash = true; // Refill dash
@@ -1372,7 +1423,7 @@
                     }
                 }
                 else if (item.type === 'goal') {
-                    if (checkAABB(pBox, item) && crystalsCollected >= totalCrystalsInLevel) {
+                    if (gameState === 'playing' && checkAABB(pBox, item) && crystalsCollected >= totalCrystalsInLevel) {
                         levelComplete();
                     }
                 }
@@ -1428,17 +1479,17 @@
 
             // Eye
             ctx.fillStyle = '#2c3e50';
-            ctx.fillRect(player.width/4 - 3, -player.height/4 + yOffset, 9, 9);
+            ctx.fillRect(player.width/4 - 2, -player.height/4 + yOffset, 6, 6);
             ctx.fillStyle = player.colorEye; // Glowing eye center
-            ctx.fillRect(player.width/4, -player.height/4 + 3 + yOffset, 3, 3);
+            ctx.fillRect(player.width/4, -player.height/4 + 2 + yOffset, 2, 2);
             // Headband
             ctx.fillStyle = player.colorBand;
-            ctx.fillRect(-player.width/2, -player.height/2 + 6 + yOffset, player.width, 6);
+            ctx.fillRect(-player.width/2, -player.height/2 + 4 + yOffset, player.width, 4);
 
             // Wall slide specific graphics
             if(player.state === 'wall') {
                 ctx.fillStyle = '#bdc3c7';
-                ctx.fillRect(player.width/2, -6, 3, 12); // Hands on wall
+                ctx.fillRect(player.width/2, -4, 2, 8); // Hands on wall
             }
 
             ctx.restore();
@@ -1466,17 +1517,17 @@
                 let drawY = Math.round(item.y - camera.y);
 
                 if (item.type === 'crystal' && !item.collected) {
-                    let floatY = drawY + Math.sin(floatingTime * 3) * 6;
+                    let floatY = drawY + Math.sin(floatingTime * 3) * 4;
                     ctx.fillStyle = '#f1c40f';
                     ctx.beginPath();
-                    ctx.moveTo(drawX + 12, floatY);
-                    ctx.lineTo(drawX + 24, floatY + 12);
-                    ctx.lineTo(drawX + 12, floatY + 24);
-                    ctx.lineTo(drawX, floatY + 12);
+                    ctx.moveTo(drawX + 8, floatY);
+                    ctx.lineTo(drawX + 16, floatY + 8);
+                    ctx.lineTo(drawX + 8, floatY + 16);
+                    ctx.lineTo(drawX, floatY + 8);
                     ctx.fill();
                     // White core
                     ctx.fillStyle = '#fff';
-                    ctx.fillRect(drawX + 9, floatY + 9, 6, 6);
+                    ctx.fillRect(drawX + 6, floatY + 6, 4, 4);
                 } 
                 else if (item.type === 'spike') {
                     ctx.fillStyle = '#bdc3c7';
@@ -1490,17 +1541,17 @@
                 }
                 else if (item.type === 'spring') {
                     // Animated top part of spring
-                    let bounceOffset = (player.state === 'jump' && player.vy < -900 && Math.abs(player.x - item.x) < 60 && Math.abs(player.y - item.y) < 60) ? 12 : 0;
+                    let bounceOffset = (player.state === 'jump' && player.vy < -600 && Math.abs(player.x - item.x) < 40 && Math.abs(player.y - item.y) < 40) ? 8 : 0;
                     ctx.fillStyle = '#e67e22';
-                    ctx.fillRect(drawX + 6, drawY + bounceOffset, item.w - 12, item.h - bounceOffset);
+                    ctx.fillRect(drawX + 4, drawY + bounceOffset, item.w - 8, item.h - bounceOffset);
                 }
                 else if (item.type === 'lava') {
                     // Animated Lava
                     ctx.fillStyle = '#e74c3c';
                     ctx.fillRect(drawX, drawY, item.w, item.h);
                     ctx.fillStyle = '#f1c40f';
-                    let wave = Math.sin(floatingTime * 5 + item.x) * 4.5;
-                    ctx.fillRect(drawX, drawY + wave, item.w, 6);
+                    let wave = Math.sin(floatingTime * 5 + item.x) * 3;
+                    ctx.fillRect(drawX, drawY + wave, item.w, 4);
                 }
                 else if (item.type === 'goal') {
                     let active = crystalsCollected >= totalCrystalsInLevel;
@@ -1564,37 +1615,37 @@
             // Player Light
             let px = Math.round(player.x + player.width/2 - camera.x);
             let py = Math.round(player.y + player.height/2 - camera.y);
-            let pulse = Math.sin(floatingTime * 4) * 15;
+            let pulse = Math.sin(floatingTime * 4) * 10;
             
-            let pGrad = lightCtx.createRadialGradient(px, py, 15, px, py, 180 + pulse);
+            let pGrad = lightCtx.createRadialGradient(px, py, 10, px, py, 120 + pulse);
             pGrad.addColorStop(0, 'rgba(0,0,0,1)');
             pGrad.addColorStop(1, 'rgba(0,0,0,0)');
             lightCtx.fillStyle = pGrad;
             lightCtx.beginPath();
-            lightCtx.arc(px, py, 180 + pulse, 0, Math.PI*2);
+            lightCtx.arc(px, py, 120 + pulse, 0, Math.PI*2);
             lightCtx.fill();
 
             // Crystal Lights
             interactables.forEach(item => {
                 if (item.type === 'crystal' && !item.collected) {
-                    let cx = Math.round(item.x + 12 - camera.x);
-                    let cy = Math.round(item.y + 12 - camera.y + Math.sin(floatingTime * 3) * 6);
-                    let cGrad = lightCtx.createRadialGradient(cx, cy, 0, cx, cy, 75);
+                    let cx = Math.round(item.x + 8 - camera.x);
+                    let cy = Math.round(item.y + 8 - camera.y + Math.sin(floatingTime * 3) * 4);
+                    let cGrad = lightCtx.createRadialGradient(cx, cy, 0, cx, cy, 50);
                     cGrad.addColorStop(0, 'rgba(0,0,0,0.8)');
                     cGrad.addColorStop(1, 'rgba(0,0,0,0)');
                     lightCtx.fillStyle = cGrad;
                     lightCtx.beginPath();
-                    lightCtx.arc(cx, cy, 75, 0, Math.PI*2);
+                    lightCtx.arc(cx, cy, 50, 0, Math.PI*2);
                     lightCtx.fill();
                 } else if (item.type === 'lava') {
                     // Lava glow
                     let lx = Math.round(item.x + item.w/2 - camera.x);
                     let ly = Math.round(item.y - camera.y);
-                    let lGrad = lightCtx.createRadialGradient(lx, ly, 0, lx, ly, 90);
+                    let lGrad = lightCtx.createRadialGradient(lx, ly, 0, lx, ly, 60);
                     lGrad.addColorStop(0, 'rgba(0,0,0,0.5)');
                     lGrad.addColorStop(1, 'rgba(0,0,0,0)');
                     lightCtx.fillStyle = lGrad;
-                    lightCtx.fillRect(lx - 90, ly - 90, 180, 180);
+                    lightCtx.fillRect(lx - 60, ly - 60, 120, 120);
                 }
             });
 
@@ -1660,10 +1711,8 @@
             if (dt > 0.1) dt = 0.1; // Cap dt to prevent massive jumps on lag/tab out
             lastTime = timestamp;
 
-            if (gameState === 'playing' || gameState === 'dialogue') {
-                update(dt);
-                draw();
-            }
+            update(dt);
+            draw();
 
             // Reset edge triggers
             jumpPressedThisFrame = false;
@@ -1674,7 +1723,6 @@
 
         function showScreen(screenId) {
             Object.values(screens).forEach(s => s.classList.add('hidden'));
-            hud.style.display = 'none';
             if (screens[screenId]) {
                 screens[screenId].classList.remove('hidden');
                 screens[screenId].style.opacity = 0;
@@ -1731,14 +1779,23 @@
             // Play introductory dialogue
             triggerDialogue('intro', () => {
                 currentLevelIndex = 0;
-                hud.style.display = 'block';
                 loadLevel(currentLevelIndex);
             });
         });
 
         document.getElementById('next-level-btn').addEventListener('click', () => {
             currentLevelIndex++;
-            hud.style.display = 'block';
+            showScreen('none');
+            loadLevel(currentLevelIndex);
+        });
+
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            showScreen('none');
+            loadLevel(currentLevelIndex);
+        });
+
+        document.getElementById('play-again-btn').addEventListener('click', () => {
+            currentLevelIndex = 0;
             showScreen('none');
             loadLevel(currentLevelIndex);
         });
@@ -1767,7 +1824,6 @@
                 btn.addEventListener('click', () => {
                     initAudio();
                     currentLevelIndex = idx;
-                    hud.style.display = 'block';
                     showScreen('none');
                     loadLevel(currentLevelIndex);
                 });
@@ -1834,12 +1890,57 @@
             showScreen('start');
         });
 
+        function initMenuBackground() {
+            const levelData = levels[0];
+            currentLevelIndex = 0;
+            
+            mapGrid = [];
+            const grid = levelData.grid;
+            mapHeight = grid.length * TILE_SIZE;
+            mapWidth = grid[0].length * TILE_SIZE;
+            
+            mapCanvas.width = mapWidth;
+            mapCanvas.height = mapHeight;
+            mapCtx.clearRect(0, 0, mapWidth, mapHeight);
+
+            for (let y = 0; y < grid.length; y++) {
+                let row = [];
+                for (let x = 0; x < grid[y].length; x++) {
+                    const char = grid[y][x];
+                    if (char === '#') {
+                        row.push(1);
+                        const isTop = (y === 0 || grid[y-1][x] !== '#');
+                        generateTileTexture(mapCtx, x * TILE_SIZE, y * TILE_SIZE, levelData.theme, isTop);
+                    } else {
+                        row.push(0);
+                    }
+                }
+                mapGrid.push(row);
+            }
+
+            ambientParticles = [];
+            for(let i=0; i<40; i++) {
+                ambientParticles.push({
+                    x: Math.random() * mapWidth,
+                    y: Math.random() * mapHeight,
+                    size: Math.random() * 2 + 1,
+                    speed: Math.random() * 10 + 5,
+                    offset: Math.random() * Math.PI * 2
+                });
+            }
+            
+            // Spawn player safely offscreen for menus
+            player.x = 0;
+            player.y = 0;
+            
+            if(!animationFrameId) gameLoop(performance.now());
+        }
+
         // Initialize setup
         setupInputs();
         
-        // Render a static frame for the background menu
-        generateTileTexture(mapCtx, 0, 0, 'forest', true); // Warmup texture Gen
-        drawParallax(levels[0]);
+        // Launch cinematic menu background
+        initMenuBackground();
 
     </script>
 </body>
