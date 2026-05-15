@@ -165,6 +165,26 @@
             pointer-events: auto;
         }
 
+        .remap-btn {
+            background: rgba(0,0,0,0.6);
+            border: 2px solid #fff;
+            color: #ecf0f1;
+            padding: 10px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.6rem;
+            cursor: pointer;
+            border-radius: 4px;
+            width: calc(50% - 10px);
+            margin: 0;
+            box-shadow: 0 4px 0 #555;
+            transition: all 0.1s;
+        }
+        .remap-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #555;
+        }
+
         .btn-control {
             width: 65px;
             height: 65px;
@@ -349,9 +369,10 @@
             h1 { font-size: 1.8rem; }
             p { font-size: 0.6rem; margin-bottom: 10px; }
             button { font-size: 0.8rem; padding: 12px 24px; border-width: 3px; }
-            .btn-control { width: 55px; height: 55px; font-size: 1.2rem; touch-action: manipulation; }
+            .btn-control { width: 70px; height: 70px; font-size: 1.5rem; touch-action: none; margin: 0 5px; }
+            .control-group { gap: 10px; }
             .controls-text { display: none; } /* Hide complex kb controls on mobile */
-            #mobile-controls { bottom: max(20px, env(safe-area-inset-bottom)); }
+            #mobile-controls { bottom: max(30px, env(safe-area-inset-bottom)); padding: 0 15px; }
         }
     </style>
 </head>
@@ -404,6 +425,15 @@
                 <p class="mb-4"><span class="highlight">SPACE / W / UP</span> : Jump <br><span class="text-gray-400" style="font-size:0.6rem;">(Hold against walls to Wall-Slide/Jump)</span></p>
                 <p class="mb-0"><span class="action">SHIFT / Z / X</span> : Dash <br><span class="text-gray-400" style="font-size:0.6rem;">(Mid-air or Ground)</span></p>
             </div>
+
+            <div style="font-size: 0.8rem; margin-bottom: 10px; color: #f1c40f; text-shadow: 1px 1px 0 #000;">REMAP CONTROLS</div>
+            <div id="remap-container" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 25px; max-width: 400px;">
+                <button class="remap-btn" id="remap-left">LEFT: Default</button>
+                <button class="remap-btn" id="remap-right">RIGHT: Default</button>
+                <button class="remap-btn" id="remap-up">JUMP: Default</button>
+                <button class="remap-btn" id="remap-dash">DASH: Default</button>
+            </div>
+
             <button id="back-from-controls-btn" style="background: linear-gradient(to bottom, #e74c3c, #c0392b);">Back</button>
         </div>
 
@@ -601,11 +631,11 @@
             facingRight: true,
             
             // Movement fluidity
-            accel: 15,
-            airAccel: 8,
-            coyoteTime: 0.1,
+            accel: 25,
+            airAccel: 12,
+            coyoteTime: 0.15,
             coyoteTimer: 0,
-            jumpBufferTime: 0.15,
+            jumpBufferTime: 0.2,
             jumpBufferTimer: 0,
             
             // Complex Mechanics
@@ -841,14 +871,14 @@
                     "................................................................................",
                     "............................................................................G...",
                     "..........................................................................#####.",
-                    "..........................C.....................................................",
-                    ".........................###...................................C................",
-                    "..P......................................C....................###...............",
-                    "#####...................................###.....................................",
-                    "#####.........................S.................................................",
-                    "#####...C....................###.................S...................S..........",
-                    "#####..###..........^.........#.........^.......###........^........###.........",
-                    "#####S~~~~S#######~###~#######~~~~~#######~~~~~#####~~~~~~###~~~~~~#####~~~~~~~~",
+                    "..........................................C.....................................",
+                    "........................C................###...................C................",
+                    "..P....................###.......................S............###...............",
+                    "#####..........................S...S...........#####............................",
+                    "#####...S...............S....#######.......................S##..##S.............",
+                    "#####..###..............#..................................####..###............",
+                    "#####..###..C.......C...#...........^...........###........####..###............",
+                    "#####~~~~~~###~^~###~~~###~~~~~###~~~~~#######~~~~~~~~~~~~######S###~~~~~~~~~~~~",
                     "################################################################################"
                 ]
             }
@@ -866,12 +896,52 @@
             }
         }
 
+        let customKeys = { left: null, right: null, up: null, dash: null };
+        let isRemapping = false;
+        let remapAction = '';
+
+        function formatKey(code) {
+            if (!code) return '';
+            return code.replace('Key', '').replace('Arrow', '').replace('ShiftLeft', 'LShift').replace('ShiftRight', 'RShift');
+        }
+
         function setupInputs() {
+            // Remap Button Listeners
+            const actions = ['left', 'right', 'up', 'dash'];
+            actions.forEach(action => {
+                const btn = document.getElementById(`remap-${action}`);
+                if (btn) {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (isRemapping) return;
+                        isRemapping = true;
+                        remapAction = action;
+                        btn.innerText = 'PRESS KEY...';
+                        btn.style.borderColor = '#f1c40f';
+                    });
+                }
+            });
+
             window.addEventListener('keydown', (e) => {
+                if (isRemapping) {
+                    e.preventDefault();
+                    customKeys[remapAction] = e.code;
+                    const btn = document.getElementById(`remap-${remapAction}`);
+                    btn.innerText = `${remapAction.toUpperCase()}: ${formatKey(e.code)}`;
+                    btn.style.borderColor = '#fff';
+                    isRemapping = false;
+                    return;
+                }
+
                 if(gameState !== 'playing' && gameState !== 'dialogue') return;
                 initAudio();
                 
-                if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
+                let isUp = customKeys.up ? (e.code === customKeys.up) : (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW');
+                let isLeft = customKeys.left ? (e.code === customKeys.left) : (e.code === 'ArrowLeft' || e.code === 'KeyA');
+                let isRight = customKeys.right ? (e.code === customKeys.right) : (e.code === 'ArrowRight' || e.code === 'KeyD');
+                let isDash = customKeys.dash ? (e.code === customKeys.dash) : (e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'KeyZ' || e.code === 'KeyX');
+
+                if (isUp) {
                     if (gameState === 'dialogue') {
                         advanceDialogue();
                         return;
@@ -882,20 +952,27 @@
 
                 if(gameState !== 'playing') return; // Block other inputs during dialogue
                 
-                if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
-                if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
+                if (isLeft) keys.left = true;
+                if (isRight) keys.right = true;
                 
-                if (e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'KeyZ' || e.code === 'KeyX') {
+                if (isDash) {
                     if(!keys.dash) dashPressedThisFrame = true;
                     keys.dash = true;
                 }
             });
 
             window.addEventListener('keyup', (e) => {
-                if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
-                if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
-                if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') keys.up = false;
-                if (e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'KeyZ' || e.code === 'KeyX') keys.dash = false;
+                if (isRemapping) return;
+
+                let isUp = customKeys.up ? (e.code === customKeys.up) : (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW');
+                let isLeft = customKeys.left ? (e.code === customKeys.left) : (e.code === 'ArrowLeft' || e.code === 'KeyA');
+                let isRight = customKeys.right ? (e.code === customKeys.right) : (e.code === 'ArrowRight' || e.code === 'KeyD');
+                let isDash = customKeys.dash ? (e.code === customKeys.dash) : (e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'KeyZ' || e.code === 'KeyX');
+
+                if (isLeft) keys.left = false;
+                if (isRight) keys.right = false;
+                if (isUp) keys.up = false;
+                if (isDash) keys.dash = false;
             });
 
             // Touch Controls
@@ -916,8 +993,33 @@
                     btn.addEventListener('touchcancel', release);
                 };
 
-                bindTouch('btn-left', 'left', false);
-                bindTouch('btn-right', 'right', false);
+                // Advanced Slide Support for Directional Buttons
+                const leftBtn = document.getElementById('btn-left');
+                const rightBtn = document.getElementById('btn-right');
+                
+                const handleDpad = (e) => {
+                    e.preventDefault();
+                    if(gameState !== 'playing') return;
+                    
+                    let touchLeft = false;
+                    let touchRight = false;
+                    
+                    for(let i = 0; i < e.touches.length; i++) {
+                        const touch = e.touches[i];
+                        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+                        if(target === leftBtn) touchLeft = true;
+                        if(target === rightBtn) touchRight = true;
+                    }
+                    
+                    keys.left = touchLeft;
+                    keys.right = touchRight;
+                };
+
+                const dpadGroup = leftBtn.parentElement;
+                dpadGroup.addEventListener('touchstart', (e) => { initAudio(); handleDpad(e); });
+                dpadGroup.addEventListener('touchmove', handleDpad);
+                dpadGroup.addEventListener('touchend', handleDpad);
+                dpadGroup.addEventListener('touchcancel', handleDpad);
                 
                 const btnJump = document.getElementById('btn-jump');
                 btnJump.addEventListener('touchstart', (e) => {
@@ -1328,7 +1430,11 @@
                     }
                     
                     let currentAccel = player.grounded ? player.accel : player.airAccel;
-                    player.vx += (targetVx - player.vx) * currentAccel * dt;
+                    if (targetVx === 0) {
+                        player.vx += (targetVx - player.vx) * (currentAccel * 1.5) * dt; // Extra friction for snappy stop
+                    } else {
+                        player.vx += (targetVx - player.vx) * currentAccel * dt;
+                    }
                     
                     // Stop completely if very slow to prevent sliding forever
                     if (Math.abs(player.vx) < 5 && targetVx === 0) player.vx = 0;
