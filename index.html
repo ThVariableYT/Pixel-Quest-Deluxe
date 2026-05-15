@@ -436,6 +436,33 @@
             transform: scale(1.1);
         }
 
+        #pause-btn-mobile {
+            position: absolute;
+            top: 20px;
+            right: 70px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: none; /* Flex when in game */
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 100;
+            backdrop-filter: blur(2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            text-shadow: 2px 2px 0 #000;
+            margin: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #pause-btn-mobile:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.1);
+        }
+
         @media (max-width: 768px) {
             .title-pixel { font-size: 2.2rem; }
             .title-quest { font-size: 3.2rem; margin-top: -2px; }
@@ -459,6 +486,7 @@
         <div id="transition-screen" class="overlay active"></div>
 
         <!-- HUD -->
+        <button id="pause-btn-mobile" title="Pause Game">⏸</button>
         <div id="hud">
             <div id="level-display" class="text-white mb-2" style="font-size: 0.6rem; color:#bdc3c7;">Area 1</div>
             <div id="timer-display" class="text-white mb-2" style="font-size: 0.6rem; color:#bdc3c7;">Time: 0.00s</div>
@@ -562,6 +590,12 @@
             <button id="back-to-start-btn-char" style="background: linear-gradient(to bottom, #e74c3c, #c0392b);">Back</button>
         </div>
 
+        <div id="pause-screen" class="overlay hidden">
+            <h1 style="color: #3498db; text-shadow: 4px 4px 0 #2980b9;">PAUSED</h1>
+            <button id="resume-btn" style="background: linear-gradient(to bottom, #f1c40f, #e67e22);">Resume</button>
+            <button id="quit-to-menu-btn" style="background: linear-gradient(to bottom, #e74c3c, #c0392b);">Quit to Menu</button>
+        </div>
+
         <div id="level-screen" class="overlay hidden">
             <h1 id="level-title">Area Cleared!</h1>
             <p id="level-desc">Crystals secured. Power returning.</p>
@@ -609,12 +643,21 @@
         lightCanvas.height = GAME_HEIGHT;
         const lightCtx = lightCanvas.getContext('2d');
 
+        // Local Storage for Best Times
+        let bestTimes = {};
+        try {
+            bestTimes = JSON.parse(localStorage.getItem('pixelQuestBestTimes')) || {};
+        } catch(e) {
+            console.warn('LocalStorage not available');
+        }
+
         // UI Elements
         const screens = {
             start: document.getElementById('start-screen'),
             controls: document.getElementById('controls-screen'),
             levelSelect: document.getElementById('level-select-screen'),
             charSelect: document.getElementById('char-select-screen'),
+            pause: document.getElementById('pause-screen'),
             level: document.getElementById('level-screen'),
             gameOver: document.getElementById('game-over-screen'),
             victory: document.getElementById('victory-screen')
@@ -625,6 +668,7 @@
         const crystalDisplay = document.getElementById('crystal-display');
         const dashBar = document.getElementById('dash-bar');
         const mobileControls = document.getElementById('mobile-controls');
+        const pauseBtnMobile = document.getElementById('pause-btn-mobile');
         const transitionScreen = document.getElementById('transition-screen');
 
         // Audio Engine (Retro Synth)
@@ -849,7 +893,9 @@
         let ambientParticles = [];
         let weatherParticles = [];
         let floatingTexts = [];
+        let shockwaves = [];
         let screenShake = 0;
+        let damageFlash = 0;
         let floatingTime = 0; // Global time for animations
         let levelTimer = 0;   // Speedrun timer
 
@@ -1140,9 +1186,11 @@
         function updateHUDVisibility() {
             if (gameState === 'playing') {
                 hud.style.display = 'block';
+                pauseBtnMobile.style.display = 'flex';
                 if (isTouchDevice) mobileControls.style.display = 'flex';
             } else {
                 hud.style.display = 'none';
+                pauseBtnMobile.style.display = 'none';
                 mobileControls.style.display = 'none';
             }
         }
@@ -1181,6 +1229,19 @@
                     btn.innerText = `${remapAction.toUpperCase()}: ${formatKey(e.code)}`;
                     btn.style.borderColor = '#fff';
                     isRemapping = false;
+                    return;
+                }
+
+                // Pause Toggle System
+                if (e.code === 'Escape' || e.code === 'KeyP') {
+                    if (gameState === 'playing') {
+                        gameState = 'paused';
+                        showScreen('pause');
+                    } else if (gameState === 'paused') {
+                        gameState = 'playing';
+                        showScreen('none');
+                        lastTime = performance.now(); // Prevent dt jump
+                    }
                     return;
                 }
 
@@ -1289,6 +1350,17 @@
                 
                 bindTouch('btn-dash', 'dash', true);
             }
+
+            // Mobile Pause Button Setup
+            const togglePauseMobile = (e) => {
+                e.preventDefault();
+                if (gameState === 'playing') {
+                    gameState = 'paused';
+                    showScreen('pause');
+                }
+            };
+            pauseBtnMobile.addEventListener('click', togglePauseMobile);
+            pauseBtnMobile.addEventListener('touchstart', togglePauseMobile);
 
             // Universal dialogue tap-to-continue
             const db = document.getElementById('dialogue-box');
@@ -1446,6 +1518,7 @@
                 ambientParticles = [];
                 weatherParticles = [];
                 floatingTexts = [];
+                shockwaves = [];
                 crystalsCollected = 0;
                 totalCrystalsInLevel = 0;
                 player.history = [];
@@ -1591,6 +1664,25 @@
             }
 
             ctx.globalAlpha = 1.0;
+        }
+
+        function updateAndDrawShockwaves(dt) {
+            ctx.save();
+            for (let i = shockwaves.length - 1; i >= 0; i--) {
+                let s = shockwaves[i];
+                s.radius += 150 * dt;
+                s.life -= 2 * dt;
+                if (s.life <= 0) {
+                    shockwaves.splice(i, 1);
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(Math.round(s.x - camera.x), Math.round(s.y - camera.y), s.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(241, 196, 15, ${s.life})`;
+                    ctx.lineWidth = 2 + (s.life * 3);
+                    ctx.stroke();
+                }
+            }
+            ctx.restore();
         }
 
         function updateAndDrawWeather(dt, theme) {
@@ -1878,6 +1970,14 @@
 
         function update(dt) {
             floatingTime += dt;
+            
+            // Handle Damage Flash Decay
+            if (damageFlash > 0) damageFlash -= dt * 2;
+
+            // Pause State Logic
+            if (gameState === 'paused') {
+                return; // Freeze game logic entirely when paused
+            }
 
             if (gameState === 'dialogue') {
                 updateDialogue(dt);
@@ -1916,6 +2016,7 @@
                         crystalsCollected++;
                         playSound('crystal');
                         spawnParticles(item.x + 8, item.y + 8, '#f1c40f', 30);
+                        shockwaves.push({ x: item.x + 8, y: floatY + 8, radius: 0, life: 1 });
                         spawnFloatingText(item.x + 8, item.y - 10, "+1 Crystal", "#f1c40f");
                         updateHUD();
                     }
@@ -2043,8 +2144,10 @@
                     ctx.lineTo(drawX, floatY + 8);
                     ctx.fill();
                     // White core
+                    // Add a subtle inner pulse to uncollected crystals
+                    let innerSize = 2 + Math.sin(floatingTime * 10) * 1;
                     ctx.fillStyle = '#fff';
-                    ctx.fillRect(drawX + 6, floatY + 6, 4, 4);
+                    ctx.fillRect(drawX + 8 - innerSize, floatY + 8 - innerSize, innerSize * 2, innerSize * 2);
                 } 
                 else if (item.type === 'spike') {
                     ctx.fillStyle = '#bdc3c7';
@@ -2072,15 +2175,27 @@
                 }
                 else if (item.type === 'goal') {
                     let active = crystalsCollected >= totalCrystalsInLevel;
+                    let cx = drawX + item.w/2;
+                    let cy = drawY + item.h/2;
+                    
                     ctx.fillStyle = active ? '#9b59b6' : '#34495e';
                     ctx.beginPath();
-                    ctx.arc(drawX + item.w/2, drawY + item.h/2, item.w/2 - 3, 0, Math.PI * 2);
+                    ctx.arc(cx, cy, item.w/2 - 3, 0, Math.PI * 2);
                     ctx.fill();
+                    
                     if(active) {
+                        // Spinning Inner Vortex 
+                        ctx.save();
+                        ctx.translate(cx, cy);
+                        ctx.rotate(floatingTime * 3);
                         ctx.fillStyle = '#e056fd';
-                        ctx.beginPath();
-                        ctx.arc(drawX + item.w/2, drawY + item.h/2, item.w/4 + Math.sin(floatingTime*10)*3, 0, Math.PI * 2);
-                        ctx.fill();
+                        for(let i=0; i<4; i++) {
+                            ctx.rotate(Math.PI / 2);
+                            ctx.beginPath();
+                            ctx.arc(10, 0, 4 + Math.sin(floatingTime*10)*2, 0, Math.PI*2);
+                            ctx.fill();
+                        }
+                        ctx.restore();
                     }
                 }
             });
@@ -2197,21 +2312,28 @@
             // 3. Dynamic Weather (rendered behind interactables but in front of map)
             updateAndDrawWeather(0.016, levelData.theme);
 
-            // 4. Interactables
+            // 4. Shockwaves (Crystal collection FX)
+            updateAndDrawShockwaves(0.016);
+
+            // 5. Interactables
             drawInteractables();
 
-            // 5. Player & Scarf
+            // 6. Player & Scarf
             drawPlayer();
 
-            // 6. Particles & Floating Text
-            updateAndDrawParticles(0.016); // Assuming ~60fps for drawing step
-            updateAndDrawFloatingText(0.016);
+            // 7. Particles & Floating Text
+            if (gameState !== 'paused') {
+                updateAndDrawParticles(0.016); // Assuming ~60fps for drawing step
+                updateAndDrawFloatingText(0.016);
+            }
 
             // Draw floating ambient particles (Front layer)
             ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
             ambientParticles.forEach(p => {
-                p.y -= p.speed * 0.016;
-                p.x += Math.sin(floatingTime + p.offset) * 0.5;
+                if (gameState !== 'paused') {
+                    p.y -= p.speed * 0.016;
+                    p.x += Math.sin(floatingTime + p.offset) * 0.5;
+                }
                 if (p.y < -10) p.y = mapHeight + 10;
                 
                 let px = Math.round(p.x - camera.x);
@@ -2221,8 +2343,14 @@
                 }
             });
 
-            // 7. Lighting Overlay
+            // 8. Lighting Overlay
             drawLighting(levelData);
+
+            // 9. Damage Flash Overlay
+            if (damageFlash > 0) {
+                ctx.fillStyle = `rgba(231, 76, 60, ${damageFlash})`;
+                ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+            }
 
             ctx.restore();
         }
@@ -2266,6 +2394,7 @@
             stopAmbientMusic();
             playSound('die');
             screenShake = 0.5;
+            damageFlash = 1.0;
             spawnParticles(player.x + player.width/2, player.y + player.height/2, '#e74c3c', 50, 300);
             draw(); // Draw final frame with explosion
             setTimeout(() => showScreen('gameOver'), 500);
@@ -2275,6 +2404,16 @@
             if (gameState === 'gameOver' || gameState === 'levelClear' || gameState === 'victory') return;
             gameState = 'levelClear';
             
+            // Check for Best Time / Speedrun Record
+            let isNewRecord = false;
+            if (!bestTimes[currentLevelIndex] || levelTimer < bestTimes[currentLevelIndex]) {
+                bestTimes[currentLevelIndex] = levelTimer;
+                try {
+                    localStorage.setItem('pixelQuestBestTimes', JSON.stringify(bestTimes));
+                } catch(e) {}
+                isNewRecord = true;
+            }
+
             // Fade out the screen for cinematic effect
             transitionScreen.classList.add('active');
 
@@ -2282,7 +2421,7 @@
                 transitionScreen.classList.remove('active');
                 
                 document.getElementById('level-desc').innerText = `Recovered ${crystalsCollected} / ${totalCrystalsInLevel} Crystals.`;
-                document.getElementById('level-time').innerText = `Time: ${levelTimer.toFixed(2)}s`;
+                document.getElementById('level-time').innerText = `Time: ${levelTimer.toFixed(2)}s` + (isNewRecord ? ' (NEW RECORD!)' : '');
                 playSound('crystal');
                 
                 // Trigger storytelling sequence after level clears
@@ -2332,6 +2471,21 @@
             loadLevel(currentLevelIndex);
         });
 
+        // Pause Menu Listeners
+        document.getElementById('resume-btn').addEventListener('click', () => {
+            gameState = 'playing';
+            showScreen('none');
+            lastTime = performance.now(); // Reset time to prevent dt spike jump
+        });
+
+        document.getElementById('quit-to-menu-btn').addEventListener('click', () => {
+            stopAmbientMusic();
+            playAmbientMusic('menu');
+            showScreen('start');
+            gameState = 'start';
+            initMenuBackground();
+        });
+
         // Level Select Logic
         function populateLevelSelect() {
             const grid = document.getElementById('level-grid');
@@ -2339,7 +2493,11 @@
             levels.forEach((lvl, idx) => {
                 const btn = document.createElement('button');
                 btn.style.cssText = 'background: rgba(0,0,0,0.5); font-size: 0.7rem; padding: 10px; width: 100%; max-width: 200px; border: 2px solid #fff; border-radius: 4px; color: white; cursor: pointer; text-align: center;';
-                btn.innerText = `${idx + 1}. ${lvl.name}`;
+                
+                let bestTime = bestTimes[idx];
+                let timeText = bestTime ? `<br><span style="color:#f1c40f; font-size:0.5rem; text-shadow:none;">Best: ${bestTime.toFixed(2)}s</span>` : '';
+                
+                btn.innerHTML = `${idx + 1}. ${lvl.name}${timeText}`;
                 btn.addEventListener('click', () => {
                     initAudio();
                     currentLevelIndex = idx;
