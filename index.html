@@ -236,15 +236,6 @@
             transition: width 0.1s;
         }
 
-        .scanlines {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.15));
-            background-size: 100% 4px;
-            pointer-events: none;
-            z-index: 11;
-        }
-
         .vignette {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -379,7 +370,6 @@
 <body>
     <div id="game-container">
         <!-- Post-processing Overlays -->
-        <div class="scanlines"></div>
         <div class="vignette"></div>
 
         <!-- HUD -->
@@ -518,10 +508,145 @@
         // Audio Engine (Retro Synth)
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx;
+        let ambientOscillators = [];
+        let ambientGain = null;
+        let ambientInterval = null;
 
         function initAudio() {
             if (!audioCtx) audioCtx = new AudioContext();
             if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function stopAmbientMusic() {
+            if (ambientGain) {
+                try {
+                    ambientGain.gain.cancelScheduledValues(audioCtx.currentTime);
+                    ambientGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1);
+                } catch(e) {}
+                setTimeout(() => {
+                    ambientOscillators.forEach(osc => { try { osc.stop(); osc.disconnect(); } catch(e){} });
+                    ambientOscillators = [];
+                    if (ambientGain) ambientGain.disconnect();
+                    ambientGain = null;
+                }, 1000);
+            }
+            if (ambientInterval) {
+                clearInterval(ambientInterval);
+                ambientInterval = null;
+            }
+        }
+
+        function playAmbientMusic(theme) {
+            if (!audioCtx) return;
+            stopAmbientMusic();
+
+            ambientGain = audioCtx.createGain();
+            ambientGain.gain.setValueAtTime(0, audioCtx.currentTime);
+            ambientGain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 2); // Fade in
+            
+            // Subtle master filter for ambient layer
+            let filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 1000;
+            
+            ambientGain.connect(filter);
+            filter.connect(audioCtx.destination);
+
+            const t = audioCtx.currentTime;
+
+            function createDrone(type, freq, detune = 0) {
+                let osc = audioCtx.createOscillator();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, t);
+                osc.detune.setValueAtTime(detune, t);
+                
+                // LFO for slow evolving sound
+                let lfo = audioCtx.createOscillator();
+                lfo.type = 'sine';
+                lfo.frequency.setValueAtTime(0.05 + Math.random() * 0.1, t);
+                let lfoGain = audioCtx.createGain();
+                lfoGain.gain.setValueAtTime(15, t); // pitch wobble depth
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+                lfo.start(t);
+
+                osc.connect(ambientGain);
+                osc.start(t);
+                ambientOscillators.push(osc, lfo);
+            }
+
+            function createPing(freqBase) {
+                ambientInterval = setInterval(() => {
+                    if (gameState !== 'playing' && gameState !== 'start' && gameState !== 'dialogue') return;
+                    let osc = audioCtx.createOscillator();
+                    let gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    
+                    const pentatonic = [1, 1.122, 1.259, 1.498, 1.681, 2];
+                    let note = freqBase * pentatonic[Math.floor(Math.random() * pentatonic.length)];
+                    
+                    osc.frequency.setValueAtTime(note, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 0.5);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 4);
+                    
+                    osc.connect(gain);
+                    gain.connect(ambientGain);
+                    osc.start(audioCtx.currentTime);
+                    osc.stop(audioCtx.currentTime + 4);
+                }, 3500);
+            }
+
+            switch(theme) {
+                case 'forest':
+                    createDrone('triangle', 110);
+                    createDrone('sine', 220, 5);
+                    createPing(440);
+                    break;
+                case 'cave':
+                    createDrone('sine', 65);
+                    createDrone('triangle', 130, -10);
+                    filter.frequency.value = 500;
+                    break;
+                case 'volcano':
+                    createDrone('square', 55);
+                    createDrone('sawtooth', 110, 15);
+                    filter.frequency.value = 400;
+                    createPing(165);
+                    break;
+                case 'ice':
+                    createDrone('sine', 440);
+                    createDrone('sine', 880, 5);
+                    createPing(880);
+                    break;
+                case 'void':
+                    createDrone('sine', 40);
+                    createDrone('sawtooth', 80, -5);
+                    filter.frequency.value = 200;
+                    break;
+                case 'sky':
+                    createDrone('triangle', 330);
+                    createDrone('sine', 440, 10);
+                    createPing(660);
+                    break;
+                case 'swamp':
+                    createDrone('triangle', 73);
+                    createDrone('square', 146, 8);
+                    filter.frequency.value = 600;
+                    createPing(220);
+                    break;
+                case 'core':
+                    createDrone('sawtooth', 65);
+                    createDrone('square', 130, -12);
+                    createDrone('triangle', 260, 5);
+                    filter.frequency.value = 800;
+                    break;
+                case 'menu':
+                    createDrone('triangle', 150);
+                    createDrone('sine', 300, 5);
+                    createPing(300);
+                    break;
+            }
         }
 
         function playSound(type) {
@@ -1259,6 +1384,8 @@
                 });
             }
 
+            playAmbientMusic(levelData.theme);
+
             updateHUD();
             gameState = 'playing';
             updateHUDVisibility();
@@ -1886,7 +2013,9 @@
         }
 
         function die() {
+            if (gameState === 'gameOver' || gameState === 'levelClear' || gameState === 'victory') return;
             gameState = 'gameOver';
+            stopAmbientMusic();
             playSound('die');
             screenShake = 0.5;
             spawnParticles(player.x + player.width/2, player.y + player.height/2, '#e74c3c', 50, 300);
@@ -1895,6 +2024,7 @@
         }
 
         function levelComplete() {
+            if (gameState === 'gameOver' || gameState === 'levelClear' || gameState === 'victory') return;
             gameState = 'levelClear';
             document.getElementById('level-desc').innerText = `Recovered ${crystalsCollected} / ${totalCrystalsInLevel} Crystals.`;
             playSound('crystal');
@@ -1906,6 +2036,7 @@
                 
                 triggerDialogue(storyKey, () => {
                     if (storyKey === 'ending') {
+                        stopAmbientMusic();
                         showScreen('victory');
                         gameState = 'victory';
                     } else {
@@ -1986,6 +2117,7 @@
 
         document.getElementById('back-to-start-btn').addEventListener('click', () => {
             initAudio();
+            playAmbientMusic('menu');
             showScreen('start');
         });
 
@@ -2023,6 +2155,7 @@
 
         document.getElementById('back-to-start-btn-char').addEventListener('click', () => {
             initAudio();
+            playAmbientMusic('menu');
             showScreen('start');
         });
 
@@ -2033,6 +2166,7 @@
 
         document.getElementById('back-from-controls-btn').addEventListener('click', () => {
             initAudio();
+            playAmbientMusic('menu');
             showScreen('start');
         });
 
