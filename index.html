@@ -305,6 +305,45 @@
             width: 100%;
         }
 
+        /* Fullscreen Container Styles for CSS Fallback */
+        .css-fullscreen-mode {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9999 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border-radius: 0 !important;
+        }
+
+        #fullscreen-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 100;
+            backdrop-filter: blur(2px);
+            padding: 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            margin: 0;
+        }
+
+        #fullscreen-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.1);
+        }
+
         @media (max-width: 768px) {
             .game-title { font-size: 2.5rem; }
             h1 { font-size: 1.8rem; }
@@ -347,6 +386,7 @@
 
         <!-- UI Screens -->
         <div id="start-screen" class="overlay">
+            <button id="fullscreen-btn" title="Toggle Fullscreen">⛶</button>
             <h1 class="game-title">PIXEL QUEST<br><span style="-webkit-text-fill-color: #fff; text-shadow: none; font-size: 1.5rem; letter-spacing: 10px;">DELUXE</span></h1>
             
             <div class="main-menu-buttons">
@@ -1889,6 +1929,76 @@
             initAudio();
             showScreen('start');
         });
+
+        // Fullscreen Logic
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const gameContainer = document.getElementById('game-container');
+        let isCssFullscreen = false;
+
+        function toggleFullscreen() {
+            try {
+                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                    // Enter fullscreen
+                    let promise;
+                    if (gameContainer.requestFullscreen) {
+                        promise = gameContainer.requestFullscreen();
+                    } else if (gameContainer.webkitRequestFullscreen) { /* Safari */
+                        promise = gameContainer.webkitRequestFullscreen();
+                    }
+                    
+                    // Handle potential permission denial gracefully
+                    if (promise) {
+                        promise.catch(err => {
+                            console.warn("Native Fullscreen blocked by browser policy. Falling back to CSS Fullscreen.", err);
+                            toggleCssFullscreen();
+                        });
+                    } else {
+                         toggleCssFullscreen(); // Fallback if API doesn't exist
+                    }
+                    fullscreenBtn.innerText = '⤬'; // Change icon to exit
+                } else {
+                    // Exit fullscreen
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) { /* Safari */
+                        document.webkitExitFullscreen();
+                    }
+                    fullscreenBtn.innerText = '⛶'; // Change back to enter
+                }
+            } catch (err) {
+                 console.warn("Fullscreen API failed. Falling back to CSS Fullscreen.", err);
+                 toggleCssFullscreen();
+            }
+        }
+        
+        function toggleCssFullscreen() {
+            isCssFullscreen = !isCssFullscreen;
+            if (isCssFullscreen) {
+                gameContainer.classList.add('css-fullscreen-mode');
+                fullscreenBtn.innerText = '⤬';
+            } else {
+                gameContainer.classList.remove('css-fullscreen-mode');
+                fullscreenBtn.innerText = '⛶';
+            }
+            
+            // Force a resize event so the canvas scales correctly
+            window.dispatchEvent(new Event('resize'));
+        }
+
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+        fullscreenBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            toggleFullscreen();
+        });
+
+        // Listen for fullscreen changes to update the button icon if user exits via ESC key
+        document.addEventListener('fullscreenchange', () => {
+             if (!document.fullscreenElement && !isCssFullscreen) fullscreenBtn.innerText = '⛶';
+        });
+        document.addEventListener('webkitfullscreenchange', () => {
+             if (!document.webkitFullscreenElement && !isCssFullscreen) fullscreenBtn.innerText = '⛶';
+        });
+
 
         function initMenuBackground() {
             const levelData = levels[0];
