@@ -727,6 +727,21 @@
             50% { opacity: 1; transform: scale(1); } 
         }
 
+        /* Glitch Animation for Secret Menu */
+        @keyframes glitchAnim {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 1px) }
+            40% { transform: translate(-1px, -1px) }
+            60% { transform: translate(2px, 1px) }
+            80% { transform: translate(1px, -1px) }
+            100% { transform: translate(0) }
+        }
+        .glitch-text {
+            color: #fff;
+            text-shadow: 2px 0 0 #f0f, -2px 0 0 #0ff;
+            animation: glitchAnim 0.3s infinite linear alternate-reverse;
+        }
+
         #fullscreen-btn {
             position: absolute;
             top: 20px;
@@ -854,6 +869,7 @@
         <!-- UI Screens -->
         <div id="start-screen" class="overlay">
             <button id="fullscreen-btn" title="Toggle Fullscreen">⛶</button>
+            <div id="secret-btn" class="absolute bottom-4 right-4 w-4 h-4 bg-white opacity-5 hover:opacity-100 cursor-pointer rounded-full transition-opacity duration-300" title="?"></div>
             
             <div class="logo-container">
                 <svg class="logo-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
@@ -922,6 +938,20 @@
                 <!-- Populated via JS -->
             </div>
             <button id="back-to-start-btn-char" style="background: linear-gradient(to bottom, #e74c3c, #c0392b);">Back</button>
+        </div>
+
+        <!-- NEW Secret Screen -->
+        <div id="secret-screen" class="overlay hidden" style="background: rgba(15, 5, 25, 0.95); backdrop-filter: blur(10px); border: 2px solid #ff00ff; box-shadow: inset 0 0 50px rgba(255, 0, 255, 0.2);">
+            <h1 class="glitch-text text-3xl md:text-5xl mb-4 text-center tracking-widest font-bold">THE VOID ARCHIVES</h1>
+            <p class="text-pink-300 text-[0.6rem] md:text-xs mb-8 text-center max-w-lg leading-relaxed shadow-black drop-shadow-md">
+                "You strayed from the path... and found something forbidden."<br><br>
+                Welcome to the developer's hidden stash. These highly unstable prototypes were deemed too dangerous for the standard realm. Play at your own risk.
+            </p>
+            <div class="main-menu-buttons">
+                <button id="secret-lvl-1-btn" class="menu-btn" style="background: linear-gradient(180deg, #4b0082 0%, #2c3e50 100%); border-color: #9b59b6; box-shadow: 0 6px 0 #2c3e50, 0 10px 15px rgba(0,0,0,0.4); width: 100%;">? GLITCH DIMENSION ?</button>
+                <button id="secret-lvl-2-btn" class="menu-btn" style="background: linear-gradient(180deg, #d35400 0%, #c0392b 100%); border-color: #f1c40f; box-shadow: 0 6px 0 #922b21, 0 10px 15px rgba(0,0,0,0.4); width: 100%;">? THE SPRINGBOARD ?</button>
+                <button id="back-from-secret-btn" class="menu-btn danger mt-6" style="width: 100%;">Return to Reality</button>
+            </div>
         </div>
 
         <div id="pause-screen" class="overlay hidden">
@@ -1033,6 +1063,7 @@
             controls: document.getElementById('controls-screen'),
             levelSelect: document.getElementById('level-select-screen'),
             charSelect: document.getElementById('char-select-screen'),
+            secret: document.getElementById('secret-screen'),
             pause: document.getElementById('pause-screen'),
             level: document.getElementById('level-screen'),
             gameOver: document.getElementById('game-over-screen'),
@@ -1261,9 +1292,12 @@
             level5_clear: [{ speaker: "Eldor", portrait: "portrait-eldor", text: "You survived The Void! But wait, there are more readings..." }, { speaker: "Hero", portrait: "portrait-hero", text: "The portal led to the Sky Ruins. The crystals scattered further." }],
             level6_clear: [{ speaker: "Eldor", portrait: "portrait-eldor", text: "Sky Ruins secure! The trail heads deep underground now." }, { speaker: "Hero", portrait: "portrait-hero", text: "The Swamp Depths... I can smell the toxic fumes from here." }],
             level7_clear: [{ speaker: "Eldor", portrait: "portrait-eldor", text: "Incredible! Only the True Core remains." }, { speaker: "Hero", portrait: "portrait-hero", text: "I will plunge into the depths and finish this once and for all." }],
-            ending: [{ speaker: "Hero", portrait: "portrait-hero", text: "The final crystal... I have it!" }, { speaker: "Eldor", portrait: "portrait-eldor", text: "You did it! The Realm Core is completely restored!" }, { speaker: "Eldor", portrait: "portrait-eldor", text: "The darkness is vanquished. Peace returns to our world." }]
+            ending: [{ speaker: "Hero", portrait: "portrait-hero", text: "The final crystal... I have it!" }, { speaker: "Eldor", portrait: "portrait-eldor", text: "You did it! The Realm Core is completely restored!" }, { speaker: "Eldor", portrait: "portrait-eldor", text: "The darkness is vanquished. Peace returns to our world." }],
+            secret_clear: [{ speaker: "Hero", portrait: "portrait-hero", text: "What... what was that strange realm?" }, { speaker: "Eldor", portrait: "portrait-eldor", text: "You have tread into the developer's archives... well done." }]
         };
 
+        // Expanded Level Grids for longer gameplay + 2 Secret Levels
+        // . = Empty, # = Solid, P = Player, C = Crystal, G = Goal, ^ = Spring, S = Spikes, ~ = Lava
         const levels = [
             { name: "The Green Valley", theme: "forest", darkness: 0, bgColors: ["#4facfe", "#00f2fe"], grid: ["............................................................", "............................................................", "............................................................", "............................................................", "..........................C.................................", ".......................#######.......................C......", "..P.......C......####......................####...######..G.", "#####...#####......................#####..................##", "#####...#####......................#####..................##", "#####...#####.....C....#####...S...#####...S....S.........##", "#####S.S####################################################", "############################################################"] },
             { name: "Echoing Caves", theme: "cave", darkness: 0.85, bgColors: ["#0f2027", "#203a43"], grid: ["............................................................", "............................................................", ".......................................................G....", "........................####.....#####.........#####.#####..", "..P..........C..........####.....#####.....C...#####.#####..", "#####.......####........####.....#####...#####.#####.#####..", "#####.......####........####.....#####.........#####.#####..", "#####.......####........####C....#####...S...S.#####.#####..", "#####.......####........#####....#####..######.#####.#####..", "#####...C...####...C....#####...S#####.........#####.#####..", "#####..###..####..####..##############.........#############", "############################################################"] },
@@ -1272,7 +1306,10 @@
             { name: "The Void", theme: "void", darkness: 0.9, bgColors: ["#050510", "#1a1a2e"], grid: ["................................................................................", "................................................................................", "................................................................................", "..........................C.................................................G...", ".........................###...................................C..........#####.", "..P......................................C....................###...............", "#####...................................###.....................................", "#####.........................S.................................................", "#####...C....................###.................S...................S..........", "#####..###..........^.........#.........^.......###........^........###.........", "#####S~~~~S#######~###~#######~~~~~#######~~~~~#####~~~~~~###~~~~~~#####~~~~~~~~", "################################################################################"] },
             { name: "Sky Ruins", theme: "sky", darkness: 0, bgColors: ["#87CEEB", "#1E90FF"], grid: ["................................................................................", "................................................................G...............", ".................C............................................#####.............", "................###............................C................................", "..............................................###...............................", "..P.............................................................................", "#####......................C.........^..................#####...................", "#####.....................###......#####........................................", "#####...^......S##..##S.........................S##..##S........................", "#####.#####...####..###.......^...........^....####..###........................", "#####.#####...####..###.....#####.......#####..####..###........................", "################################################################################"] },
             { name: "Swamp Depths", theme: "swamp", darkness: 0.7, bgColors: ["#142414", "#0a120a"], grid: ["................................................................................", "................................................................................", "................................................................G...............", "...................................C..........................#####.............", "..................................###.......S...................................", "..P..................C.....................###..........C.......................", "#####...............###............................^...###......................", "#####............................S...............#####..........................", "#####...........S............S..###.............................................", "#####...C......###..^.......###......^..........................................", "#####S~~~~S#######~~~~~#######~~~~~#######~~~~~#####~~~~~~~~~~~~~###############", "################################################################################"] },
-            { name: "The True Core", theme: "core", darkness: 0.5, bgColors: ["#4a0000", "#1a0000"], grid: ["................................................................................", "............................................................................G...", "..........................................................................#####.", "..........................................C.....................................", "........................C................###...................C................", "..P....................###.......................S............###...............", "#####..........................S...S...........#####............................", "#####...S...............S....#######.......................S##..##S.............", "#####..###..............#..................................####..###............", "#####..###..C.......C...#...........^...........###........####..###............", "#####~~~~~~###~^~###~~~###~~~~~###~~~~~#######~~~~~~~~~~~~######S###~~~~~~~~~~~~", "################################################################################"] }
+            { name: "The True Core", theme: "core", darkness: 0.5, bgColors: ["#4a0000", "#1a0000"], grid: ["................................................................................", "............................................................................G...", "..........................................................................#####.", "..........................................C.....................................", "........................C................###...................C................", "..P....................###.......................S............###...............", "#####..........................S...S...........#####............................", "#####...S...............S....#######.......................S##..##S.............", "#####..###..............#..................................####..###............", "#####..###..C.......C...#...........^...........###........####..###............", "#####~~~~~~###~^~###~~~###~~~~~###~~~~~#######~~~~~~~~~~~~######S###~~~~~~~~~~~~", "################################################################################"] },
+            // SECRET LEVELS
+            { name: "Glitch Dimension", theme: "void", darkness: 0, bgColors: ["#2b00ff", "#ff007f"], grid: ["................................................................................", "............................................................................G...", "..........................................................................#####.", "...................C...................................................C........", "..................###........C........................................###.......", "..P.........................###.......R............C......R.....................", "#####.............................................###...........................", "#####.........S.....................S...........................S##..##S........", "#####...C....###......C............###.......C......^...........####..###.......", "#####..###..........#####.......###.........###...#####...###...####..###.......", "#####S~~~~S#######S~~~~~~~S#######S~~~~~~~S#####S~~~~~~~S######S##########S~~~~~", "################################################################################"] },
+            { name: "The Springboard", theme: "sky", darkness: 0, bgColors: ["#ff9900", "#ff0055"], grid: ["................................................................................", "................................................................G...............", "........................................C.....................#####.............", ".......................................###......................................", ".........................C..........................R...........................", "..P.....................###.......................C...........###...............", "#####.......^.........................^..........###............................", "#####.....#####.........###.........#####......................^................", "#####...................^.........................###........#####..............", "#####...^.............#####...........###........^..............................", "#####.#####....................................#####............................", "################################################################################"] }
         ];
 
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -1536,10 +1573,18 @@
         function loadLevel(index) {
             transitionScreen.classList.add('active'); // Fade out
             setTimeout(() => {
-                if (index >= levels.length) { showScreen('victory'); transitionScreen.classList.remove('active'); return; }
+                if (index >= 8 && index >= levels.length) { 
+                    // Prevent crash if somehow bypassing 
+                    index = 0; 
+                }
 
                 const levelData = levels[index];
-                document.getElementById('level-display').innerText = `Area ${index + 1}: ${levelData.name}`;
+                if (index < 8) {
+                    document.getElementById('level-display').innerText = `Area ${index + 1}: ${levelData.name}`;
+                } else {
+                    document.getElementById('level-display').innerText = `SECRET: ${levelData.name}`;
+                }
+                
                 preRenderBackground(levelData);
                 
                 mapGrid = []; interactables = []; particles = []; ambientParticles = []; weatherParticles = [];
@@ -1587,7 +1632,14 @@
                 updateHUD(); gameState = 'playing'; updateHUDVisibility(); lastTime = performance.now();
                 if(!animationFrameId) gameLoop(lastTime);
                 
-                introTitle.innerText = `AREA ${index + 1}`; introSubtitle.innerText = levelData.name;
+                if (index < 8) {
+                    introTitle.innerText = `AREA ${index + 1}`; 
+                    introSubtitle.innerText = levelData.name;
+                } else {
+                    introTitle.innerText = `SECRET`; 
+                    introSubtitle.innerText = levelData.name;
+                }
+                
                 introBanner.classList.add('show');
                 setTimeout(() => { introBanner.classList.remove('show'); }, 3500);
                 transitionScreen.classList.remove('active');
@@ -1799,8 +1851,10 @@
                 }
                 else if (item.type === 'spring') {
                     if (checkAABB(pBox, {x: item.x, y: item.y, width: item.width, height: item.height})) {
-                        if(player.vy > 0 && player.y + player.height - player.vy*dt <= item.y + 7.5) {
-                            player.vy = -750; player.grounded = false; player.isDashing = false;
+                        // More forgiving hitbox, and bounce higher if jump is held!
+                        if(player.vy > 0 && player.y + player.height - player.vy*dt <= item.y + 20) {
+                            player.vy = keys.up ? -1050 : -800; 
+                            player.grounded = false; player.isDashing = false;
                             if(player.dashCooldownTimer > 0 || !player.canDash) player.canDash = true; 
                             player.jumpCount = 0; screenShake = 0.3; playSound('bounce'); spawnParticles(item.x + item.width/2, item.y, '#e67e22', 15);
                         }
@@ -2043,24 +2097,62 @@
         function levelComplete() {
             if (gameState === 'gameOver' || gameState === 'levelClear' || gameState === 'victory') return;
             gameState = 'levelClear';
-            if (currentLevelIndex >= unlockedLevel) { unlockedLevel = currentLevelIndex + 1; try { localStorage.setItem('pixelQuestUnlockedLevel', unlockedLevel); } catch(e) {} }
+            
+            // Only update progression if it's a standard level (not secret)
+            if (currentLevelIndex < 8 && currentLevelIndex >= unlockedLevel) { 
+                unlockedLevel = currentLevelIndex + 1; 
+                try { localStorage.setItem('pixelQuestUnlockedLevel', unlockedLevel); } catch(e) {} 
+            }
+            
             let isNewRecord = false;
-            if (!bestTimes[currentLevelIndex] || levelTimer < bestTimes[currentLevelIndex]) { bestTimes[currentLevelIndex] = levelTimer; try { localStorage.setItem('pixelQuestBestTimes', JSON.stringify(bestTimes)); } catch(e) {} isNewRecord = true; }
+            if (!bestTimes[currentLevelIndex] || levelTimer < bestTimes[currentLevelIndex]) { 
+                bestTimes[currentLevelIndex] = levelTimer; 
+                try { localStorage.setItem('pixelQuestBestTimes', JSON.stringify(bestTimes)); } catch(e) {} 
+                isNewRecord = true; 
+            }
 
             transitionScreen.classList.add('active');
             setTimeout(() => {
                 transitionScreen.classList.remove('active');
                 document.getElementById('level-desc').innerText = `Recovered ${crystalsCollected} / ${totalCrystalsInLevel} Crystals.`;
                 document.getElementById('level-time').innerText = `Time: ${levelTimer.toFixed(2)}s` + (isNewRecord ? ' (NEW RECORD!)' : '');
+                
+                if (currentLevelIndex >= 8) {
+                    document.getElementById('next-level-btn').innerText = "Return to Archives";
+                } else {
+                    document.getElementById('next-level-btn').innerText = "Proceed [ENTER]";
+                }
+
                 playSound('crystal');
+                
                 let storyKey = `level${currentLevelIndex + 1}_clear`;
-                if(currentLevelIndex >= levels.length - 1) storyKey = 'ending';
-                triggerDialogue(storyKey, () => { if (storyKey === 'ending') { stopAmbientMusic(); showScreen('victory'); gameState = 'victory'; } else { showScreen('level'); gameState = 'levelClear'; } });
+                if(currentLevelIndex === 7) storyKey = 'ending';
+                else if(currentLevelIndex >= 8) storyKey = 'secret_clear';
+                
+                triggerDialogue(storyKey, () => { 
+                    if (storyKey === 'ending') { 
+                        stopAmbientMusic(); showScreen('victory'); gameState = 'victory'; 
+                    } else { 
+                        showScreen('level'); gameState = 'levelClear'; 
+                    } 
+                });
             }, 600); 
         }
 
         document.getElementById('start-btn').addEventListener('click', () => { initAudio(); applyCharacterStats(); showScreen('none'); triggerDialogue('intro', () => { currentLevelIndex = 0; loadLevel(currentLevelIndex); }); });
-        document.getElementById('next-level-btn').addEventListener('click', () => { currentLevelIndex++; showScreen('none'); loadLevel(currentLevelIndex); });
+        
+        document.getElementById('next-level-btn').addEventListener('click', () => { 
+            if (currentLevelIndex >= 8) {
+                initAudio();
+                playAmbientMusic('menu');
+                showScreen('secret');
+            } else {
+                currentLevelIndex++; 
+                showScreen('none'); 
+                loadLevel(currentLevelIndex); 
+            }
+        });
+
         document.getElementById('restart-btn').addEventListener('click', () => { showScreen('none'); loadLevel(currentLevelIndex); });
         document.getElementById('play-again-btn').addEventListener('click', () => { currentLevelIndex = 0; showScreen('none'); loadLevel(currentLevelIndex); });
         
@@ -2083,7 +2175,10 @@
 
         function populateLevelSelect() {
             const grid = document.getElementById('level-grid'); grid.innerHTML = '';
-            levels.forEach((lvl, idx) => {
+            
+            // Only populate standard levels 1 to 8
+            const standardLevels = levels.slice(0, 8);
+            standardLevels.forEach((lvl, idx) => {
                 const btn = document.createElement('div'); let isLocked = idx > unlockedLevel;
                 btn.className = `level-card ${isLocked ? 'locked' : ''}`; btn.style.border = `2px solid ${isLocked ? '#333' : '#fff'}`; btn.style.color = isLocked ? '#555' : 'white';
                 let bestTime = bestTimes[idx]; let timeText = bestTime && !isLocked ? `<br><span style="color:#f1c40f; font-size:0.5rem; text-shadow:none;">Best: ${bestTime.toFixed(2)}s</span>` : '';
@@ -2111,6 +2206,27 @@
         document.getElementById('back-to-start-btn-char').addEventListener('click', () => { initAudio(); playAmbientMusic('menu'); showScreen('start'); });
         document.getElementById('controls-btn').addEventListener('click', () => { initAudio(); showScreen('controls'); });
         document.getElementById('back-from-controls-btn').addEventListener('click', () => { initAudio(); playAmbientMusic('menu'); showScreen('start'); });
+
+        // Secret Screen Listeners
+        document.getElementById('secret-btn').addEventListener('click', () => {
+            initAudio();
+            playAmbientMusic('void');
+            showScreen('secret');
+        });
+
+        document.getElementById('back-from-secret-btn').addEventListener('click', () => {
+            initAudio();
+            playAmbientMusic('menu');
+            showScreen('start');
+        });
+
+        document.getElementById('secret-lvl-1-btn').addEventListener('click', () => {
+            initAudio(); applyCharacterStats(); currentLevelIndex = 8; showScreen('none'); loadLevel(currentLevelIndex);
+        });
+
+        document.getElementById('secret-lvl-2-btn').addEventListener('click', () => {
+            initAudio(); applyCharacterStats(); currentLevelIndex = 9; showScreen('none'); loadLevel(currentLevelIndex);
+        });
 
         const fullscreenBtn = document.getElementById('fullscreen-btn'); const gameContainer = document.getElementById('game-container'); let isCssFullscreen = false;
         function toggleFullscreen() {
