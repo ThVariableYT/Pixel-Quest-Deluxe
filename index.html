@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Epic Pixel Quest Deluxe</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -24,6 +24,7 @@
             touch-action: none; /* Prevent pinch-zoom and scroll on mobile */
             user-select: none;
             -webkit-user-select: none;
+            -webkit-touch-callout: none;
         }
 
         #game-container {
@@ -419,9 +420,9 @@
             width: 100%;
             display: none; /* Shown via JS on touch */
             justify-content: space-between;
-            padding: 0 30px;
+            padding: 0 20px;
             box-sizing: border-box;
-            z-index: 15;
+            z-index: 40;
             pointer-events: none;
         }
 
@@ -429,6 +430,7 @@
             display: flex;
             gap: 15px;
             pointer-events: auto;
+            position: relative;
         }
 
         .remap-btn {
@@ -463,17 +465,30 @@
             font-size: 1.5rem;
             color: white;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            backdrop-filter: blur(2px);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             -webkit-tap-highlight-color: transparent;
+            position: relative;
         }
         
-        .btn-control:active {
+        /* Generous invisible padding to make missing buttons impossible */
+        .btn-control::after {
+            content: '';
+            position: absolute;
+            top: -20px; left: -20px; right: -20px; bottom: -20px;
+            border-radius: 50%;
+        }
+        
+        .btn-control:active, .btn-control.active-touch {
             background-color: rgba(255, 255, 255, 0.4);
             transform: scale(0.95);
+            border-color: #fff;
         }
 
         #btn-dash { border-color: #3498db; color: #3498db; }
+        #btn-dash.active-touch { background-color: rgba(52, 152, 219, 0.4); }
         #btn-jump { border-color: #e74c3c; color: #e74c3c; }
+        #btn-jump.active-touch { background-color: rgba(231, 76, 60, 0.4); }
 
         /* Premium Glassmorphism HUD */
         #hud {
@@ -514,7 +529,7 @@
         }
 
         @keyframes breathingVignette {
-            0% { opacity: 0.8; }
+            0% { opacity: 0.7; }
             100% { opacity: 1; }
         }
 
@@ -526,6 +541,17 @@
             z-index: 12;
             mix-blend-mode: multiply;
             animation: breathingVignette 6s infinite alternate ease-in-out;
+        }
+
+        /* CRT Scanlines Overlay */
+        .scanlines {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 13;
+            opacity: 0.8;
         }
 
         /* Cinematic Level Banner Overhaul */
@@ -758,7 +784,7 @@
             .btn-control { width: 70px; height: 70px; font-size: 1.5rem; touch-action: none; margin: 0 5px; }
             .control-group { gap: 10px; }
             .controls-text { display: none; } /* Hide complex kb controls on mobile */
-            #mobile-controls { bottom: max(30px, env(safe-area-inset-bottom)); padding: 0 15px; }
+            #mobile-controls { bottom: max(30px, env(safe-area-inset-bottom)); padding: 0 10px; }
         }
     </style>
 </head>
@@ -766,6 +792,7 @@
     <div id="game-container">
         <!-- Post-processing Overlays -->
         <div class="vignette"></div>
+        <div class="scanlines"></div>
         <div id="transition-screen" class="overlay active"></div>
         
         <!-- Cinematic Level Banner -->
@@ -794,7 +821,7 @@
 
         <!-- Mobile Controls -->
         <div id="mobile-controls">
-            <div class="control-group">
+            <div class="control-group" id="dpad-group">
                 <div class="btn-control" id="btn-left">◀</div>
                 <div class="btn-control" id="btn-right">▶</div>
             </div>
@@ -810,27 +837,18 @@
             
             <div class="logo-container">
                 <svg class="logo-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
-                    <!-- Shadow/Outline -->
                     <rect x="7" y="0" width="2" height="16" fill="#111" />
                     <rect x="5" y="1" width="6" height="14" fill="#111" />
                     <rect x="3" y="3" width="10" height="10" fill="#111" />
                     <rect x="1" y="5" width="14" height="6" fill="#111" />
-                    
-                    <!-- Base Color (Cyan) -->
                     <rect x="7" y="1" width="2" height="14" fill="#0984e3" />
                     <rect x="5" y="2" width="6" height="12" fill="#0984e3" />
                     <rect x="3" y="4" width="10" height="8" fill="#0984e3" />
                     <rect x="2" y="6" width="12" height="4" fill="#0984e3" />
-
-                    <!-- Inner Shadow (Dark Blue) -->
                     <rect x="9" y="3" width="2" height="10" fill="#0652dd" />
                     <rect x="11" y="5" width="2" height="6" fill="#0652dd" />
-
-                    <!-- Highlights (Light Blue) -->
                     <rect x="5" y="3" width="2" height="10" fill="#74b9ff" />
                     <rect x="3" y="5" width="2" height="6" fill="#74b9ff" />
-
-                    <!-- Core Sparkle (White) -->
                     <rect x="7" y="3" width="2" height="4" fill="#fff" />
                     <rect x="5" y="4" width="2" height="2" fill="#fff" />
                 </svg>
@@ -926,18 +944,45 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         
-        // Internal Resolution (Original Retro Size)
+        // Internal Resolution
         const GAME_WIDTH = 640;
         const GAME_HEIGHT = 360;
         const TILE_SIZE = 32;
 
-        // Offscreen canvases for performance and lighting
+        // Offscreen Canvas Engine Optimizations (MASSIVE performance boost for mobile)
         const mapCanvas = document.createElement('canvas');
         const mapCtx = mapCanvas.getContext('2d');
+        const bgCanvas = document.createElement('canvas');
+        bgCanvas.width = GAME_WIDTH; bgCanvas.height = GAME_HEIGHT;
+        const bgCtx = bgCanvas.getContext('2d');
+        
         const lightCanvas = document.createElement('canvas');
-        lightCanvas.width = GAME_WIDTH;
-        lightCanvas.height = GAME_HEIGHT;
+        lightCanvas.width = GAME_WIDTH; lightCanvas.height = GAME_HEIGHT;
         const lightCtx = lightCanvas.getContext('2d');
+
+        // Pre-rendered Light Stamps to replace expensive createRadialGradient calls
+        const lightStamps = {
+            player: document.createElement('canvas'),
+            crystal: document.createElement('canvas'),
+            lava: document.createElement('canvas')
+        };
+
+        function preRenderLights() {
+            const createLight = (canvas, radius, r, g, b, alphaCenter) => {
+                canvas.width = radius * 2; canvas.height = radius * 2;
+                const c = canvas.getContext('2d');
+                const grad = c.createRadialGradient(radius, radius, 0, radius, radius, radius);
+                // For the destination-out masking layer, color doesn't matter, only alpha
+                grad.addColorStop(0, `rgba(${r},${g},${b},${alphaCenter})`);
+                grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+                c.fillStyle = grad;
+                c.fillRect(0, 0, radius*2, radius*2);
+            };
+            createLight(lightStamps.player, 150, 255, 255, 255, 1);
+            createLight(lightStamps.crystal, 50, 255, 255, 255, 0.8);
+            createLight(lightStamps.lava, 60, 255, 255, 255, 0.5);
+        }
+        preRenderLights(); // Run once on load
 
         // Local Storage for Best Times & Progression
         let bestTimes = {};
@@ -945,9 +990,7 @@
         try {
             bestTimes = JSON.parse(localStorage.getItem('pixelQuestBestTimes')) || {};
             unlockedLevel = parseInt(localStorage.getItem('pixelQuestUnlockedLevel')) || 0;
-        } catch(e) {
-            console.warn('LocalStorage not available');
-        }
+        } catch(e) { console.warn('LocalStorage not available'); }
 
         // UI Elements
         const screens = {
@@ -973,7 +1016,7 @@
         const introTitle = document.getElementById('level-intro-title');
         const introSubtitle = document.getElementById('level-intro-subtitle');
 
-        // Audio Engine (Retro Synth)
+        // Audio Engine
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx;
         let ambientOscillators = [];
@@ -981,9 +1024,7 @@
         let ambientInterval = null;
 
         function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new AudioContext();
-            }
+            if (!audioCtx) audioCtx = new AudioContext();
             if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
@@ -1012,9 +1053,8 @@
 
             ambientGain = audioCtx.createGain();
             ambientGain.gain.setValueAtTime(0, audioCtx.currentTime);
-            ambientGain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 2); // Fade in
+            ambientGain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 2); 
             
-            // Subtle master filter for ambient layer
             let filter = audioCtx.createBiquadFilter();
             filter.type = 'lowpass';
             filter.frequency.value = 1000;
@@ -1030,12 +1070,11 @@
                 osc.frequency.setValueAtTime(freq, t);
                 osc.detune.setValueAtTime(detune, t);
                 
-                // LFO for slow evolving sound
                 let lfo = audioCtx.createOscillator();
                 lfo.type = 'sine';
                 lfo.frequency.setValueAtTime(0.05 + Math.random() * 0.1, t);
                 let lfoGain = audioCtx.createGain();
-                lfoGain.gain.setValueAtTime(15, t); // pitch wobble depth
+                lfoGain.gain.setValueAtTime(15, t); 
                 lfo.connect(lfoGain);
                 lfoGain.connect(osc.frequency);
                 lfo.start(t);
@@ -1048,7 +1087,7 @@
             function createPing(freqBase) {
                 ambientInterval = setInterval(() => {
                     if (gameState !== 'playing' && gameState !== 'start' && gameState !== 'dialogue') return;
-                    if (!ambientGain) return; // Ensure ambientGain exists before connecting
+                    if (!ambientGain) return; 
                     let osc = audioCtx.createOscillator();
                     let gain = audioCtx.createGain();
                     osc.type = 'sine';
@@ -1069,54 +1108,15 @@
             }
 
             switch(theme) {
-                case 'forest':
-                    createDrone('triangle', 110);
-                    createDrone('sine', 220, 5);
-                    createPing(440);
-                    break;
-                case 'cave':
-                    createDrone('sine', 65);
-                    createDrone('triangle', 130, -10);
-                    filter.frequency.value = 500;
-                    break;
-                case 'volcano':
-                    createDrone('square', 55);
-                    createDrone('sawtooth', 110, 15);
-                    filter.frequency.value = 400;
-                    createPing(165);
-                    break;
-                case 'ice':
-                    createDrone('sine', 440);
-                    createDrone('sine', 880, 5);
-                    createPing(880);
-                    break;
-                case 'void':
-                    createDrone('sine', 40);
-                    createDrone('sawtooth', 80, -5);
-                    filter.frequency.value = 200;
-                    break;
-                case 'sky':
-                    createDrone('triangle', 330);
-                    createDrone('sine', 440, 10);
-                    createPing(660);
-                    break;
-                case 'swamp':
-                    createDrone('triangle', 73);
-                    createDrone('square', 146, 8);
-                    filter.frequency.value = 600;
-                    createPing(220);
-                    break;
-                case 'core':
-                    createDrone('sawtooth', 65);
-                    createDrone('square', 130, -12);
-                    createDrone('triangle', 260, 5);
-                    filter.frequency.value = 800;
-                    break;
-                case 'menu':
-                    createDrone('triangle', 150);
-                    createDrone('sine', 300, 5);
-                    createPing(300);
-                    break;
+                case 'forest': createDrone('triangle', 110); createDrone('sine', 220, 5); createPing(440); break;
+                case 'cave': createDrone('sine', 65); createDrone('triangle', 130, -10); filter.frequency.value = 500; break;
+                case 'volcano': createDrone('square', 55); createDrone('sawtooth', 110, 15); filter.frequency.value = 400; createPing(165); break;
+                case 'ice': createDrone('sine', 440); createDrone('sine', 880, 5); createPing(880); break;
+                case 'void': createDrone('sine', 40); createDrone('sawtooth', 80, -5); filter.frequency.value = 200; break;
+                case 'sky': createDrone('triangle', 330); createDrone('sine', 440, 10); createPing(660); break;
+                case 'swamp': createDrone('triangle', 73); createDrone('square', 146, 8); filter.frequency.value = 600; createPing(220); break;
+                case 'core': createDrone('sawtooth', 65); createDrone('square', 130, -12); createDrone('triangle', 260, 5); filter.frequency.value = 800; break;
+                case 'menu': createDrone('triangle', 150); createDrone('sine', 300, 5); createPing(300); break;
             }
         }
 
@@ -1131,52 +1131,29 @@
             
             switch(type) {
                 case 'jump':
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(200, t);
-                    osc.frequency.exponentialRampToValueAtTime(400, t + 0.1);
-                    gain.gain.setValueAtTime(0.05, t);
-                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
-                    osc.start(t); osc.stop(t + 0.15);
-                    break;
+                    osc.type = 'square'; osc.frequency.setValueAtTime(200, t); osc.frequency.exponentialRampToValueAtTime(400, t + 0.1);
+                    gain.gain.setValueAtTime(0.05, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+                    osc.start(t); osc.stop(t + 0.15); break;
                 case 'dash':
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(150, t);
-                    osc.frequency.linearRampToValueAtTime(100, t + 0.2);
-                    gain.gain.setValueAtTime(0.08, t);
-                    gain.gain.linearRampToValueAtTime(0.001, t + 0.2);
-                    osc.start(t); osc.stop(t + 0.2);
-                    break;
+                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, t); osc.frequency.linearRampToValueAtTime(100, t + 0.2);
+                    gain.gain.setValueAtTime(0.08, t); gain.gain.linearRampToValueAtTime(0.001, t + 0.2);
+                    osc.start(t); osc.stop(t + 0.2); break;
                 case 'crystal':
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(800, t);
-                    osc.frequency.setValueAtTime(1200, t + 0.1);
-                    gain.gain.setValueAtTime(0.1, t);
-                    gain.gain.linearRampToValueAtTime(0.001, t + 0.3);
-                    osc.start(t); osc.stop(t + 0.3);
-                    break;
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(800, t); osc.frequency.setValueAtTime(1200, t + 0.1);
+                    gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0.001, t + 0.3);
+                    osc.start(t); osc.stop(t + 0.3); break;
                 case 'bounce':
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(300, t);
-                    osc.frequency.linearRampToValueAtTime(600, t + 0.3);
-                    gain.gain.setValueAtTime(0.1, t);
-                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-                    osc.start(t); osc.stop(t + 0.3);
-                    break;
+                    osc.type = 'triangle'; osc.frequency.setValueAtTime(300, t); osc.frequency.linearRampToValueAtTime(600, t + 0.3);
+                    gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+                    osc.start(t); osc.stop(t + 0.3); break;
                 case 'die':
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(100, t);
-                    osc.frequency.exponentialRampToValueAtTime(20, t + 0.5);
-                    gain.gain.setValueAtTime(0.15, t);
-                    gain.gain.linearRampToValueAtTime(0.001, t + 0.5);
-                    osc.start(t); osc.stop(t + 0.5);
-                    break;
-                case 'blip': // High pitch
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(400 + Math.random()*100, t);
-                    gain.gain.setValueAtTime(0.02, t);
-                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-                    osc.start(t); osc.stop(t + 0.05);
-                    break;
+                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, t); osc.frequency.exponentialRampToValueAtTime(20, t + 0.5);
+                    gain.gain.setValueAtTime(0.15, t); gain.gain.linearRampToValueAtTime(0.001, t + 0.5);
+                    osc.start(t); osc.stop(t + 0.5); break;
+                case 'blip':
+                    osc.type = 'square'; osc.frequency.setValueAtTime(400 + Math.random()*100, t);
+                    gain.gain.setValueAtTime(0.02, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+                    osc.start(t); osc.stop(t + 0.05); break;
             }
         }
 
@@ -1200,10 +1177,10 @@
         let shockwaves = [];
         let screenShake = 0;
         let damageFlash = 0;
-        let floatingTime = 0; // Global time for animations
-        let levelTimer = 0;   // Speedrun timer
+        let floatingTime = 0; 
+        let levelTimer = 0;   
 
-        // Story & Dialogue Variables
+        // Story Variables
         let activeDialogue = null;
         let dialogueIndex = 0;
         let typewriterText = "";
@@ -1222,277 +1199,45 @@
         let dashPressedThisFrame = false;
 
         const player = {
-            x: 0, y: 0,
-            width: 20, height: 28,
-            vx: 0, vy: 0,
-            speed: 220, 
-            maxFallSpeed: 450,
-            jumpForce: -400,
-            gravity: 1000,
-            grounded: false,
-            facingRight: true,
-            
-            // Movement fluidity
-            accel: 20,
-            airAccel: 10,
-            coyoteTime: 0.15,
-            coyoteTimer: 0,
-            jumpBufferTime: 0.2,
-            jumpBufferTimer: 0,
-            maxJumps: 1,
-            jumpCount: 0,
-            canGlide: false,
-            
-            // Complex Mechanics
-            wallSliding: false,
-            wallFacing: 0, 
-            wallSlideSpeed: 60,
-            
-            canDash: true,
-            isDashing: false,
-            dashSpeed: 500,
-            dashDuration: 0.25,
-            dashTimer: 0,
-            dashCooldown: 0.8,
-            dashCooldownTimer: 0,
-            dashGhosts: [],
-            
-            wallJumpTimer: 0,
-            
-            // Animation & Visuals
-            state: 'idle', 
-            frame: 0,
-            animTimer: 0,
-            history: [], 
-            
-            colorBody: '#ecf0f1',
-            colorEye: '#3498db',
-            colorBand: '#e74c3c',
-            colorParticle: '#3498db'
+            x: 0, y: 0, width: 20, height: 28, vx: 0, vy: 0, speed: 220, maxFallSpeed: 450, jumpForce: -400, gravity: 1000,
+            grounded: false, facingRight: true, accel: 20, airAccel: 10, coyoteTime: 0.15, coyoteTimer: 0, jumpBufferTime: 0.2,
+            jumpBufferTimer: 0, maxJumps: 1, jumpCount: 0, canGlide: false, wallSliding: false, wallFacing: 0, wallSlideSpeed: 60,
+            canDash: true, isDashing: false, dashSpeed: 500, dashDuration: 0.25, dashTimer: 0, dashCooldown: 0.8, dashCooldownTimer: 0,
+            dashGhosts: [], wallJumpTimer: 0, state: 'idle', frame: 0, animTimer: 0, history: [], 
+            colorBody: '#ecf0f1', colorEye: '#3498db', colorBand: '#e74c3c', colorParticle: '#3498db'
         };
         
         function applyCharacterStats() {
-            player.speed = selectedCharacter.speed;
-            player.jumpForce = selectedCharacter.jumpForce;
-            player.maxFallSpeed = selectedCharacter.maxFallSpeed;
-            player.dashSpeed = selectedCharacter.dashSpeed;
-            player.dashDuration = selectedCharacter.dashDuration;
-            player.dashCooldown = selectedCharacter.dashCooldown;
-            player.colorBody = selectedCharacter.colorBody;
-            player.colorEye = selectedCharacter.colorEye;
-            player.colorBand = selectedCharacter.colorBand;
-            player.colorParticle = selectedCharacter.colorParticle;
-            player.maxJumps = selectedCharacter.maxJumps || 1;
-            player.canGlide = selectedCharacter.canGlide || false;
-            
-            // Dynamically tint the HUD UI
+            player.speed = selectedCharacter.speed; player.jumpForce = selectedCharacter.jumpForce;
+            player.maxFallSpeed = selectedCharacter.maxFallSpeed; player.dashSpeed = selectedCharacter.dashSpeed;
+            player.dashDuration = selectedCharacter.dashDuration; player.dashCooldown = selectedCharacter.dashCooldown;
+            player.colorBody = selectedCharacter.colorBody; player.colorEye = selectedCharacter.colorEye;
+            player.colorBand = selectedCharacter.colorBand; player.colorParticle = selectedCharacter.colorParticle;
+            player.maxJumps = selectedCharacter.maxJumps || 1; player.canGlide = selectedCharacter.canGlide || false;
             document.getElementById('dash-label').style.color = player.colorParticle;
         }
 
         const storySegments = {
-            intro: [
-                { speaker: "Eldor", portrait: "portrait-eldor", text: "Hero! The Dark Wizard has shattered the Realm Core." },
-                { speaker: "Eldor", portrait: "portrait-eldor", text: "Its fragments are scattered across treacherous lands." },
-                { speaker: "Hero", portrait: "portrait-hero", text: "I will find them. My swift dash will guide me." }
-            ],
-            level1_clear: [
-                { speaker: "Eldor", portrait: "portrait-eldor", text: "You recovered the fragments of the Green Valley! Excellent." },
-                { speaker: "Hero", portrait: "portrait-hero", text: "They resonate with energy. I must press on to the deep caves." }
-            ],
-            level2_clear: [
-                { speaker: "Eldor", portrait: "portrait-eldor", text: "The Echoing Caves are cleared. Only the Infernal Keep remains." },
-                { speaker: "Hero", portrait: "portrait-hero", text: "The heat is unbearable, but the realm depends on this." }
-            ],
-            level3_clear: [
-                { speaker: "Eldor", portrait: "portrait-eldor", text: "The Infernal Keep is conquered! But fragments still scatter." },
-                { speaker: "Hero", portrait: "portrait-hero", text: "The trail leads to the Crystal Caverns. I will not stop." }
-            ],
-            level4_clear: [
-                { speaker: "Eldor", portrait: "portrait-eldor", text: "Brilliant! Only the central shard remains, cast into The Void." },
-                { speaker: "Hero", portrait: "portrait-hero", text: "The Void... It matters not. I will bring the light back." }
-            ],
-            level5_clear: [
-                { speaker: "Eldor", portrait: "portrait-eldor", text: "You survived The Void! But wait, there are more readings..." },
-                { speaker: "Hero", portrait: "portrait-hero", text: "The portal led to the Sky Ruins. The crystals scattered further." }
-            ],
-            level6_clear: [
-                { speaker: "Eldor", portrait: "portrait-eldor", text: "Sky Ruins secure! The trail heads deep underground now." },
-                { speaker: "Hero", portrait: "portrait-hero", text: "The Swamp Depths... I can smell the toxic fumes from here." }
-            ],
-            level7_clear: [
-                { speaker: "Eldor", portrait: "portrait-eldor", text: "Incredible! Only the True Core remains." },
-                { speaker: "Hero", portrait: "portrait-hero", text: "I will plunge into the depths and finish this once and for all." }
-            ],
-            ending: [
-                { speaker: "Hero", portrait: "portrait-hero", text: "The final crystal... I have it!" },
-                { speaker: "Eldor", portrait: "portrait-eldor", text: "You did it! The Realm Core is completely restored!" },
-                { speaker: "Eldor", portrait: "portrait-eldor", text: "The darkness is vanquished. Peace returns to our world." }
-            ]
+            intro: [{ speaker: "Eldor", portrait: "portrait-eldor", text: "Hero! The Dark Wizard has shattered the Realm Core." }, { speaker: "Eldor", portrait: "portrait-eldor", text: "Its fragments are scattered across treacherous lands." }, { speaker: "Hero", portrait: "portrait-hero", text: "I will find them. My swift dash will guide me." }],
+            level1_clear: [{ speaker: "Eldor", portrait: "portrait-eldor", text: "You recovered the fragments of the Green Valley! Excellent." }, { speaker: "Hero", portrait: "portrait-hero", text: "They resonate with energy. I must press on to the deep caves." }],
+            level2_clear: [{ speaker: "Eldor", portrait: "portrait-eldor", text: "The Echoing Caves are cleared. Only the Infernal Keep remains." }, { speaker: "Hero", portrait: "portrait-hero", text: "The heat is unbearable, but the realm depends on this." }],
+            level3_clear: [{ speaker: "Eldor", portrait: "portrait-eldor", text: "The Infernal Keep is conquered! But fragments still scatter." }, { speaker: "Hero", portrait: "portrait-hero", text: "The trail leads to the Crystal Caverns. I will not stop." }],
+            level4_clear: [{ speaker: "Eldor", portrait: "portrait-eldor", text: "Brilliant! Only the central shard remains, cast into The Void." }, { speaker: "Hero", portrait: "portrait-hero", text: "The Void... It matters not. I will bring the light back." }],
+            level5_clear: [{ speaker: "Eldor", portrait: "portrait-eldor", text: "You survived The Void! But wait, there are more readings..." }, { speaker: "Hero", portrait: "portrait-hero", text: "The portal led to the Sky Ruins. The crystals scattered further." }],
+            level6_clear: [{ speaker: "Eldor", portrait: "portrait-eldor", text: "Sky Ruins secure! The trail heads deep underground now." }, { speaker: "Hero", portrait: "portrait-hero", text: "The Swamp Depths... I can smell the toxic fumes from here." }],
+            level7_clear: [{ speaker: "Eldor", portrait: "portrait-eldor", text: "Incredible! Only the True Core remains." }, { speaker: "Hero", portrait: "portrait-hero", text: "I will plunge into the depths and finish this once and for all." }],
+            ending: [{ speaker: "Hero", portrait: "portrait-hero", text: "The final crystal... I have it!" }, { speaker: "Eldor", portrait: "portrait-eldor", text: "You did it! The Realm Core is completely restored!" }, { speaker: "Eldor", portrait: "portrait-eldor", text: "The darkness is vanquished. Peace returns to our world." }]
         };
 
-        // Expanded Level Grids for longer gameplay
-        // . = Empty, # = Solid, P = Player, C = Crystal, G = Goal, ^ = Spring, S = Spikes, ~ = Lava
         const levels = [
-            {
-                name: "The Green Valley",
-                theme: "forest",
-                darkness: 0, // 0 to 1
-                bgColors: ["#4facfe", "#00f2fe"],
-                grid: [
-                    "............................................................",
-                    "............................................................",
-                    "............................................................",
-                    "............................................................",
-                    "..........................C.................................",
-                    ".......................#######.......................C......",
-                    "..P.......C......####......................####...######..G.",
-                    "#####...#####......................#####..................##",
-                    "#####...#####......................#####..................##",
-                    "#####...#####.....C....#####...S...#####...S....S.........##",
-                    "#####S.S####################################################",
-                    "############################################################"
-                ]
-            },
-            {
-                name: "Echoing Caves",
-                theme: "cave",
-                darkness: 0.85,
-                bgColors: ["#0f2027", "#203a43"],
-                grid: [
-                    "............................................................",
-                    "............................................................",
-                    ".......................................................G....",
-                    "........................####.....#####.........#####.#####..",
-                    "..P..........C..........####.....#####.....C...#####.#####..",
-                    "#####.......####........####.....#####...#####.#####.#####..",
-                    "#####.......####........####.....#####.........#####.#####..",
-                    "#####.......####........####C....#####...S...S.#####.#####..",
-                    "#####.......####........#####....#####..######.#####.#####..",
-                    "#####...C...####...C....#####...S#####.........#####.#####..",
-                    "#####..###..####..####..##############.........#############",
-                    "############################################################"
-                ]
-            },
-            {
-                name: "The Infernal Keep",
-                theme: "volcano",
-                darkness: 0.3,
-                bgColors: ["#3a0e0e", "#1a0000"],
-                grid: [
-                    "................................................................................",
-                    "............................................................................G...",
-                    "..........................................#####...........................#####.",
-                    ".....................C........................................C...........#####.",
-                    "....................###........C.............................###..........#####.",
-                    "..P..........................#####...................#####................#####.",
-                    "#####.........###..........................S.......................S......#####.",
-                    "#####.........................S##..##S...###...C.............S##..##S...#######.",
-                    "#####...C....................####..###..####..###...........####..###..########.",
-                    "#####..###..........^........####..###..####........^.......####..###..########.",
-                    "#####S~~~~S#######~###~#######~~~~~###S#####~~~###~~~#####~~~###~~~##S#########.",
-                    "################################################################################"
-                ]
-            },
-            {
-                name: "Crystal Caverns",
-                theme: "ice",
-                darkness: 0.6,
-                bgColors: ["#000428", "#004e92"],
-                grid: [
-                    "................................................................................",
-                    "................................................................G...............",
-                    "..............................................................#####.............",
-                    "............................................C.................#####.............",
-                    "......................C....................###................#####.............",
-                    "..P..................###...........#####......................#####.............",
-                    "#####................................................S........#####.............",
-                    "#####.......S##..##S.......S.......................#####......#####.............",
-                    "#####......#####.####.....###.............C.......######..C...#####.............",
-                    "#####.......####.####......#......^......###.......#####.###..#####.............",
-                    "#####S~~~~S#####.####S~~~~~~~~~~~###~~~~#####~~~~~~#####S###S######S~~~~~~~~~~~~",
-                    "################################################################################"
-                ]
-            },
-            {
-                name: "The Void",
-                theme: "void",
-                darkness: 0.9,
-                bgColors: ["#050510", "#1a1a2e"],
-                grid: [
-                    "................................................................................",
-                    "................................................................................",
-                    "................................................................................",
-                    "..........................C.................................................G...",
-                    ".........................###...................................C..........#####.",
-                    "..P......................................C....................###...............",
-                    "#####...................................###.....................................",
-                    "#####.........................S.................................................",
-                    "#####...C....................###.................S...................S..........",
-                    "#####..###..........^.........#.........^.......###........^........###.........",
-                    "#####S~~~~S#######~###~#######~~~~~#######~~~~~#####~~~~~~###~~~~~~#####~~~~~~~~",
-                    "################################################################################"
-                ]
-            },
-            {
-                name: "Sky Ruins",
-                theme: "sky",
-                darkness: 0,
-                bgColors: ["#87CEEB", "#1E90FF"],
-                grid: [
-                    "................................................................................",
-                    "................................................................G...............",
-                    ".................C............................................#####.............",
-                    "................###............................C................................",
-                    "..............................................###...............................",
-                    "..P.............................................................................",
-                    "#####......................C.........^..................#####...................",
-                    "#####.....................###......#####........................................",
-                    "#####...^......S##..##S.........................S##..##S........................",
-                    "#####.#####...####..###.......^...........^....####..###........................",
-                    "#####.#####...####..###.....#####.......#####..####..###........................",
-                    "################################################################################"
-                ]
-            },
-            {
-                name: "Swamp Depths",
-                theme: "swamp",
-                darkness: 0.7,
-                bgColors: ["#142414", "#0a120a"],
-                grid: [
-                    "................................................................................",
-                    "................................................................................",
-                    "................................................................G...............",
-                    "...................................C..........................#####.............",
-                    "..................................###.......S...................................",
-                    "..P..................C.....................###..........C.......................",
-                    "#####...............###............................^...###......................",
-                    "#####............................S...............#####..........................",
-                    "#####...........S............S..###.............................................",
-                    "#####...C......###..^.......###......^..........................................",
-                    "#####S~~~~S#######~~~~~#######~~~~~#######~~~~~#####~~~~~~~~~~~~~###############",
-                    "################################################################################"
-                ]
-            },
-            {
-                name: "The True Core",
-                theme: "core",
-                darkness: 0.5,
-                bgColors: ["#4a0000", "#1a0000"],
-                grid: [
-                    "................................................................................",
-                    "............................................................................G...",
-                    "..........................................................................#####.",
-                    "..........................................C.....................................",
-                    "........................C................###...................C................",
-                    "..P....................###.......................S............###...............",
-                    "#####..........................S...S...........#####............................",
-                    "#####...S...............S....#######.......................S##..##S.............",
-                    "#####..###..............#..................................####..###............",
-                    "#####..###..C.......C...#...........^...........###........####..###............",
-                    "#####~~~~~~###~^~###~~~###~~~~~###~~~~~#######~~~~~~~~~~~~######S###~~~~~~~~~~~~",
-                    "################################################################################"
-                ]
-            }
+            { name: "The Green Valley", theme: "forest", darkness: 0, bgColors: ["#4facfe", "#00f2fe"], grid: ["............................................................", "............................................................", "............................................................", "............................................................", "..........................C.................................", ".......................#######.......................C......", "..P.......C......####......................####...######..G.", "#####...#####......................#####..................##", "#####...#####......................#####..................##", "#####...#####.....C....#####...S...#####...S....S.........##", "#####S.S####################################################", "############################################################"] },
+            { name: "Echoing Caves", theme: "cave", darkness: 0.85, bgColors: ["#0f2027", "#203a43"], grid: ["............................................................", "............................................................", ".......................................................G....", "........................####.....#####.........#####.#####..", "..P..........C..........####.....#####.....C...#####.#####..", "#####.......####........####.....#####...#####.#####.#####..", "#####.......####........####.....#####.........#####.#####..", "#####.......####........####C....#####...S...S.#####.#####..", "#####.......####........#####....#####..######.#####.#####..", "#####...C...####...C....#####...S#####.........#####.#####..", "#####..###..####..####..##############.........#############", "############################################################"] },
+            { name: "The Infernal Keep", theme: "volcano", darkness: 0.3, bgColors: ["#3a0e0e", "#1a0000"], grid: ["................................................................................", "............................................................................G...", "..........................................#####...........................#####.", ".....................C........................................C...........#####.", "....................###........C.............................###..........#####.", "..P..........................#####...................#####................#####.", "#####.........###..........................S.......................S......#####.", "#####.........................S##..##S...###...C.............S##..##S...#######.", "#####...C....................####..###..####..###...........####..###..########.", "#####..###..........^........####..###..####........^.......####..###..########.", "#####S~~~~S#######~###~#######~~~~~###S#####~~~###~~~#####~~~###~~~##S#########.", "################################################################################"] },
+            { name: "Crystal Caverns", theme: "ice", darkness: 0.6, bgColors: ["#000428", "#004e92"], grid: ["................................................................................", "................................................................G...............", "..............................................................#####.............", "............................................C.................#####.............", "......................C....................###................#####.............", "..P..................###...........#####......................#####.............", "#####................................................S........#####.............", "#####.......S##..##S.......S.......................#####......#####.............", "#####......#####.####.....###.............C.......######..C...#####.............", "#####.......####.####......#......^......###.......#####.###..#####.............", "#####S~~~~S#####.####S~~~~~~~~~~~###~~~~#####~~~~~~#####S###S######S~~~~~~~~~~~~", "################################################################################"] },
+            { name: "The Void", theme: "void", darkness: 0.9, bgColors: ["#050510", "#1a1a2e"], grid: ["................................................................................", "................................................................................", "................................................................................", "..........................C.................................................G...", ".........................###...................................C..........#####.", "..P......................................C....................###...............", "#####...................................###.....................................", "#####.........................S.................................................", "#####...C....................###.................S...................S..........", "#####..###..........^.........#.........^.......###........^........###.........", "#####S~~~~S#######~###~#######~~~~~#######~~~~~#####~~~~~~###~~~~~~#####~~~~~~~~", "################################################################################"] },
+            { name: "Sky Ruins", theme: "sky", darkness: 0, bgColors: ["#87CEEB", "#1E90FF"], grid: ["................................................................................", "................................................................G...............", ".................C............................................#####.............", "................###............................C................................", "..............................................###...............................", "..P.............................................................................", "#####......................C.........^..................#####...................", "#####.....................###......#####........................................", "#####...^......S##..##S.........................S##..##S........................", "#####.#####...####..###.......^...........^....####..###........................", "#####.#####...####..###.....#####.......#####..####..###........................", "################################################################################"] },
+            { name: "Swamp Depths", theme: "swamp", darkness: 0.7, bgColors: ["#142414", "#0a120a"], grid: ["................................................................................", "................................................................................", "................................................................G...............", "...................................C..........................#####.............", "..................................###.......S...................................", "..P..................C.....................###..........C.......................", "#####...............###............................^...###......................", "#####............................S...............#####..........................", "#####...........S............S..###.............................................", "#####...C......###..^.......###......^..........................................", "#####S~~~~S#######~~~~~#######~~~~~#######~~~~~#####~~~~~~~~~~~~~###############", "################################################################################"] },
+            { name: "The True Core", theme: "core", darkness: 0.5, bgColors: ["#4a0000", "#1a0000"], grid: ["................................................................................", "............................................................................G...", "..........................................................................#####.", "..........................................C.....................................", "........................C................###...................C................", "..P....................###.......................S............###...............", "#####..........................S...S...........#####............................", "#####...S...............S....#######.......................S##..##S.............", "#####..###..............#..................................####..###............", "#####..###..C.......C...#...........^...........###........####..###............", "#####~~~~~~###~^~###~~~###~~~~~###~~~~~#######~~~~~~~~~~~~######S###~~~~~~~~~~~~", "################################################################################"] }
         ];
 
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -1519,7 +1264,6 @@
         }
 
         function setupInputs() {
-            // Remap Button Listeners
             const actions = ['left', 'right', 'up', 'dash'];
             actions.forEach(action => {
                 const btn = document.getElementById(`remap-${action}`);
@@ -1527,23 +1271,18 @@
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
                         if (isRemapping) return;
-                        isRemapping = true;
-                        remapAction = action;
-                        btn.innerText = 'PRESS KEY...';
-                        btn.style.borderColor = '#f1c40f';
+                        isRemapping = true; remapAction = action;
+                        btn.innerText = 'PRESS KEY...'; btn.style.borderColor = '#f1c40f';
                     });
                 }
             });
 
             window.addEventListener('keydown', (e) => {
                 if (isRemapping) {
-                    e.preventDefault();
-                    customKeys[remapAction] = e.code;
+                    e.preventDefault(); customKeys[remapAction] = e.code;
                     const btn = document.getElementById(`remap-${remapAction}`);
                     btn.innerText = `${remapAction.toUpperCase()}: ${formatKey(e.code)}`;
-                    btn.style.borderColor = '#fff';
-                    isRemapping = false;
-                    return;
+                    btn.style.borderColor = '#fff'; isRemapping = false; return;
                 }
 
                 let isUp = customKeys.up ? (e.code === customKeys.up) : (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW');
@@ -1551,28 +1290,11 @@
                 let isRight = customKeys.right ? (e.code === customKeys.right) : (e.code === 'ArrowRight' || e.code === 'KeyD');
                 let isDash = customKeys.dash ? (e.code === customKeys.dash) : (e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'KeyZ' || e.code === 'KeyX');
 
-                // Quick Resurrection Keybinds
-                if (gameState === 'gameOver' && (e.code === 'KeyR' || isUp || e.code === 'Enter')) {
-                    document.getElementById('restart-btn').click();
-                    return;
-                }
-
-                // Quick Next Level Keybind
-                if (gameState === 'levelClear' && (e.code === 'Enter' || isUp)) {
-                    document.getElementById('next-level-btn').click();
-                    return;
-                }
-
-                // Pause Toggle System
+                if (gameState === 'gameOver' && (e.code === 'KeyR' || isUp || e.code === 'Enter')) { document.getElementById('restart-btn').click(); return; }
+                if (gameState === 'levelClear' && (e.code === 'Enter' || isUp)) { document.getElementById('next-level-btn').click(); return; }
                 if (e.code === 'Escape' || e.code === 'KeyP') {
-                    if (gameState === 'playing') {
-                        gameState = 'paused';
-                        showScreen('pause');
-                    } else if (gameState === 'paused') {
-                        gameState = 'playing';
-                        showScreen('none');
-                        lastTime = performance.now(); // Prevent dt jump
-                    }
+                    if (gameState === 'playing') { gameState = 'paused'; showScreen('pause'); } 
+                    else if (gameState === 'paused') { gameState = 'playing'; showScreen('none'); lastTime = performance.now(); }
                     return;
                 }
 
@@ -1580,28 +1302,20 @@
                 initAudio();
                 
                 if (isUp) {
-                    if (gameState === 'dialogue') {
-                        advanceDialogue();
-                        return;
-                    }
+                    if (gameState === 'dialogue') { advanceDialogue(); return; }
                     if(!keys.up) jumpPressedThisFrame = true;
                     keys.up = true;
                 }
 
-                if(gameState !== 'playing') return; // Block other inputs during dialogue
+                if(gameState !== 'playing') return;
                 
                 if (isLeft) keys.left = true;
                 if (isRight) keys.right = true;
-                
-                if (isDash) {
-                    if(!keys.dash) dashPressedThisFrame = true;
-                    keys.dash = true;
-                }
+                if (isDash) { if(!keys.dash) dashPressedThisFrame = true; keys.dash = true; }
             });
 
             window.addEventListener('keyup', (e) => {
                 if (isRemapping) return;
-
                 let isUp = customKeys.up ? (e.code === customKeys.up) : (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW');
                 let isLeft = customKeys.left ? (e.code === customKeys.left) : (e.code === 'ArrowLeft' || e.code === 'KeyA');
                 let isRight = customKeys.right ? (e.code === customKeys.right) : (e.code === 'ArrowRight' || e.code === 'KeyD');
@@ -1613,106 +1327,96 @@
                 if (isDash) keys.dash = false;
             });
 
-            // Touch Controls
+            // Highly Optimized Mobile Controls (AABB instead of elementFromPoint)
             if (isTouchDevice) {
-                const bindTouch = (id, keyName, isEdge) => {
-                    const btn = document.getElementById(id);
-                    btn.addEventListener('touchstart', (e) => {
-                        e.preventDefault(); initAudio();
-                        if(gameState !== 'playing') return;
-                        if(isEdge && !keys[keyName]) {
-                            if(keyName === 'up') jumpPressedThisFrame = true;
-                            if(keyName === 'dash') dashPressedThisFrame = true;
-                        }
-                        keys[keyName] = true;
-                    });
-                    const release = (e) => { e.preventDefault(); keys[keyName] = false; };
-                    btn.addEventListener('touchend', release);
-                    btn.addEventListener('touchcancel', release);
-                };
-
-                // Advanced Slide Support for Directional Buttons
-                const leftBtn = document.getElementById('btn-left');
-                const rightBtn = document.getElementById('btn-right');
-                
-                const handleDpad = (e) => {
-                    e.preventDefault();
-                    if(gameState !== 'playing') return;
-                    
-                    let touchLeft = false;
-                    let touchRight = false;
-                    
-                    for(let i = 0; i < e.touches.length; i++) {
-                        const touch = e.touches[i];
-                        const target = document.elementFromPoint(touch.clientX, touch.clientY);
-                        if(target === leftBtn) touchLeft = true;
-                        if(target === rightBtn) touchRight = true;
-                    }
-                    
-                    keys.left = touchLeft;
-                    keys.right = touchRight;
-                };
-
-                const dpadGroup = leftBtn.parentElement;
-                dpadGroup.addEventListener('touchstart', (e) => { initAudio(); handleDpad(e); });
-                dpadGroup.addEventListener('touchmove', handleDpad);
-                dpadGroup.addEventListener('touchend', handleDpad);
-                dpadGroup.addEventListener('touchcancel', handleDpad);
-                
+                const btnLeft = document.getElementById('btn-left');
+                const btnRight = document.getElementById('btn-right');
                 const btnJump = document.getElementById('btn-jump');
-                btnJump.addEventListener('touchstart', (e) => {
-                    e.preventDefault(); initAudio();
-                    if(gameState === 'dialogue') {
-                        advanceDialogue();
-                        return;
+                const btnDash = document.getElementById('btn-dash');
+
+                // We cache the rects when the controls are shown to avoid DOM reflows during gameplay
+                let rectL, rectR, rectJ, rectD;
+                const updateRects = () => {
+                    if(mobileControls.style.display !== 'none') {
+                        rectL = btnLeft.getBoundingClientRect();
+                        rectR = btnRight.getBoundingClientRect();
+                        rectJ = btnJump.getBoundingClientRect();
+                        rectD = btnDash.getBoundingClientRect();
                     }
+                };
+                window.addEventListener('resize', updateRects);
+                // Also call updateRects in updateHUDVisibility
+                const originalUpdateHUD = updateHUDVisibility;
+                updateHUDVisibility = function() {
+                    originalUpdateHUD();
+                    if(gameState === 'playing' && isTouchDevice) setTimeout(updateRects, 50); 
+                };
+
+                const handleTouches = (e) => {
+                    e.preventDefault();
+                    initAudio();
                     if(gameState !== 'playing') return;
-                    if(!keys.up) jumpPressedThisFrame = true;
-                    keys.up = true;
-                });
-                const releaseJump = (e) => { e.preventDefault(); keys.up = false; };
-                btnJump.addEventListener('touchend', releaseJump);
-                btnJump.addEventListener('touchcancel', releaseJump);
+                    
+                    let touchL = false, touchR = false, touchJ = false, touchD = false;
+                    const pad = 35; // Huge invisible padding for thumb sliding
+
+                    for(let i = 0; i < e.touches.length; i++) {
+                        const tx = e.touches[i].clientX;
+                        const ty = e.touches[i].clientY;
+                        
+                        if(rectL && tx > rectL.left - pad && tx < rectL.right + pad/2 && ty > rectL.top - pad && ty < rectL.bottom + pad) touchL = true;
+                        if(rectR && tx > rectR.left - pad/2 && tx < rectR.right + pad && ty > rectR.top - pad && ty < rectR.bottom + pad) touchR = true;
+                        if(rectJ && tx > rectJ.left - pad/2 && tx < rectJ.right + pad && ty > rectJ.top - pad && ty < rectJ.bottom + pad) touchJ = true;
+                        if(rectD && tx > rectD.left - pad && tx < rectD.right + pad/2 && ty > rectD.top - pad && ty < rectD.bottom + pad) touchD = true;
+                    }
+
+                    keys.left = touchL;
+                    keys.right = touchR;
+                    
+                    if(touchJ && !keys.up) jumpPressedThisFrame = true;
+                    keys.up = touchJ;
+                    
+                    if(touchD && !keys.dash) dashPressedThisFrame = true;
+                    keys.dash = touchD;
+
+                    // Visual feedback
+                    touchL ? btnLeft.classList.add('active-touch') : btnLeft.classList.remove('active-touch');
+                    touchR ? btnRight.classList.add('active-touch') : btnRight.classList.remove('active-touch');
+                    touchJ ? btnJump.classList.add('active-touch') : btnJump.classList.remove('active-touch');
+                    touchD ? btnDash.classList.add('active-touch') : btnDash.classList.remove('active-touch');
+                };
+
+                const mc = document.getElementById('mobile-controls');
+                mc.addEventListener('touchstart', handleTouches, {passive: false});
+                mc.addEventListener('touchmove', handleTouches, {passive: false});
+                mc.addEventListener('touchend', handleTouches, {passive: false});
+                mc.addEventListener('touchcancel', handleTouches, {passive: false});
                 
-                bindTouch('btn-dash', 'dash', true);
+                // Allow tapping jump to advance dialogue
+                btnJump.addEventListener('touchstart', (e) => {
+                    if (gameState === 'dialogue') { e.preventDefault(); advanceDialogue(); }
+                }, {passive: false});
             }
 
-            // Mobile Pause Button Setup
             const togglePauseMobile = (e) => {
                 e.preventDefault();
-                if (gameState === 'playing') {
-                    gameState = 'paused';
-                    showScreen('pause');
-                }
+                if (gameState === 'playing') { gameState = 'paused'; showScreen('pause'); }
             };
             pauseBtnMobile.addEventListener('click', togglePauseMobile);
             pauseBtnMobile.addEventListener('touchstart', togglePauseMobile);
 
-            // Universal dialogue tap-to-continue
             const db = document.getElementById('dialogue-box');
             db.addEventListener('click', advanceDialogue);
             db.addEventListener('touchstart', (e) => { e.preventDefault(); advanceDialogue(); });
         }
 
-        // Storytelling Engine Functions
+        // Storytelling Engine
         function triggerDialogue(segmentKey, callback) {
-            if(!storySegments[segmentKey]) {
-                if(callback) callback();
-                return;
-            }
-            activeDialogue = {
-                sequence: storySegments[segmentKey],
-                callback: callback
-            };
-            dialogueIndex = 0;
-            gameState = 'dialogue';
+            if(!storySegments[segmentKey]) { if(callback) callback(); return; }
+            activeDialogue = { sequence: storySegments[segmentKey], callback: callback };
+            dialogueIndex = 0; gameState = 'dialogue';
             document.getElementById('dialogue-box').classList.remove('hidden');
-            updateHUDVisibility(); // Hide HUD and mobile controls during dialogue
-            
-            // Stop player movement
-            keys.left = keys.right = keys.up = keys.dash = false;
-            player.vx = 0;
-            
+            updateHUDVisibility(); keys.left = keys.right = keys.up = keys.dash = false; player.vx = 0;
             prepareDialogueLine();
         }
 
@@ -1721,34 +1425,19 @@
             document.getElementById('dialogue-speaker').innerText = line.speaker === "Hero" ? selectedCharacter.name : line.speaker;
             document.getElementById('dialogue-portrait').className = line.speaker === "Hero" ? selectedCharacter.portrait : line.portrait;
             document.getElementById('dialogue-text').innerText = "";
-            typewriterText = line.text;
-            typewriterTimer = 0;
+            typewriterText = line.text; typewriterTimer = 0;
         }
 
         function advanceDialogue() {
-            if (!activeDialogue) return; // Prevent advancing null dialogue
-            // If still typing, skip to end of line
+            if (!activeDialogue) return; 
             const textElement = document.getElementById('dialogue-text');
-            if (textElement.innerText.length < typewriterText.length) {
-                textElement.innerText = typewriterText;
-                return;
-            }
-            
+            if (textElement.innerText.length < typewriterText.length) { textElement.innerText = typewriterText; return; }
             dialogueIndex++;
             if (dialogueIndex >= activeDialogue.sequence.length) {
-                // End dialogue safely
                 document.getElementById('dialogue-box').classList.add('hidden');
-                let cb = activeDialogue.callback;
-                activeDialogue = null;
-                if(cb) {
-                    cb(); 
-                } else {
-                    gameState = 'playing';
-                    updateHUDVisibility();
-                }
-            } else {
-                prepareDialogueLine();
-            }
+                let cb = activeDialogue.callback; activeDialogue = null;
+                if(cb) cb(); else { gameState = 'playing'; updateHUDVisibility(); }
+            } else { prepareDialogueLine(); }
         }
 
         function updateDialogue(dt) {
@@ -1756,25 +1445,18 @@
             const textElement = document.getElementById('dialogue-text');
             const portraitElement = document.getElementById('dialogue-portrait');
             let currentLen = textElement.innerText.length;
-            
             if (currentLen < typewriterText.length) {
                 typewriterTimer += dt;
-                if (typewriterTimer > 0.02) { // Typist speed
-                    typewriterTimer = 0;
-                    textElement.innerText = typewriterText.substring(0, currentLen + 1);
-                    if(currentLen % 2 === 0) playSound('blip'); // Tiny blip sound for speech
+                if (typewriterTimer > 0.02) {
+                    typewriterTimer = 0; textElement.innerText = typewriterText.substring(0, currentLen + 1);
+                    if(currentLen % 2 === 0) playSound('blip');
                 }
                 portraitElement.classList.add('talking');
-            } else {
-                portraitElement.classList.remove('talking');
-            }
+            } else { portraitElement.classList.remove('talking'); }
         }
 
         function generateTileTexture(ctx, x, y, theme, isTop) {
-            ctx.save();
-            ctx.translate(x, y);
-            
-            // Base Colors
+            ctx.save(); ctx.translate(x, y);
             let base, dark, top, highlight;
             if(theme === 'forest') { base = '#6D4C41'; dark = '#5D4037'; top = '#2ecc71'; highlight = '#27ae60'; }
             else if(theme === 'cave') { base = '#455A64'; dark = '#37474F'; top = '#546E7A'; highlight = '#78909C'; }
@@ -1785,241 +1467,121 @@
             else if(theme === 'core') { base = '#3E2723'; dark = '#212121'; top = '#f1c40f'; highlight = '#f39c12'; }
             else { base = '#3E2723'; dark = '#212121'; top = '#D84315'; highlight = '#FF5722'; }
 
-            // Draw Block
-            ctx.fillStyle = base;
-            ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-            
-            // Procedural noise/bricks
+            ctx.fillStyle = base; ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
             ctx.fillStyle = dark;
             let seed = (x * 13 + y * 37) % 100;
             if(seed < 30) ctx.fillRect(6, 6, 18, 12);
             if(seed > 60) ctx.fillRect(27, 24, 15, 15);
             if(seed % 2 === 0) ctx.fillRect(12, 30, 12, 12);
+            ctx.strokeStyle = '#111'; ctx.lineWidth = 1; ctx.strokeRect(0, 0, TILE_SIZE, TILE_SIZE);
+            ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fillRect(1, 1, TILE_SIZE - 2, 3);
+            ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(1, TILE_SIZE - 4, TILE_SIZE - 2, 3);
 
-            // Border
-            ctx.strokeStyle = '#111';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(0, 0, TILE_SIZE, TILE_SIZE);
-
-            // Bevel effect for depth
-            ctx.fillStyle = 'rgba(255,255,255,0.1)';
-            ctx.fillRect(1, 1, TILE_SIZE - 2, 3);
-            ctx.fillStyle = 'rgba(0,0,0,0.2)';
-            ctx.fillRect(1, TILE_SIZE - 4, TILE_SIZE - 2, 3);
-
-            // Top surface
             if(isTop) {
-                ctx.fillStyle = top;
-                ctx.fillRect(0, 0, TILE_SIZE, 12);
-                // Blades/Highlights
-                ctx.fillStyle = highlight;
-                ctx.fillRect(6, 0, 6, 15);
-                ctx.fillRect(24, 0, 9, 12);
-                ctx.fillRect(36, 0, 6, 16);
-                
-                // Shadow under the grass
-                ctx.fillStyle = 'rgba(0,0,0,0.3)';
-                ctx.fillRect(0, 12, TILE_SIZE, 4);
+                ctx.fillStyle = top; ctx.fillRect(0, 0, TILE_SIZE, 12);
+                ctx.fillStyle = highlight; ctx.fillRect(6, 0, 6, 15); ctx.fillRect(24, 0, 9, 12); ctx.fillRect(36, 0, 6, 16);
+                ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(0, 12, TILE_SIZE, 4);
             }
-
             ctx.restore();
+        }
+
+        // Render Background Gradient Once (Massive Optimization)
+        function preRenderBackground(levelData) {
+            let grad = bgCtx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
+            grad.addColorStop(0, levelData.bgColors[0]);
+            grad.addColorStop(1, levelData.bgColors[1]);
+            bgCtx.fillStyle = grad;
+            bgCtx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
         }
 
         function loadLevel(index) {
             transitionScreen.classList.add('active'); // Fade out
-
             setTimeout(() => {
-                if (index >= levels.length) {
-                    showScreen('victory');
-                    transitionScreen.classList.remove('active');
-                    return;
-                }
+                if (index >= levels.length) { showScreen('victory'); transitionScreen.classList.remove('active'); return; }
 
                 const levelData = levels[index];
                 document.getElementById('level-display').innerText = `Area ${index + 1}: ${levelData.name}`;
+                preRenderBackground(levelData);
                 
-                mapGrid = [];
-                interactables = [];
-                particles = [];
-                ambientParticles = [];
-                weatherParticles = [];
-                floatingTexts = [];
-                shockwaves = [];
-                crystalsCollected = 0;
-                totalCrystalsInLevel = 0;
-                player.history = [];
-                player.dashGhosts = [];
-                player.jumpCount = 0;
-                levelTimer = 0;
+                mapGrid = []; interactables = []; particles = []; ambientParticles = []; weatherParticles = [];
+                floatingTexts = []; shockwaves = []; crystalsCollected = 0; totalCrystalsInLevel = 0;
+                player.history = []; player.dashGhosts = []; player.jumpCount = 0; levelTimer = 0;
 
                 const grid = levelData.grid;
-                mapHeight = grid.length * TILE_SIZE;
-                mapWidth = grid[0].length * TILE_SIZE;
-
-                // Prepare Map Canvas
-                mapCanvas.width = mapWidth;
-                mapCanvas.height = mapHeight;
+                mapHeight = grid.length * TILE_SIZE; mapWidth = grid[0].length * TILE_SIZE;
+                mapCanvas.width = mapWidth; mapCanvas.height = mapHeight;
                 mapCtx.clearRect(0, 0, mapWidth, mapHeight);
 
                 for (let y = 0; y < grid.length; y++) {
                     let row = [];
                     for (let x = 0; x < grid[y].length; x++) {
-                        const char = grid[y][x];
-                        const px = x * TILE_SIZE;
-                        const py = y * TILE_SIZE;
-
+                        const char = grid[y][x]; const px = x * TILE_SIZE; const py = y * TILE_SIZE;
                         if (char === '#') {
                             row.push(1);
                             const isTop = (y === 0 || grid[y-1][x] !== '#');
                             generateTileTexture(mapCtx, px, py, levelData.theme, isTop);
                         } else {
                             row.push(0);
-                            if (char === 'P') {
-                                player.x = px + (TILE_SIZE - player.width)/2;
-                                player.y = py + (TILE_SIZE - player.height);
-                            } else if (char === 'C') {
-                                interactables.push({ type: 'crystal', x: px + 8, y: py + 8, w: 16, h: 16, collected: false });
-                                totalCrystalsInLevel++;
-                            } else if (char === 'G') {
-                                interactables.push({ type: 'goal', x: px, y: py, w: TILE_SIZE, h: TILE_SIZE });
-                            } else if (char === 'S') {
-                                interactables.push({ type: 'spike', x: px, y: py + 16, w: TILE_SIZE, h: 16 });
-                            } else if (char === '~') {
-                                interactables.push({ type: 'lava', x: px, y: py + 10, w: TILE_SIZE, h: 22 });
-                            } else if (char === '^') {
-                                interactables.push({ type: 'spring', x: px, y: py + 16, w: TILE_SIZE, h: 16 });
-                                // Draw spring base on map
-                                mapCtx.fillStyle = '#7f8c8d';
-                                mapCtx.fillRect(px + 4, py + 26, TILE_SIZE - 8, 6);
-                            }
+                            if (char === 'P') { player.x = px + (TILE_SIZE - player.width)/2; player.y = py + (TILE_SIZE - player.height); } 
+                            else if (char === 'C') { interactables.push({ type: 'crystal', x: px + 8, y: py + 8, w: 16, h: 16, collected: false }); totalCrystalsInLevel++; } 
+                            else if (char === 'G') { interactables.push({ type: 'goal', x: px, y: py, w: TILE_SIZE, h: TILE_SIZE }); } 
+                            else if (char === 'S') { interactables.push({ type: 'spike', x: px, y: py + 16, w: TILE_SIZE, h: 16 }); } 
+                            else if (char === '~') { interactables.push({ type: 'lava', x: px, y: py + 10, w: TILE_SIZE, h: 22 }); } 
+                            else if (char === '^') { interactables.push({ type: 'spring', x: px, y: py + 16, w: TILE_SIZE, h: 16 }); mapCtx.fillStyle = '#7f8c8d'; mapCtx.fillRect(px + 4, py + 26, TILE_SIZE - 8, 6); }
                         }
                     }
                     mapGrid.push(row);
                 }
 
-                // Reset Player State
-                player.vx = 0; player.vy = 0;
-                player.isDashing = false; player.canDash = true;
-                player.dashCooldownTimer = 0;
-                player.wallSliding = false;
-                
-                // Set Camera Instantly
-                camera.x = camera.targetX = player.x - GAME_WIDTH / 2;
-                camera.y = camera.targetY = player.y - GAME_HEIGHT / 2;
-                camera.currentLookAhead = 0;
-                camera.zoom = 1.0;
-                camera.targetZoom = 1.0;
+                player.vx = 0; player.vy = 0; player.isDashing = false; player.canDash = true; player.dashCooldownTimer = 0; player.wallSliding = false;
+                camera.x = camera.targetX = player.x - GAME_WIDTH / 2; camera.y = camera.targetY = player.y - GAME_HEIGHT / 2;
+                camera.currentLookAhead = 0; camera.zoom = 1.0; camera.targetZoom = 1.0;
 
-                // Generate Ambient Background Particles
-                for(let i=0; i<40; i++) {
-                    ambientParticles.push({
-                        x: Math.random() * mapWidth,
-                        y: Math.random() * mapHeight,
-                        size: Math.random() * 2 + 1,
-                        speed: Math.random() * 10 + 5,
-                        offset: Math.random() * Math.PI * 2
-                    });
-                }
+                for(let i=0; i<40; i++) { ambientParticles.push({ x: Math.random() * mapWidth, y: Math.random() * mapHeight, size: Math.random() * 2 + 1, speed: Math.random() * 10 + 5, offset: Math.random() * Math.PI * 2 }); }
 
-                // Initialize Weather System Based on Theme
                 let weatherCount = 0;
-                if(levelData.theme === 'forest') weatherCount = 30;
-                if(levelData.theme === 'volcano' || levelData.theme === 'core') weatherCount = 50;
-                if(levelData.theme === 'ice') weatherCount = 60;
-                if(levelData.theme === 'swamp') weatherCount = 25;
-
-                for(let i=0; i<weatherCount; i++) {
-                    weatherParticles.push({
-                        x: Math.random() * mapWidth,
-                        y: Math.random() * mapHeight,
-                        size: Math.random() * 2 + 2,
-                        speedX: (Math.random() - 0.5) * 50,
-                        speedY: Math.random() * 50 + 20,
-                        sway: Math.random() * Math.PI * 2,
-                        life: Math.random()
-                    });
-                }
+                if(levelData.theme === 'forest') weatherCount = 30; if(levelData.theme === 'volcano' || levelData.theme === 'core') weatherCount = 50;
+                if(levelData.theme === 'ice') weatherCount = 60; if(levelData.theme === 'swamp') weatherCount = 25;
+                for(let i=0; i<weatherCount; i++) { weatherParticles.push({ x: Math.random() * mapWidth, y: Math.random() * mapHeight, size: Math.random() * 2 + 2, speedX: (Math.random() - 0.5) * 50, speedY: Math.random() * 50 + 20, sway: Math.random() * Math.PI * 2, life: Math.random() }); }
 
                 playAmbientMusic(levelData.theme);
-
-                updateHUD();
-                gameState = 'playing';
-                updateHUDVisibility();
-                lastTime = performance.now();
+                updateHUD(); gameState = 'playing'; updateHUDVisibility(); lastTime = performance.now();
                 if(!animationFrameId) gameLoop(lastTime);
                 
-                // Trigger Level Banner 
-                introTitle.innerText = `AREA ${index + 1}`;
-                introSubtitle.innerText = levelData.name;
+                introTitle.innerText = `AREA ${index + 1}`; introSubtitle.innerText = levelData.name;
                 introBanner.classList.add('show');
-                
-                setTimeout(() => {
-                    introBanner.classList.remove('show');
-                }, 3500);
-
-                // Fade In
+                setTimeout(() => { introBanner.classList.remove('show'); }, 3500);
                 transitionScreen.classList.remove('active');
-            }, 500); // Wait for fade out to complete
+            }, 500); 
         }
 
         function spawnParticles(x, y, color, count, speed=100) {
-            for(let i=0; i<count; i++) {
-                particles.push({
-                    x: x, y: y,
-                    vx: (Math.random() - 0.5) * speed,
-                    vy: (Math.random() - 0.5) * speed - speed/2,
-                    life: 1.0,
-                    decay: 1.5 + Math.random(),
-                    color: color,
-                    size: Math.random() * 4.5 + 1.5
-                });
-            }
+            for(let i=0; i<count; i++) { particles.push({ x: x, y: y, vx: (Math.random() - 0.5) * speed, vy: (Math.random() - 0.5) * speed - speed/2, life: 1.0, decay: 1.5 + Math.random(), color: color, size: Math.random() * 4.5 + 1.5 }); }
         }
 
-        function spawnFloatingText(x, y, text, color) {
-            floatingTexts.push({
-                x: x, y: y,
-                text: text, color: color,
-                life: 1.0, maxLife: 1.0,
-                vy: -40
-            });
-        }
+        function spawnFloatingText(x, y, text, color) { floatingTexts.push({ x: x, y: y, text: text, color: color, life: 1.0, maxLife: 1.0, vy: -40 }); }
 
         function updateAndDrawParticles(dt) {
-            // Standard Physics Particles
+            ctx.globalCompositeOperation = 'lighter'; // Magical glowing overlaps
             for(let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                p.x += p.vx * dt;
-                p.y += p.vy * dt;
-                p.vy += 750 * dt; // Gravity for particles
-                p.life -= p.decay * dt;
-                
-                if(p.life <= 0) {
-                    particles.splice(i, 1);
-                } else {
-                    ctx.fillStyle = p.color;
-                    ctx.globalAlpha = Math.max(0, p.life);
+                let p = particles[i]; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 750 * dt; p.life -= p.decay * dt;
+                if(p.life <= 0) { particles.splice(i, 1); } else {
+                    ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(0, p.life);
                     ctx.fillRect(Math.round(p.x - camera.x), Math.round(p.y - camera.y), Math.round(p.size), Math.round(p.size));
                 }
             }
-
+            ctx.globalCompositeOperation = 'source-over';
             ctx.globalAlpha = 1.0;
         }
 
         function updateAndDrawShockwaves(dt) {
             ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
             for (let i = shockwaves.length - 1; i >= 0; i--) {
-                let s = shockwaves[i];
-                s.radius += 150 * dt;
-                s.life -= 2 * dt;
-                if (s.life <= 0) {
-                    shockwaves.splice(i, 1);
-                } else {
-                    ctx.beginPath();
-                    ctx.arc(Math.round(s.x - camera.x), Math.round(s.y - camera.y), s.radius, 0, Math.PI * 2);
-                    ctx.strokeStyle = `rgba(241, 196, 15, ${s.life})`;
-                    ctx.lineWidth = 2 + (s.life * 3);
-                    ctx.stroke();
+                let s = shockwaves[i]; s.radius += 150 * dt; s.life -= 2 * dt;
+                if (s.life <= 0) { shockwaves.splice(i, 1); } else {
+                    ctx.beginPath(); ctx.arc(Math.round(s.x - camera.x), Math.round(s.y - camera.y), s.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(241, 196, 15, ${s.life})`; ctx.lineWidth = 2 + (s.life * 3); ctx.stroke();
                 }
             }
             ctx.restore();
@@ -2027,1250 +1589,525 @@
 
         function updateAndDrawWeather(dt, theme) {
             if(weatherParticles.length === 0) return;
-
             ctx.save();
             weatherParticles.forEach(p => {
                 p.sway += dt * 2;
-                
-                // Behavior based on theme
-                if (theme === 'forest') { // Leaves
-                    p.y += p.speedY * dt;
-                    p.x += (p.speedX + Math.sin(p.sway) * 30) * dt;
-                    ctx.fillStyle = p.life > 0.5 ? '#27ae60' : '#8c603a';
-                } 
-                else if (theme === 'volcano' || theme === 'core') { // Embers
-                    p.y -= p.speedY * dt * 1.5; // Rise up
-                    p.x += (p.speedX + Math.sin(p.sway) * 20) * dt;
-                    ctx.fillStyle = Math.random() > 0.1 ? '#e74c3c' : '#f1c40f';
-                }
-                else if (theme === 'ice') { // Snow
-                    p.y += p.speedY * dt * 0.8;
-                    p.x += (Math.sin(p.sway) * 40) * dt;
-                    ctx.fillStyle = '#ffffff';
-                    ctx.globalAlpha = 0.8;
-                }
-                else if (theme === 'swamp') { // Spores
-                    p.y -= p.speedY * dt * 0.5;
-                    p.x += Math.sin(p.sway) * 15 * dt;
-                    ctx.fillStyle = '#2ecc71';
-                    ctx.globalAlpha = 0.6;
-                }
+                if (theme === 'forest') { p.y += p.speedY * dt; p.x += (p.speedX + Math.sin(p.sway) * 30) * dt; ctx.fillStyle = p.life > 0.5 ? '#27ae60' : '#8c603a'; } 
+                else if (theme === 'volcano' || theme === 'core') { p.y -= p.speedY * dt * 1.5; p.x += (p.speedX + Math.sin(p.sway) * 20) * dt; ctx.fillStyle = Math.random() > 0.1 ? '#e74c3c' : '#f1c40f'; }
+                else if (theme === 'ice') { p.y += p.speedY * dt * 0.8; p.x += (Math.sin(p.sway) * 40) * dt; ctx.fillStyle = '#ffffff'; ctx.globalAlpha = 0.8; }
+                else if (theme === 'swamp') { p.y -= p.speedY * dt * 0.5; p.x += Math.sin(p.sway) * 15 * dt; ctx.fillStyle = '#2ecc71'; ctx.globalAlpha = 0.6; }
 
-                // Wrap around logic based on camera
-                if (p.y > camera.y + GAME_HEIGHT + 20) p.y = camera.y - 20;
-                if (p.y < camera.y - 20) p.y = camera.y + GAME_HEIGHT + 20;
-                if (p.x > camera.x + GAME_WIDTH + 20) p.x = camera.x - 20;
-                if (p.x < camera.x - 20) p.x = camera.x + GAME_WIDTH + 20;
+                if (p.y > camera.y + GAME_HEIGHT + 20) p.y = camera.y - 20; if (p.y < camera.y - 20) p.y = camera.y + GAME_HEIGHT + 20;
+                if (p.x > camera.x + GAME_WIDTH + 20) p.x = camera.x - 20; if (p.x < camera.x - 20) p.x = camera.x + GAME_WIDTH + 20;
 
-                let px = Math.round(p.x - camera.x);
-                let py = Math.round(p.y - camera.y);
-                ctx.fillRect(px, py, Math.round(p.size), Math.round(p.size));
+                ctx.fillRect(Math.round(p.x - camera.x), Math.round(p.y - camera.y), Math.round(p.size), Math.round(p.size));
             });
             ctx.restore();
         }
 
         function updateAndDrawFloatingText(dt) {
-            ctx.save();
-            ctx.font = '8px "Press Start 2P"';
-            ctx.textAlign = 'center';
+            ctx.save(); ctx.font = '8px "Press Start 2P"'; ctx.textAlign = 'center';
             for(let i = floatingTexts.length - 1; i >= 0; i--) {
-                let t = floatingTexts[i];
-                t.y += t.vy * dt;
-                t.life -= dt;
-                
-                if(t.life <= 0) {
-                    floatingTexts.splice(i, 1);
-                } else {
+                let t = floatingTexts[i]; t.y += t.vy * dt; t.life -= dt;
+                if(t.life <= 0) { floatingTexts.splice(i, 1); } else {
                     let alpha = Math.max(0, t.life / t.maxLife);
-                    let drawX = Math.round(t.x - camera.x);
-                    let drawY = Math.round(t.y - camera.y);
-                    
-                    ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
-                    ctx.fillText(t.text, drawX + 1, drawY + 1); // Shadow
-                    ctx.fillStyle = t.color.replace(')', `, ${alpha})`).replace('rgb', 'rgba'); // Hacky color transform if needed, assuming hex or named usually. Let's force rgba
-                    
-                    // Standard color map for floating text
-                    ctx.fillStyle = `rgba(241, 196, 15, ${alpha})`; // Yellow for crystals
-                    ctx.fillText(t.text, drawX, drawY);
+                    let drawX = Math.round(t.x - camera.x); let drawY = Math.round(t.y - camera.y);
+                    ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`; ctx.fillText(t.text, drawX + 1, drawY + 1); 
+                    ctx.fillStyle = `rgba(241, 196, 15, ${alpha})`; ctx.fillText(t.text, drawX, drawY);
                 }
             }
             ctx.restore();
         }
 
         function getTile(x, y) {
-            const col = Math.floor(x / TILE_SIZE);
-            const row = Math.floor(y / TILE_SIZE);
-            if (row < 0 || row >= mapGrid.length || col < 0 || col >= mapGrid[0].length) return 1; // Bounds are solid
+            const col = Math.floor(x / TILE_SIZE); const row = Math.floor(y / TILE_SIZE);
+            if (row < 0 || row >= mapGrid.length || col < 0 || col >= mapGrid[0].length) return 1; 
             return mapGrid[row][col];
         }
 
         function resolveCollisions(dt) {
-            player.grounded = false;
-            let hitWall = 0; // 0: no, -1: left, 1: right
-
-            // Next theoretical positions
-            let nextX = player.x + player.vx * dt;
-            let nextY = player.y + player.vy * dt;
-
-            // HORIZONTAL
-            let boxTop = player.y + 2; // slight margin to avoid catching corners
-            let boxBottom = player.y + player.height - 2;
+            player.grounded = false; let hitWall = 0; 
+            let nextX = player.x + player.vx * dt; let nextY = player.y + player.vy * dt;
+            let boxTop = player.y + 2; let boxBottom = player.y + player.height - 2;
             
             if (player.vx > 0) {
                 let boxRight = nextX + player.width;
-                if (getTile(boxRight, boxTop) === 1 || getTile(boxRight, boxBottom) === 1) {
-                    nextX = Math.floor(boxRight / TILE_SIZE) * TILE_SIZE - player.width - 0.1;
-                    player.vx = 0;
-                    hitWall = 1;
-                }
+                if (getTile(boxRight, boxTop) === 1 || getTile(boxRight, boxBottom) === 1) { nextX = Math.floor(boxRight / TILE_SIZE) * TILE_SIZE - player.width - 0.1; player.vx = 0; hitWall = 1; }
             } else if (player.vx < 0) {
                 let boxLeft = nextX;
-                if (getTile(boxLeft, boxTop) === 1 || getTile(boxLeft, boxBottom) === 1) {
-                    nextX = Math.floor(boxLeft / TILE_SIZE) * TILE_SIZE + TILE_SIZE + 0.1;
-                    player.vx = 0;
-                    hitWall = -1;
-                }
+                if (getTile(boxLeft, boxTop) === 1 || getTile(boxLeft, boxBottom) === 1) { nextX = Math.floor(boxLeft / TILE_SIZE) * TILE_SIZE + TILE_SIZE + 0.1; player.vx = 0; hitWall = -1; }
             }
             player.x = nextX;
 
-            // VERTICAL
-            let boxLeft = player.x + 2;
-            let boxRight = player.x + player.width - 2;
-            
-            if (player.vy > 0) { // Falling
-                let boxBottom = nextY + player.height;
-                if (getTile(boxLeft, boxBottom) === 1 || getTile(boxRight, boxBottom) === 1) {
-                    nextY = Math.floor(boxBottom / TILE_SIZE) * TILE_SIZE - player.height - 0.1;
-                    player.vy = 0;
-                    player.grounded = true;
-                    player.jumpCount = 0; // Reset jump count on ground
-                    player.coyoteTimer = player.coyoteTime; // Reset coyote time on land
-                    // Reset Dash & Scarf on landing
-                    if(player.dashCooldownTimer > 0 || !player.canDash) {
-                        player.canDash = true;
-                        player.dashCooldownTimer = 0;
-                    }
-                } else {
-                    player.coyoteTimer -= dt; // Tick down in air (Forgiveness mechanic)
-                }
-            } else if (player.vy < 0) { // Jumping up
+            let boxLeft = player.x + 2; let boxRight = player.x + player.width - 2;
+            if (player.vy > 0) {
+                let boxBot = nextY + player.height;
+                if (getTile(boxLeft, boxBot) === 1 || getTile(boxRight, boxBot) === 1) {
+                    nextY = Math.floor(boxBot / TILE_SIZE) * TILE_SIZE - player.height - 0.1; player.vy = 0; player.grounded = true; player.jumpCount = 0; player.coyoteTimer = player.coyoteTime; 
+                    if(player.dashCooldownTimer > 0 || !player.canDash) { player.canDash = true; player.dashCooldownTimer = 0; }
+                } else { player.coyoteTimer -= dt; }
+            } else if (player.vy < 0) {
                 let boxTop = nextY;
-                if (getTile(boxLeft, boxTop) === 1 || getTile(boxRight, boxTop) === 1) {
-                    nextY = Math.floor(boxTop / TILE_SIZE) * TILE_SIZE + TILE_SIZE + 0.1;
-                    player.vy = 0; // Bonk head
-                }
+                if (getTile(boxLeft, boxTop) === 1 || getTile(boxRight, boxTop) === 1) { nextY = Math.floor(boxTop / TILE_SIZE) * TILE_SIZE + TILE_SIZE + 0.1; player.vy = 0; }
                 player.coyoteTimer -= dt;
-            } else {
-                if(player.grounded) player.coyoteTimer = player.coyoteTime;
-            }
-            player.y = nextY;
-
-            return hitWall;
+            } else { if(player.grounded) player.coyoteTimer = player.coyoteTime; }
+            player.y = nextY; return hitWall;
         }
 
-        function checkAABB(a, b) {
-            return a.x < b.x + b.w && a.x + a.width > b.x &&
-                   a.y < b.y + b.h && a.y + a.height > b.y;
-        }
+        function checkAABB(a, b) { return a.x < b.x + b.w && a.x + a.width > b.x && a.y < b.y + b.h && a.y + a.height > b.y; }
 
         function updatePlayer(dt) {
-            let prevVy = player.vy;
-            let wasGrounded = player.grounded;
+            let prevVy = player.vy; let wasGrounded = player.grounded;
             
-            // Dash cooldown recovery
-            if(player.dashCooldownTimer > 0) {
-                player.dashCooldownTimer -= dt;
-                if(player.dashCooldownTimer <= 0 && (player.grounded || player.wallSliding)) {
-                    player.canDash = true;
-                }
-            }
+            if(player.dashCooldownTimer > 0) { player.dashCooldownTimer -= dt; if(player.dashCooldownTimer <= 0 && (player.grounded || player.wallSliding)) player.canDash = true; }
+            if (jumpPressedThisFrame) player.jumpBufferTimer = player.jumpBufferTime; else if (player.jumpBufferTimer > 0) player.jumpBufferTimer -= dt;
 
-            // Jump Buffer: Remember inputs right before hitting ground
-            if (jumpPressedThisFrame) player.jumpBufferTimer = player.jumpBufferTime;
-            else if (player.jumpBufferTimer > 0) player.jumpBufferTimer -= dt;
-
-            // Dash Trigger
             if (dashPressedThisFrame && player.canDash && !player.isDashing) {
-                player.isDashing = true;
-                player.canDash = false;
-                player.dashTimer = player.dashDuration;
-                player.vy = 0; // Stop vertical movement
-                playSound('dash');
-                spawnParticles(player.x + player.width/2, player.y + player.height/2, player.colorParticle, 20, 200);
-                screenShake = 0.2; // Increase shake on dash for more juice
+                player.isDashing = true; player.canDash = false; player.dashTimer = player.dashDuration; player.vy = 0;
+                playSound('dash'); spawnParticles(player.x + player.width/2, player.y + player.height/2, player.colorParticle, 20, 200); screenShake = 0.2; 
             }
 
             if (player.isDashing) {
-                // Execute Dash
-                player.vx = player.facingRight ? player.dashSpeed : -player.dashSpeed;
-                player.dashTimer -= dt;
-                
-                // Ghost Trail Effect
-                if (player.dashTimer % 0.05 < dt) {
-                    player.dashGhosts.unshift({
-                        x: player.x, y: player.y, 
-                        facingRight: player.facingRight, 
-                        frame: player.frame, 
-                        life: 1.0
-                    });
-                }
-                
-                // Extra Particles
-                if(Math.random() > 0.3) {
-                    particles.push({
-                        x: player.x + Math.random() * player.width,
-                        y: player.y + Math.random() * player.height,
-                        vx: 0, vy: 0, life: 0.6, decay: 2, color: player.colorParticle, size: 5
-                    });
-                }
-
-                if (player.dashTimer <= 0) {
-                    player.isDashing = false;
-                    player.dashCooldownTimer = player.dashCooldown;
-                }
+                player.vx = player.facingRight ? player.dashSpeed : -player.dashSpeed; player.dashTimer -= dt;
+                if (player.dashTimer % 0.05 < dt) { player.dashGhosts.unshift({ x: player.x, y: player.y, facingRight: player.facingRight, frame: player.frame, life: 1.0 }); }
+                if(Math.random() > 0.3) { particles.push({ x: player.x + Math.random() * player.width, y: player.y + Math.random() * player.height, vx: 0, vy: 0, life: 0.6, decay: 2, color: player.colorParticle, size: 5 }); }
+                if (player.dashTimer <= 0) { player.isDashing = false; player.dashCooldownTimer = player.dashCooldown; }
             } else {
-                // Horizontal Movement with Wall Jump Momentum Support and Fluid Acceleration
                 if (player.wallJumpTimer > 0) {
                     player.wallJumpTimer -= dt;
-                    // Reduced air control during wall jump stun for arc fluidity
-                    if (keys.left) player.vx = Math.max(player.vx - 1500 * dt, -player.speed * 1.3);
-                    else if (keys.right) player.vx = Math.min(player.vx + 1500 * dt, player.speed * 1.3);
+                    if (keys.left) player.vx = Math.max(player.vx - 1500 * dt, -player.speed * 1.3); else if (keys.right) player.vx = Math.min(player.vx + 1500 * dt, player.speed * 1.3);
                 } else {
-                    // Normal Horizontal Movement with acceleration/friction
                     let targetVx = 0;
-                    if (keys.left) {
-                        targetVx = -player.speed;
-                        player.facingRight = false;
-                    } else if (keys.right) {
-                        targetVx = player.speed;
-                        player.facingRight = true;
-                    }
-                    
+                    if (keys.left) { targetVx = -player.speed; player.facingRight = false; } else if (keys.right) { targetVx = player.speed; player.facingRight = true; }
                     let currentAccel = player.grounded ? player.accel : player.airAccel;
-                    if (targetVx === 0) {
-                        player.vx += (targetVx - player.vx) * (currentAccel * 1.2) * dt; // Extra friction for snappy stop
-                    } else {
-                        player.vx += (targetVx - player.vx) * currentAccel * dt;
-                    }
-                    
-                    // Stop completely if very slow to prevent sliding forever
+                    if (targetVx === 0) { player.vx += (targetVx - player.vx) * (currentAccel * 1.2) * dt; } else { player.vx += (targetVx - player.vx) * currentAccel * dt; }
                     if (Math.abs(player.vx) < 5 && targetVx === 0) player.vx = 0;
                 }
                 
-                // Variable Jump Height / Gliding
-                if (!keys.up && player.vy < 0) {
-                    player.vy *= Math.pow(0.85, dt * 60); // Frame-rate independent drag for PC monitors
-                } else if (player.canGlide && keys.up && player.vy > 0 && !player.wallSliding) {
-                    // Glide mechanics
-                    player.vy = player.maxFallSpeed * 0.25; // Slow down vertical fall significantly
-                    if (Math.random() > 0.7) {
-                        spawnParticles(player.x + player.width/2, player.y + player.height, '#ecf0f1', 1, 20);
-                    }
-                }
+                if (!keys.up && player.vy < 0) { player.vy *= Math.pow(0.85, dt * 60); } 
+                else if (player.canGlide && keys.up && player.vy > 0 && !player.wallSliding) { player.vy = player.maxFallSpeed * 0.25; if (Math.random() > 0.7) spawnParticles(player.x + player.width/2, player.y + player.height, '#ecf0f1', 1, 20); }
                 
-                // Gravity
-                if (!(player.canGlide && keys.up && player.vy > 0 && !player.wallSliding)) {
-                    player.vy += player.gravity * dt;
-                    if (player.vy > player.maxFallSpeed) player.vy = player.maxFallSpeed;
-                }
+                if (!(player.canGlide && keys.up && player.vy > 0 && !player.wallSliding)) { player.vy += player.gravity * dt; if (player.vy > player.maxFallSpeed) player.vy = player.maxFallSpeed; }
             }
 
-            // Physics Step
             let hitWall = resolveCollisions(dt);
 
-            // Heavy Fall Check (Game Feel Juice)
-            if (player.grounded && !wasGrounded && prevVy > 400) {
-                screenShake = 0.2;
-                spawnParticles(player.x + player.width/2, player.y + player.height, '#bdc3c7', 15, 150);
-            }
+            if (player.grounded && !wasGrounded && prevVy > 400) { screenShake = 0.2; spawnParticles(player.x + player.width/2, player.y + player.height, '#bdc3c7', 15, 150); }
 
-            // Wall Slide Logic (Only if not dashing, falling, and pushing against wall)
             player.wallSliding = false;
             if (!player.grounded && !player.isDashing && player.vy > 0 && hitWall !== 0) {
-                // Must be pressing into the wall to slide
                 if ((hitWall === 1 && keys.right) || (hitWall === -1 && keys.left)) {
-                    player.wallSliding = true;
-                    player.wallFacing = hitWall;
-                    player.jumpCount = 0; // Reset jumps on wall grab
-                    
-                    if(player.dashCooldownTimer > 0 || !player.canDash) {
-                        player.canDash = true; // Dash refreshes on wall touch too!
-                        player.dashCooldownTimer = 0;
-                    }
-                    
+                    player.wallSliding = true; player.wallFacing = hitWall; player.jumpCount = 0;
+                    if(player.dashCooldownTimer > 0 || !player.canDash) { player.canDash = true; player.dashCooldownTimer = 0; }
                     if(player.vy > player.wallSlideSpeed) player.vy = player.wallSlideSpeed;
-                    
-                    // Dust particles while sliding
-                    if(Math.random() > 0.7) {
-                        spawnParticles(hitWall === 1 ? player.x + player.width : player.x, player.y + player.height, '#ccc', 1, 20);
-                    }
+                    if(Math.random() > 0.7) spawnParticles(hitWall === 1 ? player.x + player.width : player.x, player.y + player.height, '#ccc', 1, 20);
                 }
             }
 
-            // Jump Execution using Buffer and Multi-jump check
             if (player.jumpBufferTimer > 0) {
                 if (player.wallSliding) {
-                    // Fluid Wall Jump (Prioritized over double jump)
-                    player.vy = player.jumpForce * 0.9;
-                    player.vx = -player.wallFacing * player.speed * 1.5; // Stronger kick off wall
-                    player.wallJumpTimer = 0.25; // Lock normal movement briefly for fluid arc
-                    player.jumpBufferTimer = 0;
-                    player.jumpCount = 1; // Consumes the primary jump
-                    playSound('jump');
-                    spawnParticles(player.wallFacing === 1 ? player.x + player.width : player.x, player.y + player.height, '#fff', 15);
-                    // Temporarily prevent immediate re-sticking
-                    player.facingRight = player.wallFacing === -1;
+                    player.vy = player.jumpForce * 0.9; player.vx = -player.wallFacing * player.speed * 1.5; player.wallJumpTimer = 0.25; player.jumpBufferTimer = 0; player.jumpCount = 1;
+                    playSound('jump'); spawnParticles(player.wallFacing === 1 ? player.x + player.width : player.x, player.y + player.height, '#fff', 15); player.facingRight = player.wallFacing === -1;
                 } else if (player.coyoteTimer > 0 || player.jumpCount < player.maxJumps) {
-                    let isDoubleJump = player.coyoteTimer <= 0;
-                    let isCoyote = player.coyoteTimer > 0 && player.coyoteTimer < player.coyoteTime - 0.05 && !player.grounded;
-                    
-                    // Execute Jump
-                    player.vy = player.jumpForce;
-                    player.coyoteTimer = 0;
-                    player.jumpBufferTimer = 0;
-                    player.jumpCount++;
-                    
-                    playSound('jump');
-                    
-                    if (isDoubleJump) {
-                        spawnParticles(player.x + player.width/2, player.y + player.height, player.colorParticle, 15, 150);
-                        shockwaves.push({ x: player.x + player.width/2, y: player.y + player.height, radius: 0, life: 0.8 });
-                    } else {
-                        if (isCoyote) { // Extra rewarding visual for tight coyote jump
-                            spawnParticles(player.x + player.width/2, player.y + player.height, '#f1c40f', 8, 100);
-                        }
-                        spawnParticles(player.x + player.width/2, player.y + player.height, '#fff', 10);
-                    }
+                    let isDoubleJump = player.coyoteTimer <= 0; let isCoyote = player.coyoteTimer > 0 && player.coyoteTimer < player.coyoteTime - 0.05 && !player.grounded;
+                    player.vy = player.jumpForce; player.coyoteTimer = 0; player.jumpBufferTimer = 0; player.jumpCount++; playSound('jump');
+                    if (isDoubleJump) { spawnParticles(player.x + player.width/2, player.y + player.height, player.colorParticle, 15, 150); shockwaves.push({ x: player.x + player.width/2, y: player.y + player.height, radius: 0, life: 0.8 }); } 
+                    else { if (isCoyote) spawnParticles(player.x + player.width/2, player.y + player.height, '#f1c40f', 8, 100); spawnParticles(player.x + player.width/2, player.y + player.height, '#fff', 10); }
                 }
             }
 
-            // Update Dash Ghosts
-            for(let i = player.dashGhosts.length - 1; i >= 0; i--) {
-                player.dashGhosts[i].life -= dt * 3;
-                if(player.dashGhosts[i].life <= 0) player.dashGhosts.splice(i, 1);
-            }
+            for(let i = player.dashGhosts.length - 1; i >= 0; i--) { player.dashGhosts[i].life -= dt * 3; if(player.dashGhosts[i].life <= 0) player.dashGhosts.splice(i, 1); }
 
-            // Determine Animation State
-            if (player.isDashing) player.state = 'dash';
-            else if (player.wallSliding) player.state = 'wall';
-            else if (!player.grounded) player.state = player.vy < 0 ? 'jump' : 'fall';
-            else if (player.vx !== 0) player.state = 'run';
-            else player.state = 'idle';
-
-            // Update Animation Frame
-            player.animTimer += dt;
-            if (player.animTimer > 0.1) {
-                player.frame = (player.frame + 1) % 4;
-                player.animTimer = 0;
-            }
-
-            // Scarf Physics Trail
-            player.history.unshift({x: player.x + (player.facingRight ? 2 : player.width - 2), y: player.y + 4});
-            if(player.history.length > 8) player.history.pop();
+            if (player.isDashing) player.state = 'dash'; else if (player.wallSliding) player.state = 'wall'; else if (!player.grounded) player.state = player.vy < 0 ? 'jump' : 'fall'; else if (player.vx !== 0) player.state = 'run'; else player.state = 'idle';
+            player.animTimer += dt; if (player.animTimer > 0.1) { player.frame = (player.frame + 1) % 4; player.animTimer = 0; }
+            player.history.unshift({x: player.x + (player.facingRight ? 2 : player.width - 2), y: player.y + 4}); if(player.history.length > 8) player.history.pop();
         }
 
         function update(dt) {
             floatingTime += dt;
-            
-            // Handle Damage Flash Decay
             if (damageFlash > 0) damageFlash -= dt * 2;
-
-            // Pause State Logic
-            if (gameState === 'paused') {
-                return; // Freeze game logic entirely when paused
-            }
-
-            if (gameState === 'dialogue') {
-                updateDialogue(dt);
-                return; // Freeze game logic while story is playing
-            }
+            if (gameState === 'paused') return; 
+            if (gameState === 'dialogue') { updateDialogue(dt); return; }
             
             if (gameState !== 'playing' && gameState !== 'levelClear' && gameState !== 'gameOver' && gameState !== 'victory') {
-                // Cinematic Background Pan for menus
-                camera.x += 20 * dt * menuPanDir;
-                if (camera.x > mapWidth - GAME_WIDTH) menuPanDir = -1;
-                if (camera.x < 0) menuPanDir = 1;
-                
-                updateAndDrawParticles(dt);
-                return; 
+                camera.x += 20 * dt * menuPanDir; if (camera.x > mapWidth - GAME_WIDTH) menuPanDir = -1; if (camera.x < 0) menuPanDir = 1;
+                updateAndDrawParticles(dt); return; 
             }
 
-            if (gameState === 'playing') {
-                levelTimer += dt;
-                timerDisplay.innerText = `Time: ${levelTimer.toFixed(2)}s`;
-                updatePlayer(dt);
-            }
-
-            // Bounds check (Death)
+            if (gameState === 'playing') { levelTimer += dt; timerDisplay.innerText = `Time: ${levelTimer.toFixed(2)}s`; updatePlayer(dt); }
             if (gameState === 'playing' && player.y > mapHeight + 100) die();
 
-            // Interactables
-            let pBox = { x: player.x, y: player.y, width: player.width, height: player.height };
+            let pBox = { x: player.x, y: player.y, w: player.width, h: player.height };
             
             interactables.forEach(item => {
                 if (item.type === 'crystal' && !item.collected) {
-                    // Create floating hitbox
                     let floatY = item.y + Math.sin(floatingTime * 3) * 4;
                     if (checkAABB(pBox, {x: item.x, y: floatY, w: item.w, h: item.h})) {
-                        item.collected = true;
-                        crystalsCollected++;
-                        playSound('crystal');
-                        spawnParticles(item.x + 8, item.y + 8, '#f1c40f', 30);
-                        shockwaves.push({ x: item.x + 8, y: floatY + 8, radius: 0, life: 1 });
-                        spawnFloatingText(item.x + 8, item.y - 10, "+1 Crystal", "#f1c40f");
-                        updateHUD();
+                        item.collected = true; crystalsCollected++; playSound('crystal');
+                        spawnParticles(item.x + 8, item.y + 8, '#f1c40f', 30); shockwaves.push({ x: item.x + 8, y: floatY + 8, radius: 0, life: 1 });
+                        spawnFloatingText(item.x + 8, item.y - 10, "+1 Crystal", "#f1c40f"); updateHUD();
                     }
                 }
                 else if (item.type === 'spike' || item.type === 'lava') {
-                    // Forgiving hitbox (smaller than visuals)
                     let hazardBox = {x: item.x + 4, y: item.y + 8, w: item.w - 8, h: item.h - 8};
-                    if (gameState === 'playing' && checkAABB(pBox, hazardBox)) {
-                        die(); 
-                    }
+                    if (gameState === 'playing' && checkAABB(pBox, hazardBox)) die(); 
                 }
                 else if (item.type === 'spring') {
                     if (checkAABB(pBox, {x: item.x, y: item.y, w: item.w, h: item.h})) {
-                        // Only bounce if falling on it
                         if(player.vy > 0 && player.y + player.height - player.vy*dt <= item.y + 7.5) {
-                            player.vy = -750; // Huge boost
-                            player.grounded = false;
-                            player.isDashing = false; // Cancel dash on spring
-                            if(player.dashCooldownTimer > 0 || !player.canDash) {
-                                player.canDash = true; // Refill dash
-                            }
-                            player.jumpCount = 0; // Restore jumps on spring bounce
-                            screenShake = 0.3; // Add dramatic screen shake
-                            playSound('bounce');
-                            spawnParticles(item.x + item.w/2, item.y, '#e67e22', 15);
+                            player.vy = -750; player.grounded = false; player.isDashing = false;
+                            if(player.dashCooldownTimer > 0 || !player.canDash) player.canDash = true; 
+                            player.jumpCount = 0; screenShake = 0.3; playSound('bounce'); spawnParticles(item.x + item.w/2, item.y, '#e67e22', 15);
                         }
                     }
                 }
-                else if (item.type === 'goal') {
-                    if (gameState === 'playing' && checkAABB(pBox, item) && crystalsCollected >= totalCrystalsInLevel) {
-                        levelComplete();
-                    }
-                }
+                else if (item.type === 'goal') { if (gameState === 'playing' && checkAABB(pBox, item) && crystalsCollected >= totalCrystalsInLevel) levelComplete(); }
             });
 
-            // Update Dash Bar UI (Match the character's particle aura color)
             let dashPercent = player.canDash ? 100 : (1 - player.dashCooldownTimer / player.dashCooldown) * 100;
-            dashBar.style.width = `${Math.max(0, Math.min(100, dashPercent))}%`;
-            dashBar.style.background = player.canDash ? player.colorParticle : '#e74c3c';
+            dashBar.style.width = `${Math.max(0, Math.min(100, dashPercent))}%`; dashBar.style.background = player.canDash ? player.colorParticle : '#e74c3c';
 
-            // Dynamic Smooth Camera Look-Ahead
             let targetLookAhead = 0;
-            if (player.vx > 20) targetLookAhead = 60;
-            else if (player.vx < -20) targetLookAhead = -60;
-            
-            // Lerp the look-ahead specifically to eliminate snapping
+            if (player.vx > 20) targetLookAhead = 60; else if (player.vx < -20) targetLookAhead = -60;
             camera.currentLookAhead += (targetLookAhead - camera.currentLookAhead) * 2 * dt;
 
-            // FOV Zoom Out Effect during dash
-            if (player.isDashing) camera.targetZoom = 0.95;
-            else camera.targetZoom = 1.0;
+            if (player.isDashing) camera.targetZoom = 0.95; else camera.targetZoom = 1.0;
 
             camera.targetX = player.x + player.width/2 - GAME_WIDTH / 2 + camera.currentLookAhead;
-            camera.targetY = player.y + player.height/2 - GAME_HEIGHT / 2 + 50; // Look slightly down
-            
-            // Clamp Target
+            camera.targetY = player.y + player.height/2 - GAME_HEIGHT / 2 + 50; 
             camera.targetX = Math.max(0, Math.min(camera.targetX, mapWidth - GAME_WIDTH));
             camera.targetY = Math.max(0, Math.min(camera.targetY, mapHeight - GAME_HEIGHT));
             
-            // Lerp Overall Camera
-            camera.x += (camera.targetX - camera.x) * 8 * dt;
-            camera.y += (camera.targetY - camera.y) * 8 * dt;
+            camera.x += (camera.targetX - camera.x) * 8 * dt; camera.y += (camera.targetY - camera.y) * 8 * dt;
             camera.zoom += (camera.targetZoom - camera.zoom) * 8 * dt;
 
-            // Decay screen shake
             if (screenShake > 0) screenShake -= dt;
         }
 
         function drawPlayer() {
             ctx.save();
-
-            // 1. Draw Dash Ghosts (Fading trail behind player)
+            ctx.globalCompositeOperation = 'lighter';
             player.dashGhosts.forEach(g => {
                 ctx.save();
-                let gDrawX = Math.round(g.x - camera.x);
-                let gDrawY = Math.round(g.y - camera.y);
-                ctx.translate(gDrawX + player.width/2, gDrawY + player.height/2);
+                ctx.translate(Math.round(g.x - camera.x) + player.width/2, Math.round(g.y - camera.y) + player.height/2);
                 if (!g.facingRight) ctx.scale(-1, 1);
-                
                 let yOffsetGhost = (player.state === 'run') ? (g.frame % 2 === 0 ? -2 : 0) : 0;
-                
-                ctx.globalAlpha = g.life * 0.4;
-                ctx.fillStyle = player.colorParticle;
-                // Draw simplified block for the ghost outline
+                ctx.globalAlpha = g.life * 0.5; ctx.fillStyle = player.colorParticle;
                 ctx.fillRect(-player.width/2, -player.height/2 + yOffsetGhost, player.width, player.height);
                 ctx.restore();
             });
+            ctx.globalCompositeOperation = 'source-over';
 
-            // 2. Draw Drop Shadow
-            // Calculate a simple shadow based on distance to ground
-            let shadowY = player.y + player.height;
-            let foundGround = false;
-            for (let i = 0; i < 15; i++) { // Scan downward up to 15 tiles
+            let shadowY = player.y + player.height; let foundGround = false;
+            for (let i = 0; i < 15; i++) {
                 let testY = shadowY + i * TILE_SIZE;
-                if (getTile(player.x + player.width/2, testY) === 1) {
-                    shadowY = Math.floor(testY / TILE_SIZE) * TILE_SIZE;
-                    foundGround = true;
-                    break;
-                }
+                if (getTile(player.x + player.width/2, testY) === 1) { shadowY = Math.floor(testY / TILE_SIZE) * TILE_SIZE; foundGround = true; break; }
             }
             if (foundGround) {
                 let dist = Math.max(0, shadowY - (player.y + player.height));
-                let shadowScale = Math.max(0.2, 1 - (dist / 200));
-                let shadowAlpha = Math.max(0.1, 0.5 - (dist / 400));
-                
-                ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
-                ctx.beginPath();
-                ctx.ellipse(Math.round(player.x + player.width/2 - camera.x), Math.round(shadowY - camera.y), player.width * shadowScale, 4 * shadowScale, 0, 0, Math.PI * 2);
-                ctx.fill();
+                let shadowScale = Math.max(0.2, 1 - (dist / 200)); let shadowAlpha = Math.max(0.1, 0.5 - (dist / 400));
+                ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`; ctx.beginPath();
+                ctx.ellipse(Math.round(player.x + player.width/2 - camera.x), Math.round(shadowY - camera.y), player.width * shadowScale, 4 * shadowScale, 0, 0, Math.PI * 2); ctx.fill();
             }
 
-            // 3. Draw Actual Player
-            // Snap translation to integer to avoid pixel blurring
-            let drawX = Math.round(player.x - camera.x);
-            let drawY = Math.round(player.y - camera.y);
-            ctx.translate(drawX + player.width/2, drawY + player.height/2);
+            ctx.translate(Math.round(player.x - camera.x) + player.width/2, Math.round(player.y - camera.y) + player.height/2);
             if (!player.facingRight) ctx.scale(-1, 1);
             
-            // Squash and Stretch based on velocity
-            let stretch = 1 + Math.abs(player.vy) * 0.0003;
-            let squash = 1 / stretch;
+            let stretch = 1 + Math.abs(player.vy) * 0.0003; let squash = 1 / stretch;
             if (player.state === 'dash') { stretch = 0.8; squash = 1.3; }
             if (player.state !== 'wall' && player.state !== 'dash') ctx.scale(squash, stretch);
             
-            // Bobbing based on state
             let yOffset = (player.state === 'run') ? (player.frame % 2 === 0 ? -2 : 0) : 0;
 
-            // Player Glow / Dash Indicator
-            ctx.shadowColor = player.colorParticle;
-            ctx.shadowBlur = (player.canDash && player.state === 'idle') ? 15 + Math.sin(floatingTime*5)*8 : 0;
-
             ctx.fillStyle = player.colorBody;
-
-            // Body
             ctx.fillRect(-player.width/2, -player.height/2 + yOffset, player.width, player.height);
             
-            // Character specific accessories
-            if (selectedCharacter.id === 'hero') { // Knight
-                // Sword
-                ctx.fillStyle = '#bdc3c7';
-                ctx.fillRect(player.width/4 + 2, -player.height/4 + yOffset, 6, 2); // hilt
-                ctx.fillRect(player.width/4 + 6, -player.height/2 + yOffset, 2, 14); // blade
+            if (selectedCharacter.id === 'hero') { 
+                ctx.fillStyle = '#bdc3c7'; ctx.fillRect(player.width/4 + 2, -player.height/4 + yOffset, 6, 2); ctx.fillRect(player.width/4 + 6, -player.height/2 + yOffset, 2, 14); 
             } else if (selectedCharacter.id === 'ninja') {
-                // Katana on back
-                ctx.fillStyle = '#7f8c8d';
-                ctx.save();
-                ctx.rotate(Math.PI / 6);
-                ctx.fillRect(-player.width/2 - 2, -player.height/2 + yOffset, 2, 18);
-                ctx.restore();
+                ctx.fillStyle = '#7f8c8d'; ctx.save(); ctx.rotate(Math.PI / 6); ctx.fillRect(-player.width/2 - 2, -player.height/2 + yOffset, 2, 18); ctx.restore();
             } else if (selectedCharacter.id === 'scout') {
-                // Cape
-                ctx.fillStyle = player.colorBand; // match headband
-                if (player.canGlide && keys.up && !player.grounded && player.vy > 0 && !player.wallSliding) {
-                    // Gliding cape spread
-                    ctx.fillRect(-player.width/2 - 10, -player.height/2 + yOffset, 12, 10);
-                } else {
-                    // Idle/Running cape
-                    ctx.fillRect(-player.width/2 - 4, -player.height/2 + yOffset, 4, 16);
-                }
+                ctx.fillStyle = player.colorBand; 
+                if (player.canGlide && keys.up && !player.grounded && player.vy > 0 && !player.wallSliding) { ctx.fillRect(-player.width/2 - 10, -player.height/2 + yOffset, 12, 10); } 
+                else { ctx.fillRect(-player.width/2 - 4, -player.height/2 + yOffset, 4, 16); }
             } else if (selectedCharacter.id === 'mage') {
-                // Floating Orb
-                let orbX = Math.cos(floatingTime * 5) * 12;
-                let orbY = Math.sin(floatingTime * 5) * 12 + yOffset - 4;
-                ctx.fillStyle = player.colorEye;
-                ctx.shadowColor = player.colorEye;
-                ctx.shadowBlur = 8;
-                ctx.beginPath();
-                ctx.arc(orbX, orbY, 3, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.shadowBlur = 0; // Reset
+                let orbX = Math.cos(floatingTime * 5) * 12; let orbY = Math.sin(floatingTime * 5) * 12 + yOffset - 4;
+                ctx.fillStyle = player.colorEye; ctx.beginPath(); ctx.arc(orbX, orbY, 3, 0, Math.PI * 2); ctx.fill();
             }
 
-            ctx.shadowBlur = 0; // Reset generic shadow
+            ctx.fillStyle = '#2c3e50'; ctx.fillRect(player.width/4 - 2, -player.height/4 + yOffset, 6, 6);
+            ctx.fillStyle = player.colorEye; ctx.fillRect(player.width/4, -player.height/4 + 2 + yOffset, 2, 2);
+            ctx.fillStyle = player.colorBand; ctx.fillRect(-player.width/2, -player.height/2 + 4 + yOffset, player.width, 4);
 
-            // Eye
-            ctx.fillStyle = '#2c3e50';
-            ctx.fillRect(player.width/4 - 2, -player.height/4 + yOffset, 6, 6);
-            ctx.fillStyle = player.colorEye; // Glowing eye center
-            ctx.fillRect(player.width/4, -player.height/4 + 2 + yOffset, 2, 2);
-            // Headband
-            ctx.fillStyle = player.colorBand;
-            ctx.fillRect(-player.width/2, -player.height/2 + 4 + yOffset, player.width, 4);
-
-            // Wall slide specific graphics
-            if(player.state === 'wall') {
-                ctx.fillStyle = '#bdc3c7';
-                ctx.fillRect(player.width/2, -4, 2, 8); // Hands on wall
-            }
+            if(player.state === 'wall') { ctx.fillStyle = '#bdc3c7'; ctx.fillRect(player.width/2, -4, 2, 8); }
 
             ctx.restore();
 
-            // 4. Draw Scarf (Trail)
             if(player.history.length > 1) {
-                ctx.beginPath();
-                ctx.moveTo(Math.round(player.history[0].x - camera.x), Math.round(player.history[0].y - camera.y));
+                ctx.beginPath(); ctx.moveTo(Math.round(player.history[0].x - camera.x), Math.round(player.history[0].y - camera.y));
                 for(let i=1; i<player.history.length; i++) {
-                    // Add sine wave flutter to tail
                     let flutter = Math.sin(floatingTime * 10 + i) * 3;
                     ctx.lineTo(Math.round(player.history[i].x - camera.x), Math.round(player.history[i].y - camera.y + flutter));
                 }
-                ctx.strokeStyle = player.colorBand;
-                ctx.lineWidth = 4.5;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.stroke();
+                ctx.strokeStyle = player.colorBand; ctx.lineWidth = 4.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
             }
         }
 
         function drawInteractables() {
             interactables.forEach(item => {
-                let drawX = Math.round(item.x - camera.x);
-                let drawY = Math.round(item.y - camera.y);
+                let drawX = Math.round(item.x - camera.x); let drawY = Math.round(item.y - camera.y);
 
                 if (item.type === 'crystal' && !item.collected) {
                     let floatY = drawY + Math.sin(floatingTime * 3) * 4;
-                    
-                    // Magical Light Beam
-                    let beamGrad = ctx.createLinearGradient(0, floatY + 8, 0, floatY - 50);
-                    beamGrad.addColorStop(0, 'rgba(241, 196, 15, 0.4)');
-                    beamGrad.addColorStop(1, 'rgba(241, 196, 15, 0)');
-                    ctx.fillStyle = beamGrad;
-                    ctx.fillRect(drawX + 4, floatY - 50, 8, 58);
-
-                    ctx.fillStyle = '#f1c40f';
-                    ctx.beginPath();
-                    ctx.moveTo(drawX + 8, floatY);
-                    ctx.lineTo(drawX + 16, floatY + 8);
-                    ctx.lineTo(drawX + 8, floatY + 16);
-                    ctx.lineTo(drawX, floatY + 8);
-                    ctx.fill();
-                    // White core
-                    // Add a subtle inner pulse to uncollected crystals
-                    let innerSize = 2 + Math.sin(floatingTime * 10) * 1;
-                    ctx.fillStyle = '#fff';
-                    ctx.fillRect(drawX + 8 - innerSize, floatY + 8 - innerSize, innerSize * 2, innerSize * 2);
+                    ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.moveTo(drawX + 8, floatY); ctx.lineTo(drawX + 16, floatY + 8); ctx.lineTo(drawX + 8, floatY + 16); ctx.lineTo(drawX, floatY + 8); ctx.fill();
+                    let innerSize = 2 + Math.sin(floatingTime * 10) * 1; ctx.fillStyle = '#fff'; ctx.fillRect(drawX + 8 - innerSize, floatY + 8 - innerSize, innerSize * 2, innerSize * 2);
                 } 
                 else if (item.type === 'spike') {
-                    ctx.fillStyle = '#bdc3c7';
-                    ctx.beginPath();
-                    ctx.moveTo(drawX, drawY + item.h);
-                    ctx.lineTo(drawX + item.w/2, drawY);
-                    ctx.lineTo(drawX + item.w, drawY + item.h);
-                    ctx.fill();
-                    ctx.strokeStyle = '#7f8c8d';
-                    ctx.stroke();
+                    ctx.fillStyle = '#bdc3c7'; ctx.beginPath(); ctx.moveTo(drawX, drawY + item.h); ctx.lineTo(drawX + item.w/2, drawY); ctx.lineTo(drawX + item.w, drawY + item.h); ctx.fill(); ctx.strokeStyle = '#7f8c8d'; ctx.stroke();
                 }
                 else if (item.type === 'spring') {
-                    // Animated top part of spring
                     let bounceOffset = (player.state === 'jump' && player.vy < -600 && Math.abs(player.x - item.x) < 40 && Math.abs(player.y - item.y) < 40) ? 8 : 0;
-                    ctx.fillStyle = '#e67e22';
-                    ctx.fillRect(drawX + 4, drawY + bounceOffset, item.w - 8, item.h - bounceOffset);
+                    ctx.fillStyle = '#e67e22'; ctx.fillRect(drawX + 4, drawY + bounceOffset, item.w - 8, item.h - bounceOffset);
                 }
                 else if (item.type === 'lava') {
-                    // Animated Lava
-                    ctx.fillStyle = '#e74c3c';
-                    ctx.fillRect(drawX, drawY, item.w, item.h);
-                    ctx.fillStyle = '#f1c40f';
-                    let wave = Math.sin(floatingTime * 5 + item.x) * 3;
-                    ctx.fillRect(drawX, drawY + wave, item.w, 4);
+                    ctx.fillStyle = '#e74c3c'; ctx.fillRect(drawX, drawY, item.w, item.h); ctx.fillStyle = '#f1c40f'; let wave = Math.sin(floatingTime * 5 + item.x) * 3; ctx.fillRect(drawX, drawY + wave, item.w, 4);
                 }
                 else if (item.type === 'goal') {
-                    let active = crystalsCollected >= totalCrystalsInLevel;
-                    let cx = drawX + item.w/2;
-                    let cy = drawY + item.h/2;
-                    
-                    ctx.fillStyle = active ? '#9b59b6' : '#34495e';
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, item.w/2 - 3, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    if(active) {
-                        // Spinning Inner Vortex 
-                        ctx.save();
-                        ctx.translate(cx, cy);
-                        ctx.rotate(floatingTime * 3);
-                        ctx.fillStyle = '#e056fd';
-                        for(let i=0; i<4; i++) {
-                            ctx.rotate(Math.PI / 2);
-                            ctx.beginPath();
-                            ctx.arc(10, 0, 4 + Math.sin(floatingTime*10)*2, 0, Math.PI*2);
-                            ctx.fill();
-                        }
-                        ctx.restore();
-                    }
+                    let active = crystalsCollected >= totalCrystalsInLevel; let cx = drawX + item.w/2; let cy = drawY + item.h/2;
+                    ctx.fillStyle = active ? '#9b59b6' : '#34495e'; ctx.beginPath(); ctx.arc(cx, cy, item.w/2 - 3, 0, Math.PI * 2); ctx.fill();
+                    if(active) { ctx.save(); ctx.translate(cx, cy); ctx.rotate(floatingTime * 3); ctx.fillStyle = '#e056fd'; for(let i=0; i<4; i++) { ctx.rotate(Math.PI / 2); ctx.beginPath(); ctx.arc(10, 0, 4 + Math.sin(floatingTime*10)*2, 0, Math.PI*2); ctx.fill(); } ctx.restore(); }
                 }
             });
         }
 
-        function drawParallax(levelData) {
-            // Background Gradient
-            let grad = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
-            grad.addColorStop(0, levelData.bgColors[0]);
-            grad.addColorStop(1, levelData.bgColors[1]);
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+        function drawParallax() {
+            // Highly optimized: Draw cached pre-rendered gradient
+            ctx.drawImage(bgCanvas, 0, 0);
 
-            // Distant Mountains/Shapes (Parallax factor 0.1)
-            ctx.fillStyle = 'rgba(0,0,0,0.2)';
-            let pxOffset = -(camera.x * 0.1) % 200;
-            for(let i=0; i<GAME_WIDTH/200 + 2; i++) {
-                ctx.beginPath();
-                ctx.moveTo(pxOffset + i*200, GAME_HEIGHT);
-                ctx.lineTo(pxOffset + i*200 + 100, GAME_HEIGHT - 100);
-                ctx.lineTo(pxOffset + i*200 + 200, GAME_HEIGHT);
-                ctx.fill();
-            }
+            ctx.fillStyle = 'rgba(0,0,0,0.2)'; let pxOffset = -(camera.x * 0.1) % 200;
+            for(let i=0; i<GAME_WIDTH/200 + 2; i++) { ctx.beginPath(); ctx.moveTo(pxOffset + i*200, GAME_HEIGHT); ctx.lineTo(pxOffset + i*200 + 100, GAME_HEIGHT - 100); ctx.lineTo(pxOffset + i*200 + 200, GAME_HEIGHT); ctx.fill(); }
 
-            // Midground (Parallax factor 0.3)
-            ctx.fillStyle = 'rgba(0,0,0,0.4)';
-            let midOffset = -(camera.x * 0.3) % 150;
-            for(let i=0; i<GAME_WIDTH/150 + 2; i++) {
-                ctx.fillRect(midOffset + i*150 + 20, GAME_HEIGHT - 80, 40, 80);
-                ctx.beginPath();
-                ctx.arc(midOffset + i*150 + 40, GAME_HEIGHT - 80, 30, 0, Math.PI, true);
-                ctx.fill();
-            }
+            ctx.fillStyle = 'rgba(0,0,0,0.4)'; let midOffset = -(camera.x * 0.3) % 150;
+            for(let i=0; i<GAME_WIDTH/150 + 2; i++) { ctx.fillRect(midOffset + i*150 + 20, GAME_HEIGHT - 80, 40, 80); ctx.beginPath(); ctx.arc(midOffset + i*150 + 40, GAME_HEIGHT - 80, 30, 0, Math.PI, true); ctx.fill(); }
         }
 
         function drawLighting(levelData) {
             if (levelData.darkness <= 0) return;
 
-            // Clear light buffer
-            lightCtx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-            
-            // Fill with darkness
+            lightCtx.globalCompositeOperation = 'source-over';
             lightCtx.fillStyle = `rgba(5, 5, 15, ${levelData.darkness})`;
             lightCtx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+            lightCtx.globalCompositeOperation = 'destination-out'; // Punch holes using pre-rendered light stamps
 
-            // Punch holes for lights using destination-out
-            lightCtx.globalCompositeOperation = 'destination-out';
-
-            // Player Light
+            let pulse = Math.sin(floatingTime * 4) * 10;
+            let pR = 120 + pulse;
             let px = Math.round(player.x + player.width/2 - camera.x);
             let py = Math.round(player.y + player.height/2 - camera.y);
-            let pulse = Math.sin(floatingTime * 4) * 10;
-            
-            let pGrad = lightCtx.createRadialGradient(px, py, 10, px, py, 120 + pulse);
-            pGrad.addColorStop(0, 'rgba(0,0,0,1)');
-            pGrad.addColorStop(1, 'rgba(0,0,0,0)');
-            lightCtx.fillStyle = pGrad;
-            lightCtx.beginPath();
-            lightCtx.arc(px, py, 120 + pulse, 0, Math.PI*2);
-            lightCtx.fill();
+            lightCtx.drawImage(lightStamps.player, px - pR, py - pR, pR*2, pR*2);
 
-            // Crystal Lights
             interactables.forEach(item => {
+                let drawX = Math.round(item.x - camera.x); let drawY = Math.round(item.y - camera.y);
                 if (item.type === 'crystal' && !item.collected) {
-                    let cx = Math.round(item.x + 8 - camera.x);
-                    let cy = Math.round(item.y + 8 - camera.y + Math.sin(floatingTime * 3) * 4);
-                    let cGrad = lightCtx.createRadialGradient(cx, cy, 0, cx, cy, 50);
-                    cGrad.addColorStop(0, 'rgba(0,0,0,0.8)');
-                    cGrad.addColorStop(1, 'rgba(0,0,0,0)');
-                    lightCtx.fillStyle = cGrad;
-                    lightCtx.beginPath();
-                    lightCtx.arc(cx, cy, 50, 0, Math.PI*2);
-                    lightCtx.fill();
+                    let cy = drawY + 8 + Math.sin(floatingTime * 3) * 4;
+                    lightCtx.drawImage(lightStamps.crystal, drawX + 8 - 50, cy - 50, 100, 100);
                 } else if (item.type === 'lava') {
-                    // Lava glow
-                    let lx = Math.round(item.x + item.w/2 - camera.x);
-                    let ly = Math.round(item.y - camera.y);
-                    let lGrad = lightCtx.createRadialGradient(lx, ly, 0, lx, ly, 60);
-                    lGrad.addColorStop(0, 'rgba(0,0,0,0.5)');
-                    lGrad.addColorStop(1, 'rgba(0,0,0,0)');
-                    lightCtx.fillStyle = lGrad;
-                    lightCtx.fillRect(lx - 60, ly - 60, 120, 120);
+                    lightCtx.drawImage(lightStamps.lava, drawX + item.w/2 - 60, drawY - 60, 120, 120);
                 }
             });
 
-            // Reset composite
-            lightCtx.globalCompositeOperation = 'source-over';
-
-            // Draw light overlay over main canvas
             ctx.drawImage(lightCanvas, 0, 0);
         }
 
         function draw() {
             ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
             const levelData = levels[currentLevelIndex];
 
             ctx.save();
-            
-            // Action Camera System: Apply Screen Shake & FOV Zoom
             ctx.translate(GAME_WIDTH / 2, GAME_HEIGHT / 2);
-            if (screenShake > 0) {
-                let intensity = screenShake * 20;
-                ctx.translate((Math.random() - 0.5) * intensity, (Math.random() - 0.5) * intensity);
-            }
-            ctx.scale(camera.zoom, camera.zoom);
-            ctx.translate(-GAME_WIDTH / 2, -GAME_HEIGHT / 2);
+            if (screenShake > 0) { let intensity = screenShake * 20; ctx.translate((Math.random() - 0.5) * intensity, (Math.random() - 0.5) * intensity); }
+            
+            // Motion Blur visual trick during dash
+            if(player.isDashing && gameState !== 'paused') {
+                camera.targetZoom = 0.95;
+                ctx.translate(player.facingRight ? -10 : 10, 0);
+            } else { camera.targetZoom = 1.0; }
+            
+            ctx.scale(camera.zoom, camera.zoom); ctx.translate(-GAME_WIDTH / 2, -GAME_HEIGHT / 2);
 
-            // 1. Background (Parallax)
-            drawParallax(levelData);
-
-            // 2. Map (Pre-rendered)
-            // Round camera coordinates for crisp pixel art rendering
-            ctx.drawImage(mapCanvas, 
-                Math.round(camera.x), Math.round(camera.y), GAME_WIDTH, GAME_HEIGHT, 
-                0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-            // 3. Dynamic Weather (rendered behind interactables but in front of map)
+            drawParallax();
+            ctx.drawImage(mapCanvas, Math.round(camera.x), Math.round(camera.y), GAME_WIDTH, GAME_HEIGHT, 0, 0, GAME_WIDTH, GAME_HEIGHT);
             updateAndDrawWeather(0.016, levelData.theme);
-
-            // 4. Shockwaves (Crystal collection FX)
             updateAndDrawShockwaves(0.016);
-
-            // 5. Interactables
             drawInteractables();
-
-            // 6. Player, Scarf & Ghosts
             drawPlayer();
 
-            // 7. Particles & Floating Text
-            if (gameState !== 'paused') {
-                updateAndDrawParticles(0.016); // Assuming ~60fps for drawing step
-                updateAndDrawFloatingText(0.016);
-            }
+            if (gameState !== 'paused') { updateAndDrawParticles(0.016); updateAndDrawFloatingText(0.016); }
 
-            // Draw floating ambient particles (Front layer) with twinkling effect
+            ctx.globalCompositeOperation = 'lighter';
             ambientParticles.forEach(p => {
-                if (gameState !== 'paused') {
-                    p.y -= p.speed * 0.016;
-                    p.x += Math.sin(floatingTime + p.offset) * 0.5;
-                }
+                if (gameState !== 'paused') { p.y -= p.speed * 0.016; p.x += Math.sin(floatingTime + p.offset) * 0.5; }
                 if (p.y < -10) p.y = mapHeight + 10;
-                
-                let px = Math.round(p.x - camera.x);
-                let py = Math.round(p.y - camera.y);
+                let px = Math.round(p.x - camera.x); let py = Math.round(p.y - camera.y);
                 if (px > 0 && px < GAME_WIDTH && py > 0 && py < GAME_HEIGHT) {
                     let twinkle = Math.abs(Math.sin(floatingTime * p.speed * 0.5 + p.offset));
-                    ctx.fillStyle = `rgba(255, 255, 255, ${0.1 + twinkle * 0.4})`;
-                    ctx.fillRect(px, py, p.size, p.size);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${0.1 + twinkle * 0.4})`; ctx.fillRect(px, py, p.size, p.size);
                 }
             });
+            ctx.globalCompositeOperation = 'source-over';
 
-            // 8. Dash Speed Lines (Anime Effect overlay)
-            if (player.isDashing && gameState !== 'paused') {
-                ctx.fillStyle = player.colorParticle;
-                ctx.globalAlpha = 0.5;
-                for(let i=0; i<15; i++) {
-                    let sx = camera.x + Math.random() * GAME_WIDTH;
-                    let sy = camera.y + Math.random() * GAME_HEIGHT;
-                    let sLen = Math.random() * 150 + 50;
-                    let sHeight = Math.random() * 2 + 1;
-                    ctx.fillRect(sx, sy, sLen, sHeight);
-                }
-                ctx.globalAlpha = 1.0;
-            }
-
-            // 9. Lighting Overlay
             drawLighting(levelData);
+            ctx.restore();
 
-            ctx.restore(); // Restore Zoom and Shake transforms
-
-            // 10. Damage Flash Overlay (Drawn over everything)
-            if (damageFlash > 0) {
-                ctx.fillStyle = `rgba(231, 76, 60, ${damageFlash})`;
-                ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-            }
+            if (damageFlash > 0) { ctx.fillStyle = `rgba(231, 76, 60, ${damageFlash})`; ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT); }
         }
 
         function gameLoop(timestamp) {
             let dt = (timestamp - lastTime) / 1000;
-            if (dt > 0.1) dt = 0.1; // Cap dt to prevent massive jumps on lag/tab out
+            if (dt > 0.1) dt = 0.1; 
             lastTime = timestamp;
 
-            update(dt);
-            draw();
+            update(dt); draw();
 
-            // Reset edge triggers
-            jumpPressedThisFrame = false;
-            dashPressedThisFrame = false;
-
+            jumpPressedThisFrame = false; dashPressedThisFrame = false;
             animationFrameId = requestAnimationFrame(gameLoop);
         }
 
         function showScreen(screenId) {
             Object.values(screens).forEach(s => s.classList.add('hidden'));
-            if (screens[screenId]) {
-                screens[screenId].classList.remove('hidden');
-                screens[screenId].style.opacity = 0;
-                setTimeout(() => screens[screenId].style.opacity = 1, 10); // Fade in
-            }
+            if (screens[screenId]) { screens[screenId].classList.remove('hidden'); screens[screenId].style.opacity = 0; setTimeout(() => screens[screenId].style.opacity = 1, 10); }
         }
 
         function updateHUD() {
             crystalDisplay.innerText = `Crystals: ${crystalsCollected}/${totalCrystalsInLevel}`;
-            if(crystalsCollected >= totalCrystalsInLevel) {
-                 crystalDisplay.classList.replace('text-yellow-400', 'text-green-400');
-            } else {
-                 crystalDisplay.classList.replace('text-green-400', 'text-yellow-400');
-            }
+            if(crystalsCollected >= totalCrystalsInLevel) { crystalDisplay.classList.replace('text-yellow-400', 'text-green-400'); } 
+            else { crystalDisplay.classList.replace('text-green-400', 'text-yellow-400'); }
         }
 
         function die() {
             if (gameState === 'gameOver' || gameState === 'levelClear' || gameState === 'victory') return;
-            gameState = 'gameOver';
-            stopAmbientMusic();
-            playSound('die');
-            
-            // Dramatic Multi-Layer Explosion
-            screenShake = 0.5;
-            damageFlash = 1.0;
-            spawnParticles(player.x + player.width/2, player.y + player.height/2, '#e74c3c', 50, 300); // Core explosion
-            spawnParticles(player.x + player.width/2, player.y + player.height/2, '#f1c40f', 30, 150); // Inner fire
-            spawnParticles(player.x + player.width/2, player.y + player.height/2, '#ffffff', 15, 400); // Fast shrapnel
+            gameState = 'gameOver'; stopAmbientMusic(); playSound('die');
+            screenShake = 0.5; damageFlash = 1.0;
+            spawnParticles(player.x + player.width/2, player.y + player.height/2, '#e74c3c', 50, 300); 
+            spawnParticles(player.x + player.width/2, player.y + player.height/2, '#f1c40f', 30, 150); 
+            spawnParticles(player.x + player.width/2, player.y + player.height/2, '#ffffff', 15, 400); 
             shockwaves.push({ x: player.x + player.width/2, y: player.y + player.height/2, radius: 0, life: 1.5 });
-            
-            draw(); // Draw final frame with explosion
+            draw(); 
             setTimeout(() => showScreen('gameOver'), 500);
         }
 
         function levelComplete() {
             if (gameState === 'gameOver' || gameState === 'levelClear' || gameState === 'victory') return;
             gameState = 'levelClear';
-            
-            // Progression System: Unlock Next Level
-            if (currentLevelIndex >= unlockedLevel) {
-                unlockedLevel = currentLevelIndex + 1;
-                try {
-                    localStorage.setItem('pixelQuestUnlockedLevel', unlockedLevel);
-                } catch(e) {}
-            }
-
-            // Check for Best Time / Speedrun Record
+            if (currentLevelIndex >= unlockedLevel) { unlockedLevel = currentLevelIndex + 1; try { localStorage.setItem('pixelQuestUnlockedLevel', unlockedLevel); } catch(e) {} }
             let isNewRecord = false;
-            if (!bestTimes[currentLevelIndex] || levelTimer < bestTimes[currentLevelIndex]) {
-                bestTimes[currentLevelIndex] = levelTimer;
-                try {
-                    localStorage.setItem('pixelQuestBestTimes', JSON.stringify(bestTimes));
-                } catch(e) {}
-                isNewRecord = true;
-            }
+            if (!bestTimes[currentLevelIndex] || levelTimer < bestTimes[currentLevelIndex]) { bestTimes[currentLevelIndex] = levelTimer; try { localStorage.setItem('pixelQuestBestTimes', JSON.stringify(bestTimes)); } catch(e) {} isNewRecord = true; }
 
-            // Fade out the screen for cinematic effect
             transitionScreen.classList.add('active');
-
             setTimeout(() => {
                 transitionScreen.classList.remove('active');
-                
                 document.getElementById('level-desc').innerText = `Recovered ${crystalsCollected} / ${totalCrystalsInLevel} Crystals.`;
                 document.getElementById('level-time').innerText = `Time: ${levelTimer.toFixed(2)}s` + (isNewRecord ? ' (NEW RECORD!)' : '');
                 playSound('crystal');
-                
-                // Trigger storytelling sequence after level clears
                 let storyKey = `level${currentLevelIndex + 1}_clear`;
                 if(currentLevelIndex >= levels.length - 1) storyKey = 'ending';
-                
-                triggerDialogue(storyKey, () => {
-                    if (storyKey === 'ending') {
-                        stopAmbientMusic();
-                        showScreen('victory');
-                        gameState = 'victory';
-                    } else {
-                        showScreen('level');
-                        gameState = 'levelClear';
-                    }
-                });
-            }, 600); // Wait for screen fade to black
+                triggerDialogue(storyKey, () => { if (storyKey === 'ending') { stopAmbientMusic(); showScreen('victory'); gameState = 'victory'; } else { showScreen('level'); gameState = 'levelClear'; } });
+            }, 600); 
         }
 
-        // Event Listeners for UI
-        document.getElementById('start-btn').addEventListener('click', () => {
-            initAudio();
-            applyCharacterStats();
-            showScreen('none');
-            
-            // Play introductory dialogue
-            triggerDialogue('intro', () => {
-                currentLevelIndex = 0;
-                loadLevel(currentLevelIndex);
-            });
-        });
-
-        document.getElementById('next-level-btn').addEventListener('click', () => {
-            currentLevelIndex++;
-            showScreen('none');
-            loadLevel(currentLevelIndex);
-        });
-
-        document.getElementById('restart-btn').addEventListener('click', () => {
-            showScreen('none');
-            loadLevel(currentLevelIndex);
-        });
-
-        document.getElementById('play-again-btn').addEventListener('click', () => {
-            currentLevelIndex = 0;
-            showScreen('none');
-            loadLevel(currentLevelIndex);
-        });
-
-        // Reset Progress Logic
+        document.getElementById('start-btn').addEventListener('click', () => { initAudio(); applyCharacterStats(); showScreen('none'); triggerDialogue('intro', () => { currentLevelIndex = 0; loadLevel(currentLevelIndex); }); });
+        document.getElementById('next-level-btn').addEventListener('click', () => { currentLevelIndex++; showScreen('none'); loadLevel(currentLevelIndex); });
+        document.getElementById('restart-btn').addEventListener('click', () => { showScreen('none'); loadLevel(currentLevelIndex); });
+        document.getElementById('play-again-btn').addEventListener('click', () => { currentLevelIndex = 0; showScreen('none'); loadLevel(currentLevelIndex); });
+        
         let resetTimeout;
         document.getElementById('reset-progress-btn').addEventListener('click', function(e) {
             initAudio();
             if (this.innerText === "CONFIRM RESET?") {
-                try {
-                    localStorage.removeItem('pixelQuestBestTimes');
-                    localStorage.removeItem('pixelQuestUnlockedLevel');
-                } catch(err) {}
-                bestTimes = {};
-                unlockedLevel = 0;
-                
-                this.innerText = "PROGRESS CLEARED!";
-                this.style.borderColor = '#2ecc71';
-                this.style.color = '#2ecc71';
-                
-                setTimeout(() => {
-                    this.innerText = "⚠ Reset Progress";
-                    this.style.borderColor = '#f5b7b1';
-                    this.style.color = '#fff';
-                }, 2000);
+                try { localStorage.removeItem('pixelQuestBestTimes'); localStorage.removeItem('pixelQuestUnlockedLevel'); } catch(err) {}
+                bestTimes = {}; unlockedLevel = 0;
+                this.innerText = "PROGRESS CLEARED!"; this.style.borderColor = '#2ecc71'; this.style.color = '#2ecc71';
+                setTimeout(() => { this.innerText = "⚠ Reset Progress"; this.style.borderColor = '#f5b7b1'; this.style.color = '#fff'; }, 2000);
             } else {
-                this.innerText = "CONFIRM RESET?";
-                this.style.borderColor = '#e74c3c';
-                this.style.color = '#e74c3c';
-                
-                clearTimeout(resetTimeout);
-                resetTimeout = setTimeout(() => {
-                    this.innerText = "⚠ Reset Progress";
-                    this.style.borderColor = '#f5b7b1';
-                    this.style.color = '#fff';
-                }, 3000);
+                this.innerText = "CONFIRM RESET?"; this.style.borderColor = '#e74c3c'; this.style.color = '#e74c3c';
+                clearTimeout(resetTimeout); resetTimeout = setTimeout(() => { this.innerText = "⚠ Reset Progress"; this.style.borderColor = '#f5b7b1'; this.style.color = '#fff'; }, 3000);
             }
         });
 
-        // Pause Menu Listeners
-        document.getElementById('resume-btn').addEventListener('click', () => {
-            gameState = 'playing';
-            showScreen('none');
-            lastTime = performance.now(); // Reset time to prevent dt spike jump
-        });
+        document.getElementById('resume-btn').addEventListener('click', () => { gameState = 'playing'; showScreen('none'); lastTime = performance.now(); });
+        document.getElementById('quit-to-menu-btn').addEventListener('click', () => { stopAmbientMusic(); playAmbientMusic('menu'); showScreen('start'); gameState = 'start'; initMenuBackground(); });
 
-        document.getElementById('quit-to-menu-btn').addEventListener('click', () => {
-            stopAmbientMusic();
-            playAmbientMusic('menu');
-            showScreen('start');
-            gameState = 'start';
-            initMenuBackground();
-        });
-
-        // Level Select Logic
         function populateLevelSelect() {
-            const grid = document.getElementById('level-grid');
-            grid.innerHTML = '';
+            const grid = document.getElementById('level-grid'); grid.innerHTML = '';
             levels.forEach((lvl, idx) => {
-                const btn = document.createElement('div');
-                let isLocked = idx > unlockedLevel;
-                
-                btn.className = `level-card ${isLocked ? 'locked' : ''}`;
-                btn.style.border = `2px solid ${isLocked ? '#333' : '#fff'}`;
-                btn.style.color = isLocked ? '#555' : 'white';
-                
-                let bestTime = bestTimes[idx];
-                let timeText = bestTime && !isLocked ? `<br><span style="color:#f1c40f; font-size:0.5rem; text-shadow:none;">Best: ${bestTime.toFixed(2)}s</span>` : '';
+                const btn = document.createElement('div'); let isLocked = idx > unlockedLevel;
+                btn.className = `level-card ${isLocked ? 'locked' : ''}`; btn.style.border = `2px solid ${isLocked ? '#333' : '#fff'}`; btn.style.color = isLocked ? '#555' : 'white';
+                let bestTime = bestTimes[idx]; let timeText = bestTime && !isLocked ? `<br><span style="color:#f1c40f; font-size:0.5rem; text-shadow:none;">Best: ${bestTime.toFixed(2)}s</span>` : '';
                 let lockIcon = isLocked ? '<br><span style="font-size:0.8rem;">🔒 Locked</span>' : '';
-                
                 btn.innerHTML = `${idx + 1}. ${lvl.name}${timeText}${lockIcon}`;
-                
-                btn.addEventListener('click', () => {
-                    if (isLocked) return;
-                    initAudio();
-                    currentLevelIndex = idx;
-                    showScreen('none');
-                    loadLevel(currentLevelIndex);
-                });
+                btn.addEventListener('click', () => { if (isLocked) return; initAudio(); currentLevelIndex = idx; showScreen('none'); loadLevel(currentLevelIndex); });
                 grid.appendChild(btn);
             });
         }
 
-        document.getElementById('level-select-btn').addEventListener('click', () => {
-            initAudio();
-            applyCharacterStats();
-            populateLevelSelect();
-            showScreen('levelSelect');
-        });
-
-        document.getElementById('back-to-start-btn').addEventListener('click', () => {
-            initAudio();
-            playAmbientMusic('menu');
-            showScreen('start');
-        });
+        document.getElementById('level-select-btn').addEventListener('click', () => { initAudio(); applyCharacterStats(); populateLevelSelect(); showScreen('levelSelect'); });
+        document.getElementById('back-to-start-btn').addEventListener('click', () => { initAudio(); playAmbientMusic('menu'); showScreen('start'); });
 
         function populateCharSelect() {
-            const grid = document.getElementById('char-grid');
-            grid.innerHTML = '';
+            const grid = document.getElementById('char-grid'); grid.innerHTML = '';
             characters.forEach(c => {
-                const card = document.createElement('div');
-                card.className = `char-card ${c === selectedCharacter ? 'selected' : 'unselected'}`;
-                
-                card.innerHTML = `
-                    <div class="${c.portrait}" style="width:64px; height:64px; margin-bottom: 10px; border-radius:4px; border:2px solid #fff; position:relative; overflow:hidden;"></div>
-                    <div style="font-size:0.8rem; color:${c.colorEye}; margin-bottom:5px; text-shadow:1px 1px 0 #000;">${c.name}</div>
-                    <div style="font-size:0.5rem; color:#aaa; line-height:1.4;">${c.desc}</div>
-                `;
-                
-                card.addEventListener('click', () => {
-                    initAudio();
-                    selectedCharacter = c;
-                    populateCharSelect();
-                });
+                const card = document.createElement('div'); card.className = `char-card ${c === selectedCharacter ? 'selected' : 'unselected'}`;
+                card.innerHTML = `<div class="${c.portrait}" style="width:64px; height:64px; margin-bottom: 10px; border-radius:4px; border:2px solid #fff; position:relative; overflow:hidden;"></div><div style="font-size:0.8rem; color:${c.colorEye}; margin-bottom:5px; text-shadow:1px 1px 0 #000;">${c.name}</div><div style="font-size:0.5rem; color:#aaa; line-height:1.4;">${c.desc}</div>`;
+                card.addEventListener('click', () => { initAudio(); selectedCharacter = c; populateCharSelect(); });
                 grid.appendChild(card);
             });
         }
 
-        document.getElementById('char-select-btn').addEventListener('click', () => {
-            initAudio();
-            populateCharSelect();
-            showScreen('charSelect');
-        });
+        document.getElementById('char-select-btn').addEventListener('click', () => { initAudio(); populateCharSelect(); showScreen('charSelect'); });
+        document.getElementById('back-to-start-btn-char').addEventListener('click', () => { initAudio(); playAmbientMusic('menu'); showScreen('start'); });
+        document.getElementById('controls-btn').addEventListener('click', () => { initAudio(); showScreen('controls'); });
+        document.getElementById('back-from-controls-btn').addEventListener('click', () => { initAudio(); playAmbientMusic('menu'); showScreen('start'); });
 
-        document.getElementById('back-to-start-btn-char').addEventListener('click', () => {
-            initAudio();
-            playAmbientMusic('menu');
-            showScreen('start');
-        });
-
-        document.getElementById('controls-btn').addEventListener('click', () => {
-            initAudio();
-            showScreen('controls');
-        });
-
-        document.getElementById('back-from-controls-btn').addEventListener('click', () => {
-            initAudio();
-            playAmbientMusic('menu');
-            showScreen('start');
-        });
-
-        // Fullscreen Logic
-        const fullscreenBtn = document.getElementById('fullscreen-btn');
-        const gameContainer = document.getElementById('game-container');
-        let isCssFullscreen = false;
-
+        const fullscreenBtn = document.getElementById('fullscreen-btn'); const gameContainer = document.getElementById('game-container'); let isCssFullscreen = false;
         function toggleFullscreen() {
             try {
                 if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                    // Enter fullscreen
-                    let promise;
-                    if (gameContainer.requestFullscreen) {
-                        promise = gameContainer.requestFullscreen();
-                    } else if (gameContainer.webkitRequestFullscreen) { /* Safari */
-                        promise = gameContainer.webkitRequestFullscreen();
-                    }
-                    
-                    // Handle potential permission denial gracefully
-                    if (promise) {
-                        promise.catch(err => {
-                            console.warn("Native Fullscreen blocked by browser policy. Falling back to CSS Fullscreen.", err);
-                            toggleCssFullscreen();
-                        });
-                    } else {
-                         toggleCssFullscreen(); // Fallback if API doesn't exist
-                    }
-                    fullscreenBtn.innerText = '⤬'; // Change icon to exit
+                    let promise; if (gameContainer.requestFullscreen) promise = gameContainer.requestFullscreen(); else if (gameContainer.webkitRequestFullscreen) promise = gameContainer.webkitRequestFullscreen();
+                    if (promise) promise.catch(err => { toggleCssFullscreen(); }); else toggleCssFullscreen();
+                    fullscreenBtn.innerText = '⤬';
                 } else {
-                    // Exit fullscreen
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen();
-                    } else if (document.webkitExitFullscreen) { /* Safari */
-                        document.webkitExitFullscreen();
-                    }
-                    fullscreenBtn.innerText = '⛶'; // Change back to enter
+                    if (document.exitFullscreen) document.exitFullscreen(); else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                    fullscreenBtn.innerText = '⛶';
                 }
-            } catch (err) {
-                 console.warn("Fullscreen API failed. Falling back to CSS Fullscreen.", err);
-                 toggleCssFullscreen();
-            }
+            } catch (err) { toggleCssFullscreen(); }
         }
-        
-        function toggleCssFullscreen() {
-            isCssFullscreen = !isCssFullscreen;
-            if (isCssFullscreen) {
-                gameContainer.classList.add('css-fullscreen-mode');
-                fullscreenBtn.innerText = '⤬';
-            } else {
-                gameContainer.classList.remove('css-fullscreen-mode');
-                fullscreenBtn.innerText = '⛶';
-            }
-            
-            // Force a resize event so the canvas scales correctly
-            window.dispatchEvent(new Event('resize'));
-        }
-
-        fullscreenBtn.addEventListener('click', toggleFullscreen);
-        fullscreenBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            toggleFullscreen();
-        });
-
-        // Listen for fullscreen changes to update the button icon if user exits via ESC key
-        document.addEventListener('fullscreenchange', () => {
-             if (!document.fullscreenElement && !isCssFullscreen) fullscreenBtn.innerText = '⛶';
-        });
-        document.addEventListener('webkitfullscreenchange', () => {
-             if (!document.webkitFullscreenElement && !isCssFullscreen) fullscreenBtn.innerText = '⛶';
-        });
+        function toggleCssFullscreen() { isCssFullscreen = !isCssFullscreen; if (isCssFullscreen) { gameContainer.classList.add('css-fullscreen-mode'); fullscreenBtn.innerText = '⤬'; } else { gameContainer.classList.remove('css-fullscreen-mode'); fullscreenBtn.innerText = '⛶'; } window.dispatchEvent(new Event('resize')); }
+        fullscreenBtn.addEventListener('click', toggleFullscreen); fullscreenBtn.addEventListener('touchstart', (e) => { e.preventDefault(); toggleFullscreen(); });
+        document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && !isCssFullscreen) fullscreenBtn.innerText = '⛶'; });
+        document.addEventListener('webkitfullscreenchange', () => { if (!document.webkitFullscreenElement && !isCssFullscreen) fullscreenBtn.innerText = '⛶'; });
 
         function initMenuBackground() {
-            const levelData = levels[0];
-            currentLevelIndex = 0;
+            const levelData = levels[0]; currentLevelIndex = 0; mapGrid = [];
+            const grid = levelData.grid; mapHeight = grid.length * TILE_SIZE; mapWidth = grid[0].length * TILE_SIZE;
+            mapCanvas.width = mapWidth; mapCanvas.height = mapHeight; mapCtx.clearRect(0, 0, mapWidth, mapHeight);
             
-            mapGrid = [];
-            const grid = levelData.grid;
-            mapHeight = grid.length * TILE_SIZE;
-            mapWidth = grid[0].length * TILE_SIZE;
-            
-            mapCanvas.width = mapWidth;
-            mapCanvas.height = mapHeight;
-            mapCtx.clearRect(0, 0, mapWidth, mapHeight);
+            preRenderBackground(levelData);
 
             for (let y = 0; y < grid.length; y++) {
                 let row = [];
                 for (let x = 0; x < grid[y].length; x++) {
                     const char = grid[y][x];
-                    if (char === '#') {
-                        row.push(1);
-                        const isTop = (y === 0 || grid[y-1][x] !== '#');
-                        generateTileTexture(mapCtx, x * TILE_SIZE, y * TILE_SIZE, levelData.theme, isTop);
-                    } else {
-                        row.push(0);
-                    }
-                }
-                mapGrid.push(row);
+                    if (char === '#') { row.push(1); generateTileTexture(mapCtx, x * TILE_SIZE, y * TILE_SIZE, levelData.theme, (y === 0 || grid[y-1][x] !== '#')); } else { row.push(0); }
+                } mapGrid.push(row);
             }
-
             ambientParticles = [];
-            for(let i=0; i<40; i++) {
-                ambientParticles.push({
-                    x: Math.random() * mapWidth,
-                    y: Math.random() * mapHeight,
-                    size: Math.random() * 2 + 1,
-                    speed: Math.random() * 10 + 5,
-                    offset: Math.random() * Math.PI * 2
-                });
-            }
-            
-            // Fade in start menu
-            setTimeout(() => {
-                transitionScreen.classList.remove('active');
-            }, 100);
-
-            // Spawn player safely offscreen for menus
-            player.x = 0;
-            player.y = 0;
-            
+            for(let i=0; i<40; i++) ambientParticles.push({ x: Math.random() * mapWidth, y: Math.random() * mapHeight, size: Math.random() * 2 + 1, speed: Math.random() * 10 + 5, offset: Math.random() * Math.PI * 2 });
+            setTimeout(() => { transitionScreen.classList.remove('active'); }, 100);
+            player.x = 0; player.y = 0;
             if(!animationFrameId) gameLoop(performance.now());
         }
 
-        // Initialize setup
         setupInputs();
-        
-        // Launch cinematic menu background
         initMenuBackground();
-
     </script>
 </body>
 </html>
