@@ -192,6 +192,7 @@
         .highlight { color: #3498db; }
         .action { color: #e74c3c; }
 
+        /* Generic Button Default (for popups/menus) */
         button {
             background: linear-gradient(to bottom, #2ecc71, #27ae60);
             color: white;
@@ -218,6 +219,98 @@
         button:active:not(:disabled) {
             transform: translateY(10px);
             box-shadow: 0 0 0 #1e8449;
+        }
+
+        /* Revamped Main Menu Buttons */
+        .main-menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            width: 100%;
+            max-width: 400px;
+            margin-top: 10px;
+        }
+
+        .menu-btn {
+            position: relative;
+            width: 100%;
+            padding: 20px;
+            margin: 0;
+            background: linear-gradient(180deg, #34495e 0%, #2c3e50 100%);
+            border: 4px solid #7f8c8d;
+            border-radius: 12px;
+            color: #ecf0f1;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.2rem;
+            text-shadow: 2px 2px 0px #000;
+            box-shadow: 0 8px 0 #1a252f, 0 15px 20px rgba(0,0,0,0.4);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .menu-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 40%;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .menu-btn:hover {
+            transform: translateY(4px) !important; /* override default button */
+            box-shadow: 0 4px 0 #1a252f, 0 8px 15px rgba(0,0,0,0.4) !important;
+            border-color: #f1c40f;
+            color: #f1c40f;
+            background: linear-gradient(180deg, #3d566e 0%, #2c3e50 100%);
+            filter: none !important;
+        }
+
+        .menu-btn:active {
+            transform: translateY(8px) !important;
+            box-shadow: 0 0 0 #1a252f, 0 4px 10px rgba(0,0,0,0.4) !important;
+        }
+
+        .menu-btn.primary {
+            background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);
+            border-color: #a2d9ce;
+            box-shadow: 0 8px 0 #1e8449, 0 15px 20px rgba(0,0,0,0.4);
+        }
+
+        .menu-btn.primary:hover {
+            border-color: #fff;
+            color: #fff;
+            background: linear-gradient(180deg, #3ae085 0%, #27ae60 100%);
+            box-shadow: 0 4px 0 #1e8449, 0 8px 15px rgba(0,0,0,0.4) !important;
+        }
+
+        .menu-btn.primary:active {
+            box-shadow: 0 0 0 #1e8449, 0 4px 10px rgba(0,0,0,0.4) !important;
+        }
+        
+        .menu-btn.danger {
+            background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%);
+            border-color: #f5b7b1;
+            margin-top: 15px;
+            font-size: 0.8rem;
+            padding: 15px;
+            box-shadow: 0 8px 0 #922b21, 0 15px 20px rgba(0,0,0,0.4);
+        }
+        
+        .menu-btn.danger:hover {
+            border-color: #fff;
+            color: #fff;
+            background: linear-gradient(180deg, #f1695b 0%, #c0392b 100%);
+            box-shadow: 0 4px 0 #922b21, 0 8px 15px rgba(0,0,0,0.4) !important;
+        }
+
+        .menu-btn.danger:active {
+            box-shadow: 0 0 0 #922b21, 0 4px 10px rgba(0,0,0,0.4) !important;
         }
 
         #mobile-controls {
@@ -467,14 +560,6 @@
         .dialogue-prompt { position: absolute; bottom: 0; right: 0; color: #7f8c8d; font-size: 0.5rem; animation: blink 1s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-        .main-menu-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            align-items: center;
-            width: 100%;
-        }
-
         /* Fullscreen Container Styles for CSS Fallback */
         .css-fullscreen-mode {
             position: fixed !important;
@@ -546,16 +631,6 @@
             backdrop-filter: blur(10px);
             background-color: rgba(5, 5, 16, 0.6);
         }
-        
-        #reset-progress-btn {
-            background: transparent; 
-            color: #95a5a6; 
-            border: 2px dashed #555; 
-            padding: 10px 20px; 
-            font-size: 0.6rem; 
-            margin-top: 15px; 
-            box-shadow: none;
-        }
 
         @media (max-width: 768px) {
             .title-pixel { font-size: 2.2rem; }
@@ -566,6 +641,9 @@
             h1 { font-size: 1.8rem; }
             p { font-size: 0.6rem; margin-bottom: 10px; }
             button { font-size: 0.8rem; padding: 12px 24px; border-width: 3px; }
+            
+            .menu-btn { font-size: 1rem; padding: 15px; }
+            
             .btn-control { width: 70px; height: 70px; font-size: 1.5rem; touch-action: none; margin: 0 5px; }
             .control-group { gap: 10px; }
             .controls-text { display: none; } /* Hide complex kb controls on mobile */
@@ -653,11 +731,11 @@
             </div>
             
             <div class="main-menu-buttons">
-                <button id="start-btn">Play</button>
-                <button id="char-select-btn" style="background: linear-gradient(to bottom, #f39c12, #d35400); border-color: #fff;">Select Hero</button>
-                <button id="level-select-btn" style="background: linear-gradient(to bottom, #3498db, #2980b9); border-color: #fff;">Level Select</button>
-                <button id="controls-btn" style="background: linear-gradient(to bottom, #9b59b6, #8e44ad); border-color: #fff;">Controls</button>
-                <button id="reset-progress-btn">Reset Progress</button>
+                <button id="start-btn" class="menu-btn primary">► Play Game</button>
+                <button id="char-select-btn" class="menu-btn">★ Heroes</button>
+                <button id="level-select-btn" class="menu-btn">■ Levels</button>
+                <button id="controls-btn" class="menu-btn">⌨ Controls</button>
+                <button id="reset-progress-btn" class="menu-btn danger">⚠ Reset Progress</button>
             </div>
         </div>
 
@@ -792,7 +870,9 @@
         let ambientInterval = null;
 
         function initAudio() {
-            if (!audioCtx) audioCtx = new AudioContext();
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
             if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
@@ -979,7 +1059,7 @@
                     gain.gain.linearRampToValueAtTime(0.001, t + 0.5);
                     osc.start(t); osc.stop(t + 0.5);
                     break;
-                case 'blip':
+                case 'blip': // High pitch
                     osc.type = 'square';
                     osc.frequency.setValueAtTime(400 + Math.random()*100, t);
                     gain.gain.setValueAtTime(0.02, t);
@@ -1231,9 +1311,9 @@
                     "................................................................................",
                     "................................................................................",
                     "................................................................................",
-                    "..........................C.....................................................",
-                    ".........................###...................................C............G...",
-                    "..P......................................C....................###.........#####.",
+                    "..........................C.................................................G...",
+                    ".........................###...................................C..........#####.",
+                    "..P......................................C....................###...............",
                     "#####...................................###.....................................",
                     "#####.........................S.................................................",
                     "#####...C....................###.................S...................S..........",
@@ -1253,7 +1333,7 @@
                     ".................C............................................#####.............",
                     "................###............................C................................",
                     "..............................................###...............................",
-                    "..P.......................................................^.....................",
+                    "..P.............................................................................",
                     "#####......................C.........^..................#####...................",
                     "#####.....................###......#####........................................",
                     "#####...^......S##..##S.........................S##..##S........................",
@@ -1955,7 +2035,10 @@
                     player.jumpCount = 0; // Reset jump count on ground
                     player.coyoteTimer = player.coyoteTime; // Reset coyote time on land
                     // Reset Dash & Scarf on landing
-                    if(player.dashCooldownTimer <= 0) player.canDash = true;
+                    if(player.dashCooldownTimer > 0 || !player.canDash) {
+                        player.canDash = true;
+                        player.dashCooldownTimer = 0;
+                    }
                 } else {
                     player.coyoteTimer -= dt; // Tick down in air (Forgiveness mechanic)
                 }
@@ -1986,7 +2069,9 @@
             // Dash cooldown recovery
             if(player.dashCooldownTimer > 0) {
                 player.dashCooldownTimer -= dt;
-                if(player.dashCooldownTimer <= 0 && (player.grounded || player.wallSliding)) player.canDash = true;
+                if(player.dashCooldownTimer <= 0 && (player.grounded || player.wallSliding)) {
+                    player.canDash = true;
+                }
             }
 
             // Jump Buffer: Remember inputs right before hitting ground
@@ -2096,6 +2181,12 @@
                     player.wallSliding = true;
                     player.wallFacing = hitWall;
                     player.jumpCount = 0; // Reset jumps on wall grab
+                    
+                    if(player.dashCooldownTimer > 0 || !player.canDash) {
+                        player.canDash = true; // Dash refreshes on wall touch too!
+                        player.dashCooldownTimer = 0;
+                    }
+                    
                     if(player.vy > player.wallSlideSpeed) player.vy = player.wallSlideSpeed;
                     
                     // Dust particles while sliding
@@ -2223,7 +2314,7 @@
                     // Forgiving hitbox (smaller than visuals)
                     let hazardBox = {x: item.x + 4, y: item.y + 8, w: item.w - 8, h: item.h - 8};
                     if (gameState === 'playing' && checkAABB(pBox, hazardBox)) {
-                        die(); // Removed dash invincibility, spikes are always lethal!
+                        die(); 
                     }
                 }
                 else if (item.type === 'spring') {
@@ -2233,7 +2324,9 @@
                             player.vy = -750; // Huge boost
                             player.grounded = false;
                             player.isDashing = false; // Cancel dash on spring
-                            if(player.dashCooldownTimer <= 0) player.canDash = true; // Refill dash
+                            if(player.dashCooldownTimer > 0 || !player.canDash) {
+                                player.canDash = true; // Refill dash
+                            }
                             player.jumpCount = 0; // Restore jumps on spring bounce
                             screenShake = 0.3; // Add dramatic screen shake
                             playSound('bounce');
@@ -2344,8 +2437,9 @@
             ctx.shadowColor = player.colorParticle;
             ctx.shadowBlur = (player.canDash && player.state === 'idle') ? 15 + Math.sin(floatingTime*5)*8 : 0;
 
-            // Body
             ctx.fillStyle = player.colorBody;
+
+            // Body
             ctx.fillRect(-player.width/2, -player.height/2 + yOffset, player.width, player.height);
             
             // Character specific accessories
@@ -2820,9 +2914,9 @@
                 this.style.color = '#2ecc71';
                 
                 setTimeout(() => {
-                    this.innerText = "Reset Progress";
-                    this.style.borderColor = '#555';
-                    this.style.color = '#95a5a6';
+                    this.innerText = "⚠ Reset Progress";
+                    this.style.borderColor = '#f5b7b1';
+                    this.style.color = '#fff';
                 }, 2000);
             } else {
                 this.innerText = "CONFIRM RESET?";
@@ -2831,9 +2925,9 @@
                 
                 clearTimeout(resetTimeout);
                 resetTimeout = setTimeout(() => {
-                    this.innerText = "Reset Progress";
-                    this.style.borderColor = '#555';
-                    this.style.color = '#95a5a6';
+                    this.innerText = "⚠ Reset Progress";
+                    this.style.borderColor = '#f5b7b1';
+                    this.style.color = '#fff';
                 }, 3000);
             }
         });
