@@ -14,6 +14,12 @@
             100% { background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%); }
         }
 
+        @keyframes scanlinePulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 0.9; }
+            100% { opacity: 0.7; }
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -49,6 +55,9 @@
             object-fit: contain; /* Letterbox if screen ratio doesn't match */
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), 0 0 100px rgba(52, 152, 219, 0.3), 0 0 150px rgba(155, 89, 182, 0.2);                    
             filter: contrast(1.05) brightness(1.05) saturate(1.1);
+            will-change: transform;
+            transform: translateZ(0); /* Hardware Acceleration */
+            contain: strict;
         }
 
         .overlay {
@@ -68,6 +77,8 @@
             padding: 20px;
             box-sizing: border-box;
             transition: opacity 0.3s;
+            will-change: opacity, transform;
+            transform: translateZ(0);
         }
 
         /* Cinematic Screen Transition Overlay */
@@ -250,11 +261,12 @@
         /* Revamped Main Menu Buttons */
         .main-menu-buttons {
             display: flex;
-            flex-direction: column;
-            gap: 15px;
-            align-items: center;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
             width: 100%;
-            max-width: 400px;
+            max-width: 480px;
             margin-top: 10px;
         }
 
@@ -265,17 +277,17 @@
 
         .menu-btn {
             position: relative;
-            width: 100%;
-            padding: 20px;
+            width: calc(50% - 6px); /* 2 columns */
+            padding: 12px 10px;
             margin: 0;
             background: linear-gradient(180deg, #34495e 0%, #2c3e50 100%);
-            border: 4px solid #7f8c8d;
-            border-radius: 12px;
+            border: 3px solid #7f8c8d;
+            border-radius: 10px;
             color: #ecf0f1;
             font-family: 'Press Start 2P', cursive;
-            font-size: 1.2rem;
+            font-size: 0.8rem;
             text-shadow: 2px 2px 0px #000;
-            box-shadow: 0 8px 0 #1a252f, 0 15px 20px rgba(0,0,0,0.4);
+            box-shadow: 0 6px 0 #1a252f, 0 10px 15px rgba(0,0,0,0.4);
             cursor: pointer;
             transition: all 0.15s ease;
             text-transform: uppercase;
@@ -283,7 +295,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 15px;
+            gap: 8px;
+            will-change: transform;
         }
 
         .menu-btn::before {
@@ -316,14 +329,17 @@
         }
 
         .menu-btn:active {
-            transform: translateY(8px) !important;
-            box-shadow: 0 0 0 #1a252f, 0 4px 10px rgba(0,0,0,0.4) !important;
+            transform: translateY(6px) !important;
+            box-shadow: 0 0 0 #1a252f, 0 2px 8px rgba(0,0,0,0.4) !important;
         }
 
         .menu-btn.primary {
+            width: 100%;
+            padding: 18px 10px;
+            font-size: 1rem;
             background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);
             border-color: #a2d9ce;
-            box-shadow: 0 8px 0 #1e8449, 0 15px 20px rgba(0,0,0,0.4);
+            box-shadow: 0 6px 0 #1e8449, 0 10px 15px rgba(0,0,0,0.4);
         }
 
         .menu-btn.primary:hover {
@@ -334,16 +350,15 @@
         }
 
         .menu-btn.primary:active {
-            box-shadow: 0 0 0 #1e8449, 0 4px 10px rgba(0,0,0,0.4) !important;
+            box-shadow: 0 0 0 #1e8449, 0 2px 8px rgba(0,0,0,0.4) !important;
         }
         
         .menu-btn.danger {
             background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%);
             border-color: #f5b7b1;
-            margin-top: 15px;
-            font-size: 0.8rem;
-            padding: 15px;
-            box-shadow: 0 8px 0 #922b21, 0 15px 20px rgba(0,0,0,0.4);
+            font-size: 0.7rem;
+            box-shadow: 0 6px 0 #922b21, 0 10px 15px rgba(0,0,0,0.4);
+            margin-top: 5px;
         }
         
         .menu-btn.danger:hover {
@@ -354,7 +369,7 @@
         }
 
         .menu-btn.danger:active {
-            box-shadow: 0 0 0 #922b21, 0 4px 10px rgba(0,0,0,0.4) !important;
+            box-shadow: 0 0 0 #922b21, 0 2px 8px rgba(0,0,0,0.4) !important;
         }
 
         /* Dynamic Card Styles for Menus */
@@ -469,6 +484,8 @@
             -webkit-backdrop-filter: blur(4px);
             -webkit-tap-highlight-color: transparent;
             position: relative;
+            will-change: transform, background-color;
+            transform: translateZ(0); /* Hardware Accel for mobile controls */
         }
         
         /* Generous invisible padding to make missing buttons impossible */
@@ -552,6 +569,9 @@
             pointer-events: none;
             z-index: 13;
             opacity: 0.8;
+            animation: scanlinePulse 4s infinite linear;
+            will-change: opacity;
+            transform: translateZ(0);
         }
 
         /* Cinematic Level Banner Overhaul */
@@ -779,7 +799,10 @@
             p { font-size: 0.6rem; margin-bottom: 10px; }
             button { font-size: 0.8rem; padding: 12px 24px; border-width: 3px; }
             
-            .menu-btn { font-size: 1rem; padding: 15px; }
+            .main-menu-buttons { gap: 8px; max-width: 320px; }
+            .menu-btn { font-size: 0.65rem; padding: 12px 8px; width: calc(50% - 4px); }
+            .menu-btn.primary { font-size: 0.9rem; padding: 15px; width: 100%; }
+            .menu-btn.danger { margin-top: 0; width: 100%; }
             
             .btn-control { width: 70px; height: 70px; font-size: 1.5rem; touch-action: none; margin: 0 5px; }
             .control-group { gap: 10px; }
@@ -864,7 +887,7 @@
                 <button id="char-select-btn" class="menu-btn">★ Heroes</button>
                 <button id="level-select-btn" class="menu-btn">■ Levels</button>
                 <button id="controls-btn" class="menu-btn">⌨ Controls</button>
-                <button id="reset-progress-btn" class="menu-btn danger">⚠ Reset Progress</button>
+                <button id="reset-progress-btn" class="menu-btn danger">⚠ Reset</button>
             </div>
         </div>
 
@@ -959,6 +982,12 @@
         const lightCanvas = document.createElement('canvas');
         lightCanvas.width = GAME_WIDTH; lightCanvas.height = GAME_HEIGHT;
         const lightCtx = lightCanvas.getContext('2d');
+
+        // Extra Hardware Optimizations - Disable image smoothing globally
+        ctx.imageSmoothingEnabled = false;
+        mapCtx.imageSmoothingEnabled = false;
+        bgCtx.imageSmoothingEnabled = false;
+        lightCtx.imageSmoothingEnabled = false;
 
         // Pre-rendered Light Stamps to replace expensive createRadialGradient calls
         const lightStamps = {
@@ -1352,6 +1381,9 @@
                     if(gameState === 'playing' && isTouchDevice) setTimeout(updateRects, 50); 
                 };
 
+                // Add haptic feedback for ultra-responsive feel on mobile
+                const triggerHaptic = () => { if(navigator.vibrate) navigator.vibrate(15); };
+
                 const handleTouches = (e) => {
                     e.preventDefault();
                     initAudio();
@@ -1370,13 +1402,14 @@
                         if(rectD && tx > rectD.left - pad && tx < rectD.right + pad/2 && ty > rectD.top - pad && ty < rectD.bottom + pad) touchD = true;
                     }
 
+                    // Haptic feedback for newly pressed actions
+                    if (touchJ && !keys.up) { jumpPressedThisFrame = true; triggerHaptic(); }
+                    if (touchD && !keys.dash) { dashPressedThisFrame = true; triggerHaptic(); }
+                    if ((touchL && !keys.left) || (touchR && !keys.right)) triggerHaptic(); // Vibrate slightly on direction switch
+
                     keys.left = touchL;
                     keys.right = touchR;
-                    
-                    if(touchJ && !keys.up) jumpPressedThisFrame = true;
                     keys.up = touchJ;
-                    
-                    if(touchD && !keys.dash) dashPressedThisFrame = true;
                     keys.dash = touchD;
 
                     // Visual feedback
