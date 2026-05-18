@@ -9,9 +9,9 @@
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
         @keyframes bgPulse {
-            0% { background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%); }
-            50% { background: radial-gradient(circle at center, #23233b 0%, #050508 100%); }
-            100% { background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%); }
+            0% { background: linear-gradient(45deg, #0f0c29, #302b63, #24243e); background-size: 400% 400%; background-position: 0% 50%; }
+            50% { background: linear-gradient(45deg, #2b1055, #753a88, #cc2b5e); background-size: 400% 400%; background-position: 100% 50%; }
+            100% { background: linear-gradient(45deg, #0f0c29, #302b63, #24243e); background-size: 400% 400%; background-position: 0% 50%; }
         }
         
         @keyframes goldPulse {
@@ -46,8 +46,9 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
-            animation: bgPulse 8s infinite alternate ease-in-out;
+            background: linear-gradient(45deg, #0f0c29, #302b63, #24243e);
+            background-size: 400% 400%;
+            animation: bgPulse 15s ease infinite;
         }
         
         body.game-beaten #game-container {
@@ -82,8 +83,8 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background-color: rgba(5, 5, 16, 0.85);
-            backdrop-filter: blur(4px);
+            background-color: rgba(15, 5, 30, 0.8);
+            backdrop-filter: blur(8px);
             z-index: 20;
             text-align: center;
             padding: 20px;
@@ -91,6 +92,11 @@
             transition: opacity 0.3s;
             will-change: opacity, transform;
             transform: translateZ(0);
+        }
+
+        #start-screen {
+            background-color: transparent !important;
+            backdrop-filter: none !important;
         }
 
         #transition-screen {
@@ -112,7 +118,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             position: relative;
             animation: logoFloat 3s ease-in-out infinite alternate;
         }
@@ -287,14 +293,14 @@
             box-shadow: 0 0 0 #1e8449;
         }
 
-        /* Revamped Arcade Menu Buttons */
+        /* Revamped Title Screen Arcade Buttons */
         .main-menu-buttons {
             display: grid;
             grid-template-columns: 1fr 1fr; 
-            gap: 10px;
+            gap: 15px;
             justify-content: center;
             width: 100%;
-            max-width: 360px;
+            max-width: 400px;
             margin-top: 10px;
             padding: 0 10px;
         }
@@ -305,21 +311,20 @@
         }
 
         .menu-btn {
-            position: relative;
-            width: 100%;
-            padding: 12px 10px;
-            margin: 0;
-            background: linear-gradient(180deg, #34495e 0%, #2c3e50 100%);
-            border: 2px solid #7f8c8d;
-            border-radius: 6px;
-            color: #ecf0f1;
+            background: linear-gradient(135deg, rgba(30, 60, 114, 0.9) 0%, rgba(42, 82, 152, 0.9) 100%);
+            border: 2px solid #4facfe;
+            border-radius: 8px;
+            color: #fff;
             font-family: 'Press Start 2P', cursive;
-            font-size: 0.7rem;
-            text-shadow: 1px 1px 0px #000;
-            box-shadow: 0 4px 0 #1a252f, 0 6px 10px rgba(0,0,0,0.4);
+            font-size: 0.75rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3), inset 0 0 10px rgba(255,255,255,0.1);
             cursor: pointer;
-            transition: all 0.15s ease;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             text-transform: uppercase;
+            padding: 15px 10px;
+            margin: 0;
+            position: relative;
             overflow: hidden;
             display: flex;
             justify-content: center;
@@ -331,63 +336,107 @@
         .menu-btn::before {
             content: ''; position: absolute;
             top: 0; left: 0; right: 0; height: 40%;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.15);
         }
 
         .menu-btn::after {
             content: ''; position: absolute;
             top: 0; left: -100%;
             width: 30%; height: 100%;
-            background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);
             transform: skewX(-25deg);
         }
 
         .menu-btn:hover {
-            transform: translateY(2px) !important;
-            box-shadow: 0 2px 0 #1a252f, 0 4px 8px rgba(0,0,0,0.4) !important;
-            border-color: #f1c40f; color: #f1c40f;
-            background: linear-gradient(180deg, #3d566e 0%, #2c3e50 100%);
-            filter: none !important;
+            background: linear-gradient(135deg, rgba(79, 172, 254, 1) 0%, rgba(0, 242, 254, 1) 100%);
+            border-color: #fff;
+            color: #fff;
+            box-shadow: 0 6px 20px rgba(79, 172, 254, 0.6), inset 0 0 15px rgba(255,255,255,0.4) !important;
+            transform: translateY(-3px) scale(1.02) !important;
         }
 
         .menu-btn:hover::after { animation: btnSwipe 0.6s ease-out; }
 
         .menu-btn:active {
-            transform: translateY(4px) !important;
-            box-shadow: 0 0 0 #1a252f, 0 2px 5px rgba(0,0,0,0.4) !important;
+            transform: translateY(2px) scale(0.98) !important;
+            box-shadow: 0 2px 10px rgba(79, 172, 254, 0.4) !important;
         }
 
         .menu-btn.primary {
             grid-column: span 2; 
-            padding: 16px 10px;
+            background: linear-gradient(135deg, rgba(241, 39, 17, 0.9) 0%, rgba(245, 175, 25, 0.9) 100%);
+            border-color: #ffeb3b;
+            box-shadow: 0 6px 20px rgba(241, 39, 17, 0.4), inset 0 0 10px rgba(255,255,255,0.2);
             font-size: 0.9rem;
-            background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);
-            border-color: #a2d9ce;
-            box-shadow: 0 5px 0 #1e8449, 0 8px 15px rgba(0,0,0,0.4);
+            padding: 18px 10px;
         }
 
         .menu-btn.primary:hover {
-            border-color: #fff; color: #fff;
-            background: linear-gradient(180deg, #3ae085 0%, #27ae60 100%);
-            box-shadow: 0 3px 0 #1e8449, 0 6px 10px rgba(0,0,0,0.4) !important;
+            background: linear-gradient(135deg, rgba(255, 65, 108, 1) 0%, rgba(255, 75, 43, 1) 100%);
+            box-shadow: 0 8px 25px rgba(255, 65, 108, 0.7), inset 0 0 20px rgba(255,255,255,0.5) !important;
+            border-color: #fff;
         }
         
         .menu-btn.danger {
             grid-column: span 2;
-            background: transparent;
-            border: 2px dashed #555;
-            color: #95a5a6;
-            font-size: 0.6rem;
-            padding: 10px;
+            background: rgba(20, 5, 5, 0.6);
+            border: 2px dashed #ff4b2b;
+            color: #ff4b2b;
             box-shadow: none;
             margin-top: 5px;
         }
         
         .menu-btn.danger:hover {
-            border-color: #e74c3c; color: #e74c3c;
-            background: rgba(231, 76, 60, 0.1);
-            box-shadow: none !important;
-            transform: scale(0.98) !important;
+            background: rgba(255, 75, 43, 0.2);
+            color: #ffeb3b;
+            border-color: #ffeb3b;
+            box-shadow: 0 0 15px rgba(255, 75, 43, 0.4) !important;
+            transform: scale(0.98) translateY(0) !important;
+        }
+
+        /* Chapter Buttons Revamp */
+        .chapter-btn {
+            background: linear-gradient(135deg, rgba(75, 108, 183, 0.9), rgba(24, 40, 72, 0.9));
+            border: 3px solid #6dd5ed;
+            border-radius: 12px;
+            color: white;
+            padding: 25px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5), inset 0 0 15px rgba(255,255,255,0.1);
+            text-align: center;
+            line-height: 1.5;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+        }
+        
+        .chapter-btn::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent);
+            transform: skewX(-25deg); transition: 0.5s;
+        }
+
+        .chapter-btn:hover:not(.locked) {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 15px 35px rgba(109, 213, 237, 0.6), inset 0 0 20px rgba(255,255,255,0.3);
+            border-color: #fff;
+            background: linear-gradient(135deg, rgba(33, 147, 176, 1), rgba(109, 213, 237, 1));
+        }
+        
+        .chapter-btn:hover:not(.locked)::after {
+            left: 200%;
+            transition: 0.7s ease-out;
+        }
+
+        .chapter-btn.locked {
+            background: linear-gradient(135deg, rgba(20, 30, 48, 0.8), rgba(36, 59, 85, 0.8));
+            border-color: #444;
+            color: #777;
+            cursor: not-allowed;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
 
         /* Dynamic Card Styles for Menus */
@@ -421,29 +470,38 @@
         }
 
         .level-card {
-            background: rgba(10, 15, 30, 0.7);
-            font-size: 0.7rem;
-            padding: 15px;
-            width: 100%;
-            max-width: 200px;
-            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(31, 28, 44, 0.85) 0%, rgba(146, 141, 171, 0.85) 100%);
+            border: 2px solid #a8c0ff;
+            font-size: 0.75rem;
+            padding: 20px 15px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            color: #fff;
             cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             text-align: center;
-            position: relative;
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(5px);
+            min-height: 100px;
         }
+
         .level-card:hover:not(.locked) {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
-            border-color: #3498db !important;
-            background: rgba(20, 30, 50, 0.9);
+            background: linear-gradient(135deg, rgba(255, 117, 140, 0.9) 0%, rgba(255, 126, 179, 0.9) 100%);
+            border-color: #fff !important;
+            box-shadow: 0 12px 30px rgba(255, 117, 140, 0.6);
+            transform: translateY(-6px) scale(1.03);
+            color: #fff;
         }
+
         .level-card.locked {
-            cursor: not-allowed;
-            background: rgba(10, 10, 10, 0.8);
+            background: rgba(15, 15, 20, 0.85) !important;
+            border: 2px dashed #444 !important;
             color: #555 !important;
+            cursor: not-allowed;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
         #mobile-controls {
@@ -851,10 +909,19 @@
         }
         #secret-btn::before {
             content: '';
-            width: 4px; 
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
+            width: 14px; 
+            height: 14px;
+            background: linear-gradient(135deg, #00f2fe, #4facfe, #f0f, #ff0844);
+            background-size: 300% 300%;
+            border-radius: 3px;
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.6), 0 0 10px rgba(255, 8, 68, 0.6);
+            animation: pulseAnomaly 3s ease-in-out infinite alternate;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes pulseAnomaly {
+            0% { transform: rotate(0deg) scale(0.8); background-position: 0% 50%; border-radius: 3px;}
+            50% { transform: rotate(180deg) scale(1.1); background-position: 100% 50%; border-radius: 50%;}
+            100% { transform: rotate(360deg) scale(0.8); background-position: 0% 50%; border-radius: 3px;}
         }
         #secret-btn:hover::before {
             width: 24px; 
@@ -975,15 +1042,15 @@
             <div class="main-menu-buttons">
                 <button id="start-btn" class="menu-btn primary">► Play Game</button>
                 <button id="char-select-btn" class="menu-btn">★ Heroes</button>
-                <button id="level-select-btn" class="menu-btn">■ Levels</button>
+                <button id="chapter-select-btn" class="menu-btn">■ Chapters</button>
                 <button id="controls-btn" class="menu-btn">⌨ Controls</button>
                 <button id="reset-progress-btn" class="menu-btn danger">⚠ Reset</button>
             </div>
         </div>
 
         <div id="controls-screen" class="overlay hidden">
-            <h1 style="font-size: 2.5rem; color: #9b59b6; text-shadow: 2px 2px 0 #fff; margin-bottom: 20px;">CONTROLS</h1>
-            <div class="controls-text" style="display: block; font-size: 0.8rem; text-align: left; background: rgba(0,0,0,0.8); padding: 30px; border: 4px solid #9b59b6; border-radius: 8px; margin-bottom: 20px; max-width: 500px;">
+            <h1 style="font-size: 2.5rem; color: #00f2fe; text-shadow: 2px 2px 0 #ff0844; margin-bottom: 20px;">CONTROLS</h1>
+            <div class="controls-text" style="display: block; font-size: 0.8rem; text-align: left; background: rgba(0,0,0,0.8); padding: 30px; border: 4px solid #00f2fe; border-radius: 8px; margin-bottom: 20px; max-width: 500px;">
                 <p class="mb-4"><span class="highlight">ARROWS / A D</span> : Move</p>
                 <p class="mb-4"><span class="highlight">SPACE / W / UP</span> : Jump <br><span class="text-gray-400" style="font-size:0.6rem;">(Hold against walls to Wall-Slide/Jump)</span></p>
                 <p class="mb-0"><span class="action">SHIFT / Z / X</span> : Dash <br><span class="text-gray-400" style="font-size:0.6rem;">(Mid-air or Ground)</span></p>
@@ -997,24 +1064,45 @@
                 <button class="remap-btn" id="remap-dash">DASH: Default</button>
             </div>
 
-            <button id="back-from-controls-btn" style="background: linear-gradient(to bottom, #e74c3c, #c0392b); padding: 15px 30px;">Back</button>
+            <button id="back-from-controls-btn" class="menu-btn danger" style="width: auto; padding: 15px 40px;">Back</button>
+        </div>
+
+        <div id="chapter-select-screen" class="overlay hidden">
+            <h1 style="font-size: 2.5rem; color: #00f2fe; text-shadow: 2px 2px 0 #ff0844, 0 0 20px rgba(0,242,254,0.5); margin-bottom: 30px;">SELECT CHAPTER</h1>
+            <div style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 500px; margin-bottom: 40px;">
+                <button id="chapter-1-btn" class="chapter-btn">
+                    <span style="display:block; font-size:1.2rem; color:#f1c40f; margin-bottom:8px;">CHAPTER ONE</span>
+                    The Wizard of Darkness
+                </button>
+                <button id="chapter-2-btn" class="chapter-btn locked">
+                    <span style="display:block; font-size:1.2rem; margin-bottom:8px;">CHAPTER TWO</span>
+                    <span style="font-size:0.6rem; color:#f39c12;">Coming Soon...</span>
+                </button>
+            </div>
+            <button id="back-to-start-btn-chap" class="menu-btn danger" style="width: auto; padding: 15px 40px;">Back</button>
+        </div>
+
+        <div id="chapter-2-screen" class="overlay hidden">
+            <h1 style="font-size: 2.5rem; color: #f1c40f; text-shadow: 2px 2px 0 #e74c3c, 0 0 20px rgba(241,196,15,0.5); margin-bottom: 20px;">CHAPTER 2</h1>
+            <p style="font-size: 1.5rem; color: #ecf0f1; animation: blinkSmooth 2s infinite; text-shadow: 2px 2px 0px #000;">Coming Soon...</p>
+            <button id="back-to-chapters-from-2" class="menu-btn danger" style="width: auto; padding: 15px 40px; margin-top: 30px;">Back</button>
         </div>
 
         <div id="level-select-screen" class="overlay hidden">
-            <h1 style="font-size: 2rem; margin-bottom: 10px;">SELECT LEVEL</h1>
-            <p style="color: #95a5a6; font-size: 0.6rem; margin-bottom: 20px;">Complete levels to unlock new areas</p>
-            <div id="level-grid" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; max-width: 600px; margin-bottom: 20px;">
+            <h1 style="font-size: 2.5rem; color: #f1c40f; text-shadow: 2px 2px 0 #e74c3c, 0 0 20px rgba(241,196,15,0.5); margin-bottom: 5px;">CHAPTER 1</h1>
+            <p style="color: #00f2fe; font-size: 0.7rem; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 1px 1px 0px #000;">The Wizard of Darkness</p>
+            <div id="level-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; width: 100%; max-width: 700px; margin-bottom: 30px;">
                 <!-- Populated via JS -->
             </div>
-            <button id="back-to-start-btn" style="background: linear-gradient(to bottom, #e74c3c, #c0392b); padding: 15px 30px;">Back</button>
+            <button id="back-to-start-btn" class="menu-btn danger" style="width: auto; padding: 15px 40px;">Back</button>
         </div>
 
         <div id="char-select-screen" class="overlay hidden">
-            <h1 style="font-size: 2.5rem; color: #f1c40f; text-shadow: 2px 2px 0 #fff; margin-bottom: 20px;">CHOOSE HERO</h1>
+            <h1 style="font-size: 2.5rem; color: #00f2fe; text-shadow: 2px 2px 0 #ff0844, 0 0 20px rgba(0,242,254,0.5); margin-bottom: 30px;">CHOOSE HERO</h1>
             <div id="char-grid" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-bottom: 30px; max-width: 800px;">
                 <!-- Populated via JS -->
             </div>
-            <button id="back-to-start-btn-char" style="background: linear-gradient(to bottom, #e74c3c, #c0392b); padding: 15px 30px;">Back</button>
+            <button id="back-to-start-btn-char" class="menu-btn danger" style="width: auto; padding: 15px 40px;">Back</button>
         </div>
 
         <!-- NEW Secret Screen -->
@@ -1032,28 +1120,31 @@
         </div>
 
         <div id="pause-screen" class="overlay hidden">
-            <h1 style="color: #3498db; text-shadow: 4px 4px 0 #2980b9;">PAUSED</h1>
-            <button id="resume-btn" style="background: linear-gradient(to bottom, #f1c40f, #e67e22); padding: 15px 30px;">Resume</button>
-            <button id="quit-to-menu-btn" style="background: linear-gradient(to bottom, #e74c3c, #c0392b); padding: 15px 30px;">Quit to Menu</button>
+            <h1 style="color: #00f2fe; text-shadow: 4px 4px 0 #1e3c72; margin-bottom: 20px;">PAUSED</h1>
+            <button id="resume-btn" class="menu-btn primary" style="width: auto; padding: 15px 40px; margin-bottom: 10px;">Resume</button>
+            <button id="quit-to-menu-btn" class="menu-btn danger" style="width: auto; padding: 15px 40px;">Quit to Menu</button>
         </div>
 
         <div id="level-screen" class="overlay hidden">
-            <h1 id="level-title">Area Cleared!</h1>
-            <p id="level-desc">Crystals secured. Power returning.</p>
-            <p id="level-time" style="color: #3498db; margin-top: -10px; margin-bottom: 20px;">Time: 0.00s</p>
-            <button id="next-level-btn">Proceed [ENTER]</button>
+            <h1 id="level-title" style="color: #f1c40f; text-shadow: 2px 2px 0 #e74c3c; margin-bottom: 10px;">Area Cleared!</h1>
+            <p id="level-desc" style="color: #fff; font-size: 0.8rem;">Crystals secured. Power returning.</p>
+            <p id="level-time" style="color: #00f2fe; margin-top: -10px; margin-bottom: 30px;">Time: 0.00s</p>
+            <button id="next-level-btn" class="menu-btn primary" style="width: auto; padding: 15px 40px;">Proceed [ENTER]</button>
         </div>
 
         <div id="game-over-screen" class="overlay hidden">
-            <h1 class="text-red-600 text-shadow-none" style="text-shadow: 3px 3px 0 #550000;">YOU DIED</h1>
-            <p>The darkness consumes you...</p>
-            <button id="restart-btn">Resurrect [R]</button>
+            <h1 class="text-red-600 text-shadow-none" style="text-shadow: 3px 3px 0 #550000; margin-bottom: 10px;">YOU DIED</h1>
+            <p style="margin-bottom: 30px;">The darkness consumes you...</p>
+            <button id="restart-btn" class="menu-btn" style="background: linear-gradient(135deg, #8e44ad, #c0392b); width: auto; padding: 15px 40px;">Resurrect [R]</button>
         </div>
 
         <div id="victory-screen" class="overlay hidden">
             <h1 class="text-yellow-400" style="text-shadow: 4px 4px 0 #d35400;">VICTORY</h1>
             <p>The realm is restored! Your mastery of movement is legendary.</p>
-            <button id="play-again-btn">Play Again</button>
+            <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px; width: 100%; max-width: 300px;">
+                <button id="victory-level-select-btn" class="menu-btn primary" style="grid-column: span 1;">Level Select</button>
+                <button id="victory-title-screen-btn" class="menu-btn danger" style="grid-column: span 1; margin-top:0;">Back to Title</button>
+            </div>
         </div>
 
         <!-- Dialogue Box UI -->
@@ -1141,6 +1232,8 @@
         const screens = {
             start: document.getElementById('start-screen'),
             controls: document.getElementById('controls-screen'),
+            chapterSelect: document.getElementById('chapter-select-screen'),
+            chapter2: document.getElementById('chapter-2-screen'),
             levelSelect: document.getElementById('level-select-screen'),
             charSelect: document.getElementById('char-select-screen'),
             secret: document.getElementById('secret-screen'),
@@ -2024,20 +2117,20 @@
                         boss.y = 80 + Math.sin(floatingTime * 2.5) * 20;
 
                         boss.timer += dt;
-                        let shootRate = Math.max(0.6, boss.hp * 0.3); 
+                        let shootRate = Math.max(0.65, boss.hp * 0.35); 
                         if (boss.timer > shootRate) {
                             boss.timer = 0;
                             
                             // Smart predictive targeting based on Boss HP
                             let targetX = player.x + player.width/2;
                             let targetY = player.y + player.height/2;
-                            let predictionFactor = (5 - boss.hp) * 0.1;
+                            let predictionFactor = (5 - boss.hp) * 0.08;
                             targetX += player.vx * predictionFactor;
 
                             let dx = targetX - boss.x;
                             let dy = targetY - (boss.y + 30);
                             let dist = Math.sqrt(dx*dx + dy*dy) || 1;
-                            let speed = 200 + (5 - boss.hp) * 60; // Gets faster!
+                            let speed = 200 + (5 - boss.hp) * 45; // Gets faster, but balanced
 
                             projectiles.push({
                                 x: boss.x,
@@ -2493,7 +2586,9 @@
                 let px = Math.round(p.x - camera.x); let py = Math.round(p.y - camera.y);
                 if (px > 0 && px < GAME_WIDTH && py > 0 && py < GAME_HEIGHT) {
                     let twinkle = Math.abs(Math.sin(floatingTime * p.speed * 0.5 + p.offset));
-                    ctx.fillStyle = `rgba(255, 255, 255, ${0.1 + twinkle * 0.4})`; ctx.fillRect(px, py, p.size, p.size);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${0.1 + twinkle * 0.4})`;
+                    if (p.color) ctx.fillStyle = p.color; 
+                    ctx.fillRect(px, py, p.size, p.size);
                 }
             });
             ctx.globalCompositeOperation = 'source-over';
@@ -2577,7 +2672,9 @@
         document.getElementById('start-btn')?.addEventListener('click', () => { initAudio(); applyCharacterStats(); showScreen('none'); triggerDialogue('intro', () => { currentLevelIndex = 0; loadLevel(currentLevelIndex); }); });
         document.getElementById('next-level-btn')?.addEventListener('click', () => { currentLevelIndex++; showScreen('none'); loadLevel(currentLevelIndex); });
         document.getElementById('restart-btn')?.addEventListener('click', () => { showScreen('none'); loadLevel(currentLevelIndex); });
-        document.getElementById('play-again-btn')?.addEventListener('click', () => { currentLevelIndex = 0; showScreen('none'); loadLevel(currentLevelIndex); });
+        
+        document.getElementById('victory-level-select-btn')?.addEventListener('click', () => { stopAmbientMusic(); playAmbientMusic('menu'); gameState = 'start'; initMenuBackground(); populateLevelSelect(); showScreen('levelSelect'); });
+        document.getElementById('victory-title-screen-btn')?.addEventListener('click', () => { stopAmbientMusic(); playAmbientMusic('menu'); gameState = 'start'; initMenuBackground(); showScreen('start'); });
         
         let resetTimeout;
         document.getElementById('reset-progress-btn')?.addEventListener('click', function(e) {
@@ -2613,17 +2710,28 @@
                 if (idx >= 10) return; // Hide Secret Levels from standard list
 
                 const btn = document.createElement('div'); let isLocked = idx > unlockedLevel;
-                btn.className = `level-card ${isLocked ? 'locked' : ''}`; btn.style.border = `2px solid ${isLocked ? '#333' : '#fff'}`; btn.style.color = isLocked ? '#555' : 'white';
-                let bestTime = bestTimes[idx]; let timeText = bestTime && !isLocked ? `<br><span style="color:#f1c40f; font-size:0.5rem; text-shadow:none;">Best: ${bestTime.toFixed(2)}s</span>` : '';
-                let lockIcon = isLocked ? '<br><span style="font-size:0.8rem;">🔒 Locked</span>' : '';
-                btn.innerHTML = `${idx + 1}. ${lvl.name}${timeText}${lockIcon}`;
+                btn.className = `level-card ${isLocked ? 'locked' : ''}`;
+                let bestTime = bestTimes[idx]; 
+                let timeText = bestTime && !isLocked ? `<div style="color:#00f2fe; font-size:0.5rem; margin-top:8px;">Best: ${bestTime.toFixed(2)}s</div>` : '';
+                let lockIcon = isLocked ? '<div style="font-size:0.8rem; margin-top:8px;">🔒 Locked</div>' : '';
+                
+                btn.innerHTML = `
+                    <div style="font-size:1.2rem; color:#f1c40f; margin-bottom:8px; text-shadow:1px 1px 0 #000;">${idx + 1}</div>
+                    <div style="font-size:0.65rem; line-height:1.4; text-shadow:1px 1px 0 #000;">${lvl.name}</div>
+                    ${timeText}${lockIcon}
+                `;
+
                 btn.addEventListener('click', () => { if (isLocked) return; initAudio(); currentLevelIndex = idx; showScreen('none'); loadLevel(currentLevelIndex); });
                 grid.appendChild(btn);
             });
         }
 
-        document.getElementById('level-select-btn')?.addEventListener('click', () => { initAudio(); applyCharacterStats(); populateLevelSelect(); showScreen('levelSelect'); });
-        document.getElementById('back-to-start-btn')?.addEventListener('click', () => { initAudio(); playAmbientMusic('menu'); showScreen('start'); });
+        document.getElementById('chapter-select-btn')?.addEventListener('click', () => { initAudio(); applyCharacterStats(); showScreen('chapterSelect'); });
+        document.getElementById('chapter-1-btn')?.addEventListener('click', () => { initAudio(); populateLevelSelect(); showScreen('levelSelect'); });
+        document.getElementById('chapter-2-btn')?.addEventListener('click', () => { initAudio(); showScreen('chapter2'); });
+        document.getElementById('back-to-start-btn-chap')?.addEventListener('click', () => { initAudio(); playAmbientMusic('menu'); showScreen('start'); });
+        document.getElementById('back-to-chapters-from-2')?.addEventListener('click', () => { initAudio(); showScreen('chapterSelect'); });
+        document.getElementById('back-to-start-btn')?.addEventListener('click', () => { initAudio(); showScreen('chapterSelect'); });
 
         function populateCharSelect() {
             const grid = document.getElementById('char-grid'); 
@@ -2649,14 +2757,8 @@
         
         document.getElementById('secret-btn')?.addEventListener('click', () => {
             initAudio();
-            if (unlockedLevel >= 10) {
-                showScreen('secret');
-            } else {
-                playSound('blip');
-                let btn = document.getElementById('secret-btn');
-                btn.style.backgroundColor = 'red';
-                setTimeout(() => btn.style.backgroundColor = 'transparent', 200);
-            }
+            playSound('crystal');
+            showScreen('secret');
         });
 
         const fullscreenBtn = document.getElementById('fullscreen-btn'); const gameContainer = document.getElementById('game-container'); let isCssFullscreen = false;
@@ -2683,7 +2785,8 @@
         document.addEventListener('webkitfullscreenchange', () => { if (!document.webkitFullscreenElement && !isCssFullscreen && fullscreenBtn) fullscreenBtn.innerText = '⛶'; });
 
         function initMenuBackground() {
-            const levelData = levels[0]; currentLevelIndex = 0; mapGrid = [];
+            const levelData = { ...levels[0], theme: 'void', bgColors: ["#090979", "#ff007f"] }; 
+            currentLevelIndex = 0; mapGrid = [];
             const grid = levelData.grid; mapHeight = grid.length * TILE_SIZE; mapWidth = grid[0].length * TILE_SIZE;
             mapCanvas.width = mapWidth; mapCanvas.height = mapHeight; mapCtx.clearRect(0, 0, mapWidth, mapHeight);
             
@@ -2702,7 +2805,16 @@
                 } mapGrid.push(row);
             }
             ambientParticles = [];
-            for(let i=0; i<40; i++) ambientParticles.push({ x: Math.random() * mapWidth, y: Math.random() * mapHeight, size: Math.random() * 2 + 1, speed: Math.random() * 10 + 5, offset: Math.random() * Math.PI * 2, color: gameBeaten ? '#f1c40f' : '#ffffff' });
+            for(let i=0; i<80; i++) {
+                ambientParticles.push({ 
+                    x: Math.random() * mapWidth, 
+                    y: Math.random() * mapHeight, 
+                    size: Math.random() * 4 + 1, 
+                    speed: Math.random() * 20 + 5, 
+                    offset: Math.random() * Math.PI * 2, 
+                    color: ['#00f2fe', '#4facfe', '#f0f', '#ff0844', '#f1c40f', '#ffffff'][Math.floor(Math.random()*6)] 
+                });
+            }
             setTimeout(() => { transitionScreen?.classList.remove('active'); }, 100);
             player.x = 0; player.y = 0;
             if(!animationFrameId) gameLoop(performance.now());
