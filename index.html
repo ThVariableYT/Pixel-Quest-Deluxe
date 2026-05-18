@@ -544,6 +544,25 @@
             box-shadow: 0 8px 32px rgba(0,0,0,0.5);
         }
 
+        #boss-hud {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: none;
+            background: rgba(10, 15, 30, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 12px 18px;
+            border-radius: 12px;
+            border-top: 2px solid rgba(231, 76, 60, 0.6);
+            border-bottom: 2px solid rgba(231, 76, 60, 0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.8), inset 0 0 20px rgba(231, 76, 60, 0.2);
+            text-align: center;
+            pointer-events: none;
+        }
+
         .dash-bar-container {
             width: 100px;
             height: 10px;
@@ -857,12 +876,28 @@
 
         <!-- HUD -->
         <button id="pause-btn-mobile" title="Pause Game">⏸</button>
+        
         <div id="hud">
-            <div id="level-display" class="text-white mb-2" style="font-size: 0.6rem; color:#bdc3c7;">Area 1</div>
-            <div id="timer-display" class="text-white mb-2" style="font-size: 0.6rem; color:#bdc3c7;">Time: 0.00s</div>
-            <div id="crystal-display" class="text-yellow-400 mb-2 mt-2" style="font-size: 0.8rem;">Crystals: 0/3</div>
-            <div id="dash-label" class="text-[0.6rem] mt-3 font-bold" style="color: #3498db; text-shadow: 1px 1px 0 #000;">DASH</div>
-            <div class="dash-bar-container"><div id="dash-bar"></div></div>
+            <!-- Standard UI elements grouped -->
+            <div id="standard-info">
+                <div id="level-display" class="text-white mb-2" style="font-size: 0.6rem; color:#bdc3c7;">Area 1</div>
+                <div id="timer-display" class="text-white mb-2" style="font-size: 0.6rem; color:#bdc3c7;">Time: 0.00s</div>
+                <div id="crystal-display" class="text-yellow-400 mb-2 mt-2" style="font-size: 0.8rem;">Crystals: 0/3</div>
+            </div>
+            
+            <!-- Kept global for all levels -->
+            <div id="dash-info">
+                <div id="dash-label" class="text-[0.6rem] mt-3 font-bold" style="color: #3498db; text-shadow: 1px 1px 0 #000;">DASH</div>
+                <div class="dash-bar-container"><div id="dash-bar"></div></div>
+            </div>
+        </div>
+
+        <!-- Dedicated Boss HUD UI -->
+        <div id="boss-hud">
+            <div id="boss-name" class="text-red-500 font-bold mb-2" style="text-shadow: 2px 2px 0 #000; font-size: 0.8rem;">THE DARK WIZARD</div>
+            <div style="width: 250px; height: 15px; background: #1a252f; border: 2px solid #000; border-radius: 4px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); margin: 0 auto;">
+                <div id="boss-hp-bar" style="width: 100%; height: 100%; background: linear-gradient(90deg, #e74c3c, #c0392b); transition: width 0.2s ease-out;"></div>
+            </div>
         </div>
 
         <canvas id="gameCanvas" width="640" height="360"></canvas>
@@ -1086,6 +1121,10 @@
             victory: document.getElementById('victory-screen')
         };
         const hud = document.getElementById('hud');
+        const standardInfo = document.getElementById('standard-info');
+        const bossHud = document.getElementById('boss-hud');
+        const bossHpBar = document.getElementById('boss-hp-bar');
+        
         const levelDisplay = document.getElementById('level-display');
         const timerDisplay = document.getElementById('timer-display');
         const crystalDisplay = document.getElementById('crystal-display');
@@ -1372,7 +1411,7 @@
             { name: "Swamp Depths", theme: "swamp", darkness: 0.7, bgColors: ["#142414", "#0a120a"], grid: ["................................................................................", "................................................................................", "................................................................G...............", "...................................C..........................#####.............", "..................................###.......S...................................", "..P..................C.....................###..........C.......................", "#####...............###............................^...###......................", "#####............................S...............#####..........................", "#####...........S............S..###.............................................", "#####...C......###..^.......###......^..........................................", "#####S~~~~S#######~~~~~#######~~~~~#######~~~~~#####~~~~~~~~~~~~~###############", "################################################################################"] },
             { name: "The True Core", theme: "core", darkness: 0.5, bgColors: ["#4a0000", "#1a0000"], grid: ["................................................................................", "............................................................................G...", "..........................................................................#####.", "..........................................C.....................................", "........................C................###...................C................", "..P....................###.......................S............###...............", "#####..........................S...S...........#####............................", "#####...S...............S....#######.......................S##..##S.............", "#####..###..............#..................................####..###............", "#####..###..C.......C...#...........^...........###........####..###............", "#####~~~~~~###~^~###~~~###~~~~~###~~~~~#######~~~~~~~~~~~~######S###~~~~~~~~~~~~", "################################################################################"] },
             { name: "The Ascension", theme: "void", darkness: 0.8, bgColors: ["#1e0a2d", "#000000"], grid: ["................................................................................", "............................................................................G...", "...................................................S##..##S...............#####.", "...................................................####..###....................", "......................C............................####..###....................", "..P..................###...........................####..###....................", "#####..........................S...................####..###....................", "#####.......S##..##S.........#####.................####..###......^.............", "#####......#####.####.......#######................####..###....#####...........", "#####.......####.####......#########......^........####..###..#########.........", "#####S~~~~S#####.####S~~~~S#########S~~~~#####~~~~~####..###S###########S~~~~~~~", "################################################################################"] },
-            { name: "The Wizard's Throne", theme: "core", darkness: 0, bgColors: ["#2d0a0a", "#000000"], grid: ["................................................................................", "................................................................................", "................................................................................", "................................................................................", "................................................................................", "................................................................................", "................................................................................", "................................................................................", "..P.............................................................................", "#####........^..........###..........###..........###..........^..........#####.", "#####S~~~~~~###~~~~~~~~S###S~~~~~~~~S###S~~~~~~~~S###S~~~~~~~~###~~~~~~~~S#####.", "################################################################################"] },
+            { name: "The Wizard's Throne", theme: "core", darkness: 0, bgColors: ["#2d0a0a", "#000000"], grid: ["................................................................................", "................................................................................", "................................................................................", "................................................................................", "................................................................................", "................................................................................", "................................................................................", "................................................................................", "..P.............................................................................", "#####........^..........#############################..........^..........#####.", "#####S~~~~~~###~~~~~~~~S#############################S~~~~~~~~###~~~~~~~~S#####.", "################################################################################"] },
             // SECRET LEVELS
             { name: "Glitch Dimension", theme: "void", darkness: 0, bgColors: ["#2b00ff", "#ff007f"], grid: ["................................................................................", "............................................................................G...", "..........................................................................#####.", "...................C...................................................C........", "..................###........C........................................###.......", "..P.........................###.......R............C......R.....................", "#####.............................................###...........................", "#####.........S.....................S...........................S##..##S........", "#####...C....###......C............###.......C......^...........####..###.......", "#####..###..........#####.......###.........###...#####...###...####..###.......", "#####S~~~~S#######S~~~~~~~S#######S~~~~~~~S#####S~~~~~~~S######S##########S~~~~~", "################################################################################"] },
             { name: "The Springboard", theme: "sky", darkness: 0, bgColors: ["#ff9900", "#ff0055"], grid: ["................................................................................", "................................................................G...............", "........................................C.....................#####.............", ".......................................###......................................", ".........................C..........................R...........................", "..P.....................###.......................C...........###...............", "#####.......^.........................^..........###............................", "#####.....#####.........###.........#####......................^................", "#####...................^.........................###........#####..............", "#####...^.............#####...........###........^..............................", "#####.#####....................................#####............................", "################################################################################"] }
@@ -1383,10 +1422,20 @@
         function updateHUDVisibility() {
             if (gameState === 'playing') {
                 hud.style.display = 'block';
+                
+                if (currentLevelIndex === 9) { // Boss Level Mode
+                    standardInfo.style.display = 'none';
+                    bossHud.style.display = 'block';
+                } else { // Standard Mode
+                    standardInfo.style.display = 'block';
+                    bossHud.style.display = 'none';
+                }
+
                 if(pauseBtnMobile) pauseBtnMobile.style.display = 'flex';
                 if (isTouchDevice && mobileControls) mobileControls.style.display = 'flex';
             } else {
                 hud.style.display = 'none';
+                bossHud.style.display = 'none';
                 if(pauseBtnMobile) pauseBtnMobile.style.display = 'none';
                 if(mobileControls) mobileControls.style.display = 'none';
             }
@@ -1437,7 +1486,7 @@
                                 populateLevelSelect();
                             } else if (gameState !== 'playing') {
                                 playAmbientMusic('menu');
-                                showScreen('start');
+                                showScreen('secret');
                             } else {
                                 gameState = 'playing'; 
                                 updateHUDVisibility();
@@ -1686,7 +1735,8 @@
                         currentText: "Oh, you made it. How annoying.",
                         isDead: false, isDying: false
                     };
-                    totalCrystalsInLevel = 99; 
+                    totalCrystalsInLevel = 99; // Prevent accidental clears during boss
+                    if (bossHpBar) bossHpBar.style.width = '100%';
                 }
 
                 const grid = levelData.grid;
@@ -1935,11 +1985,23 @@
                         let shootRate = Math.max(0.6, boss.hp * 0.3); 
                         if (boss.timer > shootRate) {
                             boss.timer = 0;
+                            
+                            // Smart predictive targeting based on Boss HP
+                            let targetX = player.x + player.width/2;
+                            let targetY = player.y + player.height/2;
+                            let predictionFactor = (5 - boss.hp) * 0.1;
+                            targetX += player.vx * predictionFactor;
+
+                            let dx = targetX - boss.x;
+                            let dy = targetY - (boss.y + 30);
+                            let dist = Math.sqrt(dx*dx + dy*dy) || 1;
+                            let speed = 200 + (5 - boss.hp) * 60; // Gets faster!
+
                             projectiles.push({
                                 x: boss.x,
                                 y: boss.y + 30,
-                                vx: (player.x - boss.x) * 0.4 + (Math.random() * 60 - 30),
-                                vy: 200 + (5 - boss.hp) * 40,
+                                vx: (dx / dist) * speed,
+                                vy: (dy / dist) * speed,
                                 width: 20, height: 20,
                                 reflected: false,
                                 trail: []
@@ -1977,34 +2039,49 @@
 
                     if (p.x < 0 || p.x > mapWidth) p.vx *= -1; 
 
+                    // Hit the Ground / Walls
                     if (p.y > mapHeight || getTile(p.x, p.y) === 1) { 
-                        spawnParticles(p.x, p.y, p.reflected ? '#00ffff' : '#e74c3c', 5, 50);
+                        spawnParticles(p.x, p.y, p.reflected ? '#00ffff' : '#e74c3c', 15, 80);
+                        shockwaves.push({ x: p.x, y: p.y, radius: 0, life: 0.4 });
                         projectiles.splice(i, 1);
                         continue;
                     }
 
+                    // Contact Check
                     if (checkAABB(pBox, projBox)) {
                         if (player.isDashing && !p.reflected) { 
+                            // Deflected! Fling back at boss
                             p.reflected = true;
-                            p.vy = -600; 
-                            p.vx = (p.x - (player.x + player.width/2)) * 6; 
+                            let dx = boss.x - p.x;
+                            let dy = boss.y - p.y;
+                            let dist = Math.sqrt(dx*dx + dy*dy) || 1;
+                            let reflectSpeed = 600;
+                            
+                            p.vx = (dx / dist) * reflectSpeed;
+                            p.vy = (dy / dist) * reflectSpeed;
+
                             playSound('bounce');
-                            screenShake = 0.2;
-                            spawnParticles(p.x, p.y, '#fff', 10, 100);
+                            screenShake = 0.3;
+                            spawnParticles(p.x, p.y, '#fff', 15, 150);
+                            shockwaves.push({ x: p.x, y: p.y, radius: 0, life: 0.6 });
                         } else if (!p.reflected) {
                             die();
                         }
                     }
 
+                    // Damaging the Boss
                     if (p.reflected && boss && !boss.isDead && !boss.isDying) {
                         let bossBox = { x: boss.x - 40, y: boss.y - 40, w: 80, h: 80 };
                         if (checkAABB(projBox, bossBox)) {
                             boss.hp--;
+                            if (bossHpBar) bossHpBar.style.width = `${(boss.hp / boss.maxHp) * 100}%`;
+                            
                             projectiles.splice(i, 1);
                             screenShake = 0.6;
                             damageFlash = 0.4;
                             playSound('die');
                             spawnParticles(boss.x, boss.y, '#f1c40f', 50, 300);
+                            shockwaves.push({ x: boss.x, y: boss.y, radius: 0, life: 1.0 });
                             
                             if (boss.hp <= 0) {
                                 boss.isDying = true;
@@ -2480,6 +2557,8 @@
             grid.innerHTML = '';
             
             levels.forEach((lvl, idx) => {
+                if (idx >= 10) return; // Hide Secret Levels from standard list
+
                 const btn = document.createElement('div'); let isLocked = idx > unlockedLevel;
                 btn.className = `level-card ${isLocked ? 'locked' : ''}`; btn.style.border = `2px solid ${isLocked ? '#333' : '#fff'}`; btn.style.color = isLocked ? '#555' : 'white';
                 let bestTime = bestTimes[idx]; let timeText = bestTime && !isLocked ? `<br><span style="color:#f1c40f; font-size:0.5rem; text-shadow:none;">Best: ${bestTime.toFixed(2)}s</span>` : '';
@@ -2509,6 +2588,23 @@
         document.getElementById('back-to-start-btn-char')?.addEventListener('click', () => { initAudio(); playAmbientMusic('menu'); showScreen('start'); });
         document.getElementById('controls-btn')?.addEventListener('click', () => { initAudio(); showScreen('controls'); });
         document.getElementById('back-from-controls-btn')?.addEventListener('click', () => { initAudio(); playAmbientMusic('menu'); showScreen('start'); });
+
+        // Hidden Secret Buttons Functionality
+        document.getElementById('secret-lvl-1-btn')?.addEventListener('click', () => { initAudio(); currentLevelIndex = 10; showScreen('none'); loadLevel(currentLevelIndex); });
+        document.getElementById('secret-lvl-2-btn')?.addEventListener('click', () => { initAudio(); currentLevelIndex = 11; showScreen('none'); loadLevel(currentLevelIndex); });
+        document.getElementById('back-from-secret-btn')?.addEventListener('click', () => { initAudio(); playAmbientMusic('menu'); showScreen('start'); });
+        
+        document.getElementById('secret-btn')?.addEventListener('click', () => {
+            initAudio();
+            if (unlockedLevel >= 10) {
+                showScreen('secret');
+            } else {
+                playSound('blip');
+                let btn = document.getElementById('secret-btn');
+                btn.style.backgroundColor = 'red';
+                setTimeout(() => btn.style.backgroundColor = 'white', 200);
+            }
+        });
 
         const fullscreenBtn = document.getElementById('fullscreen-btn'); const gameContainer = document.getElementById('game-container'); let isCssFullscreen = false;
         function toggleFullscreen() {
