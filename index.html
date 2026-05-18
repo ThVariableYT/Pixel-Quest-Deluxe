@@ -1043,7 +1043,7 @@
                 <button id="start-btn" class="menu-btn primary">► Play Game</button>
                 <button id="char-select-btn" class="menu-btn">★ Heroes</button>
                 <button id="chapter-select-btn" class="menu-btn">■ Chapters</button>
-                <button id="controls-btn" class="menu-btn">⌨ Controls</button>
+                <button id="controls-btn" class="menu-btn" style="grid-column: span 2;">⌨ Controls</button>
                 <button id="reset-progress-btn" class="menu-btn danger">⚠ Reset</button>
             </div>
         </div>
@@ -1105,7 +1105,6 @@
             <button id="back-to-start-btn-char" class="menu-btn danger" style="width: auto; padding: 15px 40px;">Back</button>
         </div>
 
-        <!-- NEW Secret Screen (Updated with 5 levels) -->
         <div id="secret-screen" class="overlay hidden" style="background: rgba(15, 5, 25, 0.95); backdrop-filter: blur(10px); border: 2px solid #ff00ff; box-shadow: inset 0 0 50px rgba(255, 0, 255, 0.2);">
             <h1 class="glitch-text text-3xl md:text-5xl mb-4 text-center tracking-widest font-bold">THE VOID ARCHIVES</h1>
             <p class="text-pink-300 text-[0.6rem] md:text-xs mb-8 text-center max-w-lg leading-relaxed shadow-black drop-shadow-md">
@@ -1268,6 +1267,9 @@
         let ambientOscillators = [];
         let ambientGain = null;
         let ambientInterval = null;
+
+        // Interaction state to prevent rapid un-intended button pressing (like auto-resurrect)
+        let canInteract = true;
 
         function initAudio() {
             if (!audioCtx) audioCtx = new AudioContext();
@@ -1560,6 +1562,18 @@
 
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         
+        // Helper function for cinematic transitions between menus
+        function performTransition(actionCallback) {
+            const ts = document.getElementById('transition-screen');
+            if (ts) ts.classList.add('active');
+            setTimeout(() => {
+                if (actionCallback) actionCallback();
+                setTimeout(() => {
+                    if (ts) ts.classList.remove('active');
+                }, 100);
+            }, 500); 
+        }
+
         function updateHUDVisibility() {
             if (gameState === 'playing') {
                 hud.style.display = 'block';
@@ -1627,7 +1641,7 @@
                                 populateLevelSelect();
                             } else if (gameState !== 'playing') {
                                 playAmbientMusic('menu');
-                                showScreen('secret');
+                                performTransition(() => showScreen('secret'));
                             } else {
                                 gameState = 'playing'; 
                                 updateHUDVisibility();
@@ -1645,8 +1659,8 @@
                 let isRight = customKeys.right ? (e.code === customKeys.right) : (e.code === 'ArrowRight' || e.code === 'KeyD');
                 let isDash = customKeys.dash ? (e.code === customKeys.dash) : (e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'KeyZ' || e.code === 'KeyX');
 
-                if (gameState === 'gameOver' && (e.code === 'KeyR' || isUp || e.code === 'Enter')) { document.getElementById('restart-btn')?.click(); return; }
-                if (gameState === 'levelClear' && (e.code === 'Enter' || isUp)) { document.getElementById('next-level-btn')?.click(); return; }
+                if (gameState === 'gameOver' && canInteract && (e.code === 'KeyR' || isUp || e.code === 'Enter')) { document.getElementById('restart-btn')?.click(); return; }
+                if (gameState === 'levelClear' && canInteract && (e.code === 'Enter' || isUp)) { document.getElementById('next-level-btn')?.click(); return; }
                 if (e.code === 'Escape' || e.code === 'KeyP') {
                     if (gameState === 'playing') { gameState = 'paused'; showScreen('pause'); } 
                     else if (gameState === 'paused') { gameState = 'playing'; showScreen('none'); lastTime = performance.now(); }
@@ -2290,11 +2304,14 @@
                     if (gameState === 'playing' && checkAABB(pBox, hazardBox)) die(); 
                 }
                 else if (item.type === 'spring') {
-                    if (checkAABB(pBox, {x: item.x, y: item.y, width: item.width, height: item.height})) {
-                        if(player.vy > 0 && player.y + player.height - player.vy*dt <= item.y + 20) {
-                            player.vy = keys.up ? -1050 : -800; 
+                    let springBox = {x: item.x + 2, y: item.y + 4, width: item.width - 4, height: item.height - 4};
+                    if (checkAABB(pBox, springBox)) {
+                        // Allow bouncing gracefully upon touching the top logic area
+                        if(player.vy >= -100 || (player.y + player.height > item.y + 8)) {
+                            player.y = item.y - player.height; // Avoid getting stuck inside the spring
+                            player.vy = keys.up ? -1050 : -850; 
                             player.grounded = false; player.isDashing = false;
-                            if(player.dashCooldownTimer > 0 || !player.canDash) player.canDash = true; 
+                            player.canDash = true; player.dashCooldownTimer = 0; 
                             player.jumpCount = 0; screenShake = 0.3; playSound('bounce'); spawnParticles(item.x + item.width/2, item.y, '#e67e22', 15);
                         }
                     }
@@ -2637,18 +2654,22 @@
         function die() {
             if (gameState === 'gameOver' || gameState === 'levelClear' || gameState === 'victory') return;
             gameState = 'gameOver'; stopAmbientMusic(); playSound('die');
+            
+            canInteract = false; 
             screenShake = 0.5; damageFlash = 1.0;
             spawnParticles(player.x + player.width/2, player.y + player.height/2, '#e74c3c', 50, 300); 
             spawnParticles(player.x + player.width/2, player.y + player.height/2, '#f1c40f', 30, 150); 
             spawnParticles(player.x + player.width/2, player.y + player.height/2, '#ffffff', 15, 400); 
             shockwaves.push({ x: player.x + player.width/2, y: player.y + player.height/2, radius: 0, life: 1.5 });
             draw(); 
-            setTimeout(() => showScreen('gameOver'), 500);
+            
+            setTimeout(() => { showScreen('gameOver'); canInteract = true; }, 800); 
         }
 
         function levelComplete() {
             if (gameState === 'gameOver' || gameState === 'levelClear' || gameState === 'victory') return;
             gameState = 'levelClear';
+            canInteract = false;
             
             if (currentLevelIndex >= unlockedLevel) { 
                 unlockedLevel = currentLevelIndex + 1; 
@@ -2662,13 +2683,20 @@
                 isNewRecord = true; 
             }
 
+            // Custom UI text based on level type
+            let btnEl = document.getElementById('next-level-btn');
+            if (currentLevelIndex >= 10) {
+                if (btnEl) btnEl.innerText = "Return [ENTER]";
+            } else {
+                if (btnEl) btnEl.innerText = "Proceed [ENTER]";
+            }
+
             transitionScreen?.classList.add('active');
             setTimeout(() => {
                 transitionScreen?.classList.remove('active');
                 
                 let descEl = document.getElementById('level-desc');
                 let timeEl = document.getElementById('level-time');
-                let btnEl = document.getElementById('next-level-btn');
                 if(descEl) descEl.innerText = `Recovered ${crystalsCollected} / ${totalCrystalsInLevel} Crystals.`;
                 if(timeEl) timeEl.innerText = `Time: ${levelTimer.toFixed(2)}s` + (isNewRecord ? ' (NEW RECORD!)' : '');
                 
@@ -2676,17 +2704,48 @@
                 
                 let storyKey = `level${currentLevelIndex + 1}_clear`;
                 triggerDialogue(storyKey, () => { 
-                    showScreen('level'); gameState = 'levelClear'; 
+                    showScreen('level'); gameState = 'levelClear'; canInteract = true;
                 });
             }, 600); 
         }
 
-        document.getElementById('start-btn')?.addEventListener('click', () => { initAudio(); applyCharacterStats(); showScreen('none'); triggerDialogue('intro', () => { currentLevelIndex = 0; loadLevel(currentLevelIndex); }); });
-        document.getElementById('next-level-btn')?.addEventListener('click', () => { currentLevelIndex++; showScreen('none'); loadLevel(currentLevelIndex); });
-        document.getElementById('restart-btn')?.addEventListener('click', () => { showScreen('none'); loadLevel(currentLevelIndex); });
+        document.getElementById('start-btn')?.addEventListener('click', () => { 
+            initAudio(); 
+            performTransition(() => {
+                applyCharacterStats(); 
+                showScreen('none'); 
+                triggerDialogue('intro', () => { currentLevelIndex = 0; loadLevel(currentLevelIndex); }); 
+            }); 
+        });
+
+        document.getElementById('next-level-btn')?.addEventListener('click', () => { 
+            if (!canInteract) return;
+            if (currentLevelIndex >= 10) {
+                // Return safely to Void Archives 
+                performTransition(() => {
+                    stopAmbientMusic();
+                    playAmbientMusic('menu');
+                    showScreen('secret');
+                    gameState = 'start'; 
+                    initMenuBackground();
+                });
+            } else {
+                currentLevelIndex++; 
+                showScreen('none'); 
+                loadLevel(currentLevelIndex); 
+            }
+        });
+
+        document.getElementById('restart-btn')?.addEventListener('click', () => { 
+            if (!canInteract) return;
+            performTransition(() => {
+                showScreen('none'); 
+                loadLevel(currentLevelIndex); 
+            });
+        });
         
-        document.getElementById('victory-level-select-btn')?.addEventListener('click', () => { stopAmbientMusic(); playAmbientMusic('menu'); gameState = 'start'; initMenuBackground(); populateLevelSelect(); showScreen('levelSelect'); });
-        document.getElementById('victory-title-screen-btn')?.addEventListener('click', () => { stopAmbientMusic(); playAmbientMusic('menu'); gameState = 'start'; initMenuBackground(); showScreen('start'); });
+        document.getElementById('victory-level-select-btn')?.addEventListener('click', () => { stopAmbientMusic(); playAmbientMusic('menu'); gameState = 'start'; initMenuBackground(); performTransition(() => { populateLevelSelect(); showScreen('levelSelect'); }); });
+        document.getElementById('victory-title-screen-btn')?.addEventListener('click', () => { stopAmbientMusic(); playAmbientMusic('menu'); gameState = 'start'; initMenuBackground(); performTransition(() => showScreen('start')); });
         
         let resetTimeout;
         document.getElementById('reset-progress-btn')?.addEventListener('click', function(e) {
@@ -2711,7 +2770,7 @@
         });
 
         document.getElementById('resume-btn')?.addEventListener('click', () => { gameState = 'playing'; showScreen('none'); lastTime = performance.now(); });
-        document.getElementById('quit-to-menu-btn')?.addEventListener('click', () => { stopAmbientMusic(); playAmbientMusic('menu'); showScreen('start'); gameState = 'start'; initMenuBackground(); });
+        document.getElementById('quit-to-menu-btn')?.addEventListener('click', () => { stopAmbientMusic(); playAmbientMusic('menu'); gameState = 'start'; initMenuBackground(); performTransition(() => showScreen('start')); });
 
         function populateLevelSelect() {
             const grid = document.getElementById('level-grid'); 
@@ -2738,12 +2797,12 @@
             });
         }
 
-        document.getElementById('chapter-select-btn')?.addEventListener('click', () => { initAudio(); applyCharacterStats(); showScreen('chapterSelect'); });
-        document.getElementById('chapter-1-btn')?.addEventListener('click', () => { initAudio(); populateLevelSelect(); showScreen('levelSelect'); });
-        document.getElementById('chapter-2-btn')?.addEventListener('click', () => { initAudio(); showScreen('chapter2'); });
-        document.getElementById('back-to-start-btn-chap')?.addEventListener('click', () => { initAudio(); playAmbientMusic('menu'); showScreen('start'); });
-        document.getElementById('back-to-chapters-from-2')?.addEventListener('click', () => { initAudio(); showScreen('chapterSelect'); });
-        document.getElementById('back-to-start-btn')?.addEventListener('click', () => { initAudio(); showScreen('chapterSelect'); });
+        document.getElementById('chapter-select-btn')?.addEventListener('click', () => { initAudio(); applyCharacterStats(); performTransition(() => showScreen('chapterSelect')); });
+        document.getElementById('chapter-1-btn')?.addEventListener('click', () => { initAudio(); performTransition(() => { populateLevelSelect(); showScreen('levelSelect'); }); });
+        document.getElementById('chapter-2-btn')?.addEventListener('click', () => { initAudio(); performTransition(() => showScreen('chapter2')); });
+        document.getElementById('back-to-start-btn-chap')?.addEventListener('click', () => { initAudio(); playAmbientMusic('menu'); performTransition(() => showScreen('start')); });
+        document.getElementById('back-to-chapters-from-2')?.addEventListener('click', () => { initAudio(); performTransition(() => showScreen('chapterSelect')); });
+        document.getElementById('back-to-start-btn')?.addEventListener('click', () => { initAudio(); performTransition(() => showScreen('chapterSelect')); });
 
         function populateCharSelect() {
             const grid = document.getElementById('char-grid'); 
@@ -2757,10 +2816,10 @@
             });
         }
 
-        document.getElementById('char-select-btn')?.addEventListener('click', () => { initAudio(); populateCharSelect(); showScreen('charSelect'); });
-        document.getElementById('back-to-start-btn-char')?.addEventListener('click', () => { initAudio(); playAmbientMusic('menu'); showScreen('start'); });
-        document.getElementById('controls-btn')?.addEventListener('click', () => { initAudio(); showScreen('controls'); });
-        document.getElementById('back-from-controls-btn')?.addEventListener('click', () => { initAudio(); playAmbientMusic('menu'); showScreen('start'); });
+        document.getElementById('char-select-btn')?.addEventListener('click', () => { initAudio(); performTransition(() => { populateCharSelect(); showScreen('charSelect'); }); });
+        document.getElementById('back-to-start-btn-char')?.addEventListener('click', () => { initAudio(); playAmbientMusic('menu'); performTransition(() => showScreen('start')); });
+        document.getElementById('controls-btn')?.addEventListener('click', () => { initAudio(); performTransition(() => showScreen('controls')); });
+        document.getElementById('back-from-controls-btn')?.addEventListener('click', () => { initAudio(); playAmbientMusic('menu'); performTransition(() => showScreen('start')); });
 
         // Hidden Secret Buttons Functionality
         document.getElementById('secret-lvl-1-btn')?.addEventListener('click', () => { initAudio(); currentLevelIndex = 10; showScreen('none'); loadLevel(currentLevelIndex); });
@@ -2768,12 +2827,12 @@
         document.getElementById('secret-lvl-3-btn')?.addEventListener('click', () => { initAudio(); currentLevelIndex = 12; showScreen('none'); loadLevel(currentLevelIndex); });
         document.getElementById('secret-lvl-4-btn')?.addEventListener('click', () => { initAudio(); currentLevelIndex = 13; showScreen('none'); loadLevel(currentLevelIndex); });
         document.getElementById('secret-lvl-5-btn')?.addEventListener('click', () => { initAudio(); currentLevelIndex = 14; showScreen('none'); loadLevel(currentLevelIndex); });
-        document.getElementById('back-from-secret-btn')?.addEventListener('click', () => { initAudio(); playAmbientMusic('menu'); showScreen('start'); });
+        document.getElementById('back-from-secret-btn')?.addEventListener('click', () => { initAudio(); playAmbientMusic('menu'); performTransition(() => showScreen('start')); });
         
         document.getElementById('secret-btn')?.addEventListener('click', () => {
             initAudio();
             playSound('crystal');
-            showScreen('secret');
+            performTransition(() => showScreen('secret'));
         });
 
         const fullscreenBtn = document.getElementById('fullscreen-btn'); const gameContainer = document.getElementById('game-container'); let isCssFullscreen = false;
