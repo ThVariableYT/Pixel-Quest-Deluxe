@@ -1105,17 +1105,20 @@
             <button id="back-to-start-btn-char" class="menu-btn danger" style="width: auto; padding: 15px 40px;">Back</button>
         </div>
 
-        <!-- NEW Secret Screen -->
+        <!-- NEW Secret Screen (Updated with 5 levels) -->
         <div id="secret-screen" class="overlay hidden" style="background: rgba(15, 5, 25, 0.95); backdrop-filter: blur(10px); border: 2px solid #ff00ff; box-shadow: inset 0 0 50px rgba(255, 0, 255, 0.2);">
             <h1 class="glitch-text text-3xl md:text-5xl mb-4 text-center tracking-widest font-bold">THE VOID ARCHIVES</h1>
             <p class="text-pink-300 text-[0.6rem] md:text-xs mb-8 text-center max-w-lg leading-relaxed shadow-black drop-shadow-md">
                 "You strayed from the path... and found something forbidden."<br><br>
                 Welcome to the developer's hidden stash. These highly unstable prototypes were deemed too dangerous for the standard realm. Play at your own risk.
             </p>
-            <div class="main-menu-buttons">
-                <button id="secret-lvl-1-btn" class="menu-btn" style="background: linear-gradient(180deg, #4b0082 0%, #2c3e50 100%); border-color: #9b59b6; box-shadow: 0 6px 0 #2c3e50, 0 10px 15px rgba(0,0,0,0.4); width: 100%;">? GLITCH DIMENSION ?</button>
-                <button id="secret-lvl-2-btn" class="menu-btn" style="background: linear-gradient(180deg, #d35400 0%, #c0392b 100%); border-color: #f1c40f; box-shadow: 0 6px 0 #922b21, 0 10px 15px rgba(0,0,0,0.4); width: 100%;">? THE SPRINGBOARD ?</button>
-                <button id="back-from-secret-btn" class="menu-btn danger mt-6" style="width: 100%;">Return to Reality</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 500px;">
+                <button id="secret-lvl-1-btn" class="menu-btn" style="background: linear-gradient(180deg, #4b0082 0%, #2c3e50 100%); border-color: #9b59b6; box-shadow: 0 6px 0 #2c3e50, 0 10px 15px rgba(0,0,0,0.4);">? GLITCH DIMENSION ?</button>
+                <button id="secret-lvl-2-btn" class="menu-btn" style="background: linear-gradient(180deg, #110022 0%, #00ffcc 100%); border-color: #00ffff; box-shadow: 0 6px 0 #008888, 0 10px 15px rgba(0,0,0,0.4);">? NEON SPEEDWAY ?</button>
+                <button id="secret-lvl-3-btn" class="menu-btn" style="background: linear-gradient(180deg, #4a0000 0%, #ff5500 100%); border-color: #ffaa00; box-shadow: 0 6px 0 #882200, 0 10px 15px rgba(0,0,0,0.4);">? INFERNAL ESCAPE ?</button>
+                <button id="secret-lvl-4-btn" class="menu-btn" style="background: linear-gradient(180deg, #2d0a0a 0%, #880000 100%); border-color: #ff0000; box-shadow: 0 6px 0 #440000, 0 10px 15px rgba(0,0,0,0.4);">? SPIKE MAZE ?</button>
+                <button id="secret-lvl-5-btn" class="menu-btn" style="grid-column: span 2; background: linear-gradient(180deg, #001133 0%, #00ffff 100%); border-color: #ffffff; box-shadow: 0 6px 0 #008888, 0 10px 15px rgba(0,0,0,0.4);">? CRYSTAL TOWER ?</button>
+                <button id="back-from-secret-btn" class="menu-btn danger mt-2" style="grid-column: span 2;">Return to Reality</button>
             </div>
         </div>
 
@@ -1549,7 +1552,10 @@
             ] },
             // SECRET LEVELS
             { name: "Glitch Dimension", theme: "void", darkness: 0, bgColors: ["#2b00ff", "#ff007f"], grid: ["................................................................................", "............................................................................G...", "..........................................................................#####.", "...................C...................................................C........", "..................###........C........................................###.......", "..P.........................###.......R............C......R.....................", "#####.............................................###...........................", "#####.........S.....................S...........................S##..##S........", "#####...C....###......C............###.......C......^...........####..###.......", "#####..###..........#####.......###.........###...#####...###...####..###.......", "#####S~~~~S#######S~~~~~~~S#######S~~~~~~~S#####S~~~~~~~S######S##########S~~~~~", "################################################################################"] },
-            { name: "The Springboard", theme: "sky", darkness: 0, bgColors: ["#ff9900", "#ff0055"], grid: ["................................................................................", "................................................................G...............", "........................................C.....................#####.............", ".......................................###......................................", ".........................C..........................R...........................", "..P.....................###.......................C...........###...............", "#####.......^.........................^..........###............................", "#####.....#####.........###.........#####......................^................", "#####...................^.........................###........#####..............", "#####...^.............#####...........###........^..............................", "#####.#####....................................#####............................", "################################################################################"] }
+            { name: "Neon Speedway", theme: "void", darkness: 0, bgColors: ["#110022", "#00ffcc"], grid: ["................................................................................", "............................................................................G...", "..........................................................................#####.", "................................................................C...............", "...............................................C...............###..............", "..P............................C..............###...............................", "#####............^............###...............................................", "#####...C......#####...................................^........................", "#####..###...............^...............^...........#####............S..##..S..", "#####.................#####...........#####..........................####..###..", "#####S~~~~~~~S#####S~~~~~~~~~~S#####S~~~~~~~~~S#####S~~~~~~~S######S############", "################################################################################"] },
+            { name: "Infernal Escape", theme: "volcano", darkness: 0, bgColors: ["#4a0000", "#ff5500"], grid: ["................................................................................", "................................................................................", "............................................................................G...", "..........................................................................#####.", "................................................................................", "..P..........C............................................C.....................", "#####.......###.........^...........C...........^........###..............C.....", "#####................#####.........###........#####......................###....", "#####...S.......................S.......S.......................S...S...........", "#####..###..........#####S~~~~~~~~~~~~~S#####...............#####~~~~~~~~~~~~~~~", "#####S~~~~~S#####S~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~S#####S~~~~~~~~~~~~~~~~~~~~~~", "################################################################################"] },
+            { name: "Spike Maze", theme: "core", darkness: 0, bgColors: ["#2d0a0a", "#880000"], grid: ["................................................................................", "..................................................C................G............", ".................................................###.............#####..........", "................................................................................", "................C...................C...........................................", "..P............###.................###..........................................", "#####....................................................^......................", "#####.....S##......##S.......S##..........##S..........#####...........S##..##S.", "#####.....###......###.......###..........###..........................###..###.", "#####.....###......###.......###..........###.....C....................###..###.", "#####S~~~S###S~~~~S###S~~~~~S###S~~~~~~~~S###S~~~###S~~~~~~~~~S######S~###S~###S", "################################################################################"] },
+            { name: "Crystal Tower", theme: "ice", darkness: 0, bgColors: ["#001133", "#00ffff"], grid: ["................................................................................", ".................................G..............................................", "...............................#####............................................", "...............................#####............................................", ".............................C.#####.C..........................................", "............................###########.........................................", "..........................S....#####....S.......................................", "...................C.....###...#####...###.....C................................", "..................###..........#####..........###...............................", "................#####....S.....#####.....S....#####.............................", "..P..........^..#####...###....#####....###...#####..^..........................", "#####......##########S~~~~~~~S#######S~~~~~~~S##########........................"] }
         ];
 
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -1855,6 +1861,12 @@
                     else displayEl.innerText = `SECRET: ${levelData.name}`;
                 }
                 
+                // --- Hide Scanlines & Vignette to Improve Game Resolution ---
+                const vignette = document.querySelector('.vignette');
+                const scanlines = document.querySelector('.scanlines');
+                if(vignette) vignette.style.display = 'none';
+                if(scanlines) scanlines.style.display = 'none';
+
                 preRenderBackground(levelData);
                 
                 mapGrid = []; interactables = []; particles = []; ambientParticles = []; weatherParticles = [];
@@ -2753,6 +2765,9 @@
         // Hidden Secret Buttons Functionality
         document.getElementById('secret-lvl-1-btn')?.addEventListener('click', () => { initAudio(); currentLevelIndex = 10; showScreen('none'); loadLevel(currentLevelIndex); });
         document.getElementById('secret-lvl-2-btn')?.addEventListener('click', () => { initAudio(); currentLevelIndex = 11; showScreen('none'); loadLevel(currentLevelIndex); });
+        document.getElementById('secret-lvl-3-btn')?.addEventListener('click', () => { initAudio(); currentLevelIndex = 12; showScreen('none'); loadLevel(currentLevelIndex); });
+        document.getElementById('secret-lvl-4-btn')?.addEventListener('click', () => { initAudio(); currentLevelIndex = 13; showScreen('none'); loadLevel(currentLevelIndex); });
+        document.getElementById('secret-lvl-5-btn')?.addEventListener('click', () => { initAudio(); currentLevelIndex = 14; showScreen('none'); loadLevel(currentLevelIndex); });
         document.getElementById('back-from-secret-btn')?.addEventListener('click', () => { initAudio(); playAmbientMusic('menu'); showScreen('start'); });
         
         document.getElementById('secret-btn')?.addEventListener('click', () => {
@@ -2791,6 +2806,12 @@
             mapCanvas.width = mapWidth; mapCanvas.height = mapHeight; mapCtx.clearRect(0, 0, mapWidth, mapHeight);
             
             preRenderBackground(levelData);
+            
+            // Re-enable stylistic effects for menus
+            const vignette = document.querySelector('.vignette');
+            const scanlines = document.querySelector('.scanlines');
+            if(vignette) vignette.style.display = 'block';
+            if(scanlines) scanlines.style.display = 'block';
             
             if (gameBeaten) {
                 let deluxeTitle = document.querySelector('.title-deluxe');
