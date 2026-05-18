@@ -221,77 +221,77 @@ cd Pixel-Quest-Deluxe
 # Open index.html in your browser
 open index.html
 
-📋 Update History
-v1.0.0 — Initial Release (May 15, 2026)
+## 📋 Update History
+# v1.0.0 — Initial Release (May 15, 2026)
 Commit: Initial
 
 Project scaffolding and repository setup.
 
-v1.1.0 — Core Game Added (May 16, 2026)
+# v1.1.0 — Core Game Added (May 16, 2026)
 Commit: a8749b3
 
 Added the full Epic Pixel Quest Deluxe HTML game file.
 
 Included 8-level campaign with a custom physics engine and retro synth audio.
 
-v1.2.0 — Character Selection & Player Tuning (May 16, 2026)
+# v1.2.0 — Character Selection & Player Tuning (May 16, 2026)
 Commit: ce333b9
 
 Added character selection screen with 3 playable heroes (Knight, Ninja, Mage).
 
 Integrated unique dynamic stats for speed, jump, and dash into the player controller.
 
-v1.3.0 — Gameplay Physics & UI Polish (May 16, 2026)
+# v1.3.0 — Gameplay Physics & UI Polish (May 16, 2026)
 Commit: bac3007
 
 Tuned gameplay physics for air control and player acceleration.
 
 Polished overall UI elements and mobile touch responsiveness.
 
-v1.4.0 — Fullscreen Support (May 16, 2026)
+# v1.4.0 — Fullscreen Support (May 16, 2026)
 Commit: c7054d3
 
 Added fullscreen toggle button leveraging the native Fullscreen API.
 
 Implemented CSS position: fixed fallback for unsupported browsers.
 
-v1.5.0 — Control Remapping & Touch D-Pad (May 16, 2026)
+# v1.5.0 — Control Remapping & Touch D-Pad (May 16, 2026)
 Commit: 0be5d66
 
 Added in-game control remapping to assign keyboard bindings dynamically.
 
 Overhauled and improved the touch D-pad for better mobile maneuvering.
 
-v1.6.0 — General index.html Update (May 16, 2026)
+# v1.6.0 — General index.html Update (May 16, 2026)
 Commit: b69282e
 
 General index.html update and structural stability improvements.
 
-v1.7.0 — Refinements and Bug Fixes (May 16, 2026)
+# v1.7.0 — Refinements and Bug Fixes (May 16, 2026)
 Commit: 69c5944
 
 Further refinements and targeted bug fixes to the game loop.
 
-v1.8.0 — Final Polish Update (May 16, 2026)
+# v1.8.0 — Final Polish Update (May 16, 2026)
 Commit: 4a49d37
 
 Final pre-release polish update to iron out visual transitions.
 
-v1.9.0 — Speedrun Timer & Visual Polish (May 16, 2026)
+# v1.9.0 — Speedrun Timer & Visual Polish (May 16, 2026)
 Commit: c040db0
 
 Added speedrun timer in the HUD that tracks level completion time.
 
 Enhanced canvas particle effects (crystal sparkles and ambient particles) and level transitions.
 
-v1.10.0 — Pause System & Best Time Tracking (May 16, 2026)
+# v1.10.0 — Pause System & Best Time Tracking (May 16, 2026)
 Commit: 1a22dd2
 
 Added pause menu (via Esc, P, or mobile UI button) and localized personal best time tracking.
 
 Added visual effects including a damage flash on death and shockwaves on crystal collection.
 
-v1.11.0 — The Deluxe Endgame Expansion (Missing Commit Restored)
+# v1.11.0 — The Deluxe Endgame Expansion (Missing Commit Restored)
 Commit: d7a10e9
 
 Boss Battle Added: Epic final scripted encounter against The Dark Wizard (Level 10) featuring predictive projectiles and a custom boss HP HUD.
