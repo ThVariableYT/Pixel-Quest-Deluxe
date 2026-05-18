@@ -215,98 +215,109 @@ Your mission takes you through dense forests, ancient caves, volcanic fortresses
 
 ### Running Locally
 
-```bash
-git clone https://github.com/ThVariableYT/Pixel-Quest-Deluxe.git
+bash
+git clone [https://github.com/ThVariableYT/Pixel-Quest-Deluxe.git](https://github.com/ThVariableYT/Pixel-Quest-Deluxe.git)
 cd Pixel-Quest-Deluxe
 # Open index.html in your browser
 open index.html
-```
 
----
+📋 Update History
+v1.0.0 — Initial Release (May 15, 2026)
+Commit: Initial
 
-## 📋 Update History
+Project scaffolding and repository setup.
 
-### v1.0.0 — Initial Release *(May 15, 2026)*
-- Initial commit: project scaffolding and repository setup.
+v1.1.0 — Core Game Added (May 16, 2026)
+Commit: a8749b3
 
-### v1.1.0 — Core Game Added *(May 16, 2026)*
-- `a8749b3` — Added the full **Epic Pixel Quest Deluxe** HTML game file.
-  - 8-level campaign with tile-based map system.
-  - Custom physics engine with gravity, acceleration, and collision detection.
-  - Procedural pixel-art tile texture rendering per theme.
-  - Story and dialogue system with typewriter effect.
-  - Retro synth audio engine using Web Audio API.
-  - Dynamic darkness/lighting overlay system.
-  - Particle system (jump dust, dash trails, crystal sparks, ambient).
-  - HUD display: Level name, crystal counter, dash cooldown bar.
-  - Main menu, level select, character select, game over, and victory screens.
+Added the full Epic Pixel Quest Deluxe HTML game file.
 
-### v1.2.0 — Character Selection & Player Tuning *(May 16, 2026)*
-- `ce333b9` — Added **character selection screen** with 3 playable heroes.
-  - Knight (balanced), Ninja (fast/agile), Mage (powerful dash).
-  - Each character has unique speed, jump force, dash stats, and color palette.
-  - Player stats update dynamically on character selection.
+Included 8-level campaign with a custom physics engine and retro synth audio.
 
-### v1.3.0 — Gameplay Physics & UI Polish *(May 16, 2026)*
-- `bac3007` — Tuned gameplay physics, UI elements, and mobile experience.
-  - Improved player acceleration and air control feel.
-  - Polished overlay screens and menu transitions.
-  - Mobile layout adjustments and touch responsiveness improvements.
+v1.2.0 — Character Selection & Player Tuning (May 16, 2026)
+Commit: ce333b9
 
-### v1.4.0 — Fullscreen Support *(May 16, 2026)*
-- `c7054d3` — Added **fullscreen toggle button** with CSS fallback.
-  - Uses native Fullscreen API where available.
-  - Falls back to `position: fixed` CSS fullscreen mode for unsupported browsers.
-  - Fullscreen button visible at top-right corner during gameplay and menus.
+Added character selection screen with 3 playable heroes (Knight, Ninja, Mage).
 
-### v1.5.0 — Control Remapping & Touch D-Pad *(May 16, 2026)*
-- `0be5d66` — Added **in-game control remapping** and improved touch D-pad.
-  - Players can remap Left, Right, Jump, and Dash to any keyboard key.
-  - Improved touch D-pad with multi-touch slide support for smoother mobile movement.
-  - Remap UI accessible from the Controls screen in the main menu.
+Integrated unique dynamic stats for speed, jump, and dash into the player controller.
 
-### v1.6.0 — General Updates *(May 16, 2026)*
-- `b69282e` — General index.html update and stability improvements.
-- `69c5944` — Further refinements and bug fixes.
-- `4a49d37` — Final polish update.
+v1.3.0 — Gameplay Physics & UI Polish (May 16, 2026)
+Commit: bac3007
 
-- ### v1.7.0 – Speedrun Timer & Visual Polish *(May 16, 2026)*
-- `c040db0` – Added **speedrun timer** that tracks level completion time.
-  - Timer displayed in the HUD during gameplay.
-  - Level transition effect added between stages.
-  - Enhanced canvas particle effects (crystal sparkles, ambient particles).
+Tuned gameplay physics for air control and player acceleration.
 
-### v1.8.0 – Pause System & Best Time Tracking *(May 16, 2026)*
-- `1a22dd2` – Added **pause menu** and **personal best time** tracking.
-  - Press **Esc** or **P** to pause; mobile pause button also added.
-  - Pause screen includes Resume and Quit to Menu options.
-  - Speedrun best times saved to `localStorage` and displayed on level select.
-  - **Damage flash** (red overlay) effect when the player dies.
-  - **Shockwave** visual effect when collecting crystals.
-  - Improved crystal inner pulse animation and vortex/goal rendering.
+Polished overall UI elements and mobile touch responsiveness.
 
----
+v1.4.0 — Fullscreen Support (May 16, 2026)
+Commit: c7054d3
+
+Added fullscreen toggle button leveraging the native Fullscreen API.
+
+Implemented CSS position: fixed fallback for unsupported browsers.
+
+v1.5.0 — Control Remapping & Touch D-Pad (May 16, 2026)
+Commit: 0be5d66
+
+Added in-game control remapping to assign keyboard bindings dynamically.
+
+Overhauled and improved the touch D-pad for better mobile maneuvering.
+
+v1.6.0 — General index.html Update (May 16, 2026)
+Commit: b69282e
+
+General index.html update and structural stability improvements.
+
+v1.7.0 — Refinements and Bug Fixes (May 16, 2026)
+Commit: 69c5944
+
+Further refinements and targeted bug fixes to the game loop.
+
+v1.8.0 — Final Polish Update (May 16, 2026)
+Commit: 4a49d37
+
+Final pre-release polish update to iron out visual transitions.
+
+v1.9.0 — Speedrun Timer & Visual Polish (May 16, 2026)
+Commit: c040db0
+
+Added speedrun timer in the HUD that tracks level completion time.
+
+Enhanced canvas particle effects (crystal sparkles and ambient particles) and level transitions.
+
+v1.10.0 — Pause System & Best Time Tracking (May 16, 2026)
+Commit: 1a22dd2
+
+Added pause menu (via Esc, P, or mobile UI button) and localized personal best time tracking.
+
+Added visual effects including a damage flash on death and shockwaves on crystal collection.
+
+v1.11.0 — The Deluxe Endgame Expansion (Missing Commit Restored)
+Commit: d7a10e9
+
+Boss Battle Added: Epic final scripted encounter against The Dark Wizard (Level 10) featuring predictive projectiles and a custom boss HP HUD.
+
+Level Expansion: Expanded the standard campaign, adding Level 9 (The Ascension) and Level 10 (The Wizard's Throne).
+
+New Hero (Scout): Added a 4th playable character (Windwalker) possessing a unique Glide ability.
+
+The Void Archives: Introduced a secret developer menu containing 5 extreme-difficulty bonus levels (Glitch Dimension, Neon Speedway, Infernal Escape, Spike Maze, Crystal Tower).
+
+Cinematic Post-Game Polish: Implemented rich visual feedback upon beating the game, including God Rays, a Majestic Gold Pulse background, and a Platinum Crown logo transformation.
 
 ## 🤝 Contributing
-
 Contributions, issues, and feature requests are welcome!
 
-1. Fork the repository.
-2. Create your feature branch: `git checkout -b feature/your-feature`
-3. Commit your changes: `git commit -m 'Add your feature'`
-4. Push to the branch: `git push origin feature/your-feature`
-5. Open a Pull Request.
+Fork the repository.
 
----
+Create your feature branch: git checkout -b feature/your-feature
+
+Commit your changes: git commit -m 'Add your feature'
+
+Push to the branch: git push origin feature/your-feature
+
+Open a Pull Request.
 
 ## 📄 License
+This project is open source and available under the MIT License.
 
-This project is open source and available under the [MIT License](LICENSE).
-
----
-
-<div align="center">
-
-Made with ❤️ by [ThVariableYT](https://github.com/ThVariableYT)
-
-</div>
+Made with ❤️ by ThVariableYT
