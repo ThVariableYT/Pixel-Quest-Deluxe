@@ -434,50 +434,173 @@
             transform: scale(0.98) translateY(0) !important;
         }
 
-        /* Chapter Buttons Revamp */
-        .chapter-btn {
-            background: linear-gradient(135deg, rgba(75, 108, 183, 0.9), rgba(24, 40, 72, 0.9));
-            border: 3px solid #6dd5ed;
-            border-radius: 12px;
-            color: white;
-            padding: 25px;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5), inset 0 0 15px rgba(255,255,255,0.1);
-            text-align: center;
-            line-height: 1.5;
+        /* --- STUNNING STORYBOOK CHAPTERS STYLE --- */
+        .storybook-wrapper {
+            display: flex;
+            background: linear-gradient(135deg, #3e2312 0%, #201006 100%);
+            border-radius: 12px 24px 24px 12px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.9), inset 0 0 15px rgba(0,0,0,0.8), inset 0 0 0 2px #5a3c22;
+            padding: 15px 25px 15px 10px;
+            max-width: 850px;
+            width: 95%;
+            margin-bottom: 30px;
             position: relative;
-            overflow: hidden;
-            width: 100%;
-        }
-        
-        .chapter-btn::after {
-            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-            background: linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent);
-            transform: skewX(-25deg); transition: 0.5s;
+            perspective: 1500px;
         }
 
-        .chapter-btn:hover:not(.locked) {
-            transform: scale(1.05) translateY(-5px);
-            box-shadow: 0 15px 35px rgba(109, 213, 237, 0.6), inset 0 0 20px rgba(255,255,255,0.3);
-            border-color: #fff;
-            background: linear-gradient(135deg, rgba(33, 147, 176, 1), rgba(109, 213, 237, 1));
-        }
-        
-        .chapter-btn:hover:not(.locked)::after {
-            left: 200%;
-            transition: 0.7s ease-out;
+        .storybook-spine {
+            width: 45px;
+            background: linear-gradient(to right, #110703 0%, #3e2312 30%, #5a3c22 50%, #3e2312 70%, #110703 100%);
+            border-right: 2px solid #111;
+            border-radius: 8px 0 0 8px;
+            box-shadow: inset 5px 0 15px rgba(0,0,0,0.8);
+            position: relative;
+            z-index: 5;
         }
 
-        .chapter-btn.locked {
-            background: linear-gradient(135deg, rgba(20, 30, 48, 0.8), rgba(36, 59, 85, 0.8));
-            border-color: #444;
-            color: #777;
+        .storybook-spine::before {
+            content: ''; position: absolute; top: 10%; left: 10%; right: 10%; height: 2px; background: #8b5a2b; box-shadow: 0 20px 0 #8b5a2b, 0 40px 0 #8b5a2b; opacity: 0.5;
+        }
+
+        .storybook-page {
+            flex: 1;
+            background: #fdf5e6;
+            margin-left: -5px;
+            border-radius: 2px 16px 16px 2px;
+            /* Multi-layered box-shadow creates the illusion of stacked pages */
+            box-shadow: 4px 4px 0 #e8dcc4, 8px 8px 0 #d9c8aa, 15px 15px 20px rgba(0,0,0,0.6), inset 0 0 60px rgba(139,90,43,0.15);
+            padding: 30px 25px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            border: 1px solid #d9c8aa;
+            border-left: 1px dashed rgba(139,90,43,0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transform-origin: left center;
+        }
+
+        /* Gold Foil Corners */
+        .storybook-page::before, .storybook-page::after {
+            content: ''; position: absolute; width: 30px; height: 30px; border: 2px solid transparent; pointer-events: none;
+        }
+        .storybook-page::before { top: 10px; left: 10px; border-top-color: #d4af37; border-left-color: #d4af37; }
+        .storybook-page::after { bottom: 10px; right: 10px; border-bottom-color: #d4af37; border-right-color: #d4af37; }
+
+        .storybook-page:hover:not(.locked) {
+            transform: translateY(-8px) rotateY(-4deg) scale(1.02);
+            box-shadow: 12px 20px 30px rgba(0,0,0,0.6), inset 0 0 80px rgba(241,196,15,0.2);
+            border-color: #f1c40f;
+            z-index: 10;
+        }
+
+        .storybook-page.locked {
+            filter: grayscale(80%) sepia(40%) opacity(0.8);
             cursor: not-allowed;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            box-shadow: 2px 2px 0 #ccc, 4px 4px 0 #bbb, inset 0 0 40px rgba(0,0,0,0.2);
         }
+
+        .story-ch-num {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.65rem;
+            color: #b8860b;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.8);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .story-ch-title {
+            font-family: 'Georgia', serif;
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #3e2312;
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+            line-height: 1.1;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .story-art {
+            width: 100px;
+            height: 100px;
+            border: 4px solid #b8860b;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3.5rem;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 8px 15px rgba(0,0,0,0.4);
+            background: radial-gradient(circle at center, #34495e, #111);
+            text-shadow: 0 4px 10px rgba(0,0,0,0.8);
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .storybook-page:hover:not(.locked) .story-art {
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 0 25px rgba(241,196,15,0.6);
+            transform: scale(1.05);
+        }
+
+        /* --- WORLD MAP LEVEL SELECT STYLE --- */
+        #level-map-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 450px;
+            background: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.15"/><path d="M0,50 Q25,30 50,50 T100,50" fill="none" stroke="rgba(139,90,43,0.1)" stroke-width="2"/></svg>'), linear-gradient(135deg, #fdf5e6 0%, #e8dcc4 100%);
+            border-radius: 12px;
+            border: 6px solid #5a3c22;
+            box-shadow: inset 0 0 80px rgba(139,90,43,0.4), 0 15px 40px rgba(0,0,0,0.8), 0 0 0 2px #111;
+            margin: 0 auto 20px auto;
+            overflow: hidden;
+            display: block;
+        }
+        
+        /* Map compass rose */
+        #level-map-container::before {
+            content: '✥'; position: absolute; bottom: 15px; left: 15px; font-size: 4rem; color: rgba(139,90,43,0.2); font-family: 'Georgia', serif; transform: rotate(45deg); pointer-events: none;
+        }
+
+        .map-line-svg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;
+        }
+
+        .map-node {
+            position: absolute;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: pointer; z-index: 10;
+            display: flex; justify-content: center; align-items: center;
+            font-family: 'Press Start 2P', cursive; font-size: 0.6rem;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+        }
+
+        .map-node.locked { background: #444; border: 3px solid #222; color: #777; cursor: not-allowed; }
+        .map-node.unlocked { background: #3498db; border: 3px solid #ecf0f1; color: #fff; box-shadow: 0 0 20px rgba(52,152,219,0.8); animation: nodePulse 2s infinite; }
+        .map-node.completed { background: #2ecc71; border: 3px solid #f1c40f; color: #fff; box-shadow: 0 0 15px rgba(46,204,113,0.6); }
+        .map-node.boss { width: 44px; height: 44px; font-size: 1rem; border-radius: 8px; background: #c0392b; border-color: #f1c40f; box-shadow: 0 0 25px rgba(231,76,60,0.8); }
+
+        @keyframes nodePulse { 0% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.15); box-shadow: 0 0 30px #3498db; } 100% { transform: translate(-50%, -50%) scale(1); } }
+
+        .map-node:hover:not(.locked) { transform: translate(-50%, -50%) scale(1.4); z-index: 20; box-shadow: 0 10px 25px rgba(0,0,0,0.8); }
+
+        .map-tooltip {
+            position: absolute; top: 15px; right: 15px; width: 220px;
+            background: linear-gradient(135deg, #1a252f 0%, #2c3e50 100%);
+            border: 2px solid #f1c40f; border-radius: 8px;
+            padding: 15px; text-align: left;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+            z-index: 50;
+        }
+        .map-tooltip.active { opacity: 1; }
+        .map-tooltip h3 { margin: 0 0 8px 0; font-size: 0.8rem; color: #f1c40f; text-shadow: 1px 1px 0 #000; }
+        .map-tooltip p { margin: 0; font-size: 0.6rem; color: #bdc3c7; line-height: 1.5; }
 
         /* Ultimate RPG Character Selection Cards */
         .char-card {
@@ -928,7 +1051,7 @@
             transform: scale(1.1);
         }
         
-        #pause-screen {
+            #pause-screen {
             backdrop-filter: blur(10px);
             background-color: rgba(5, 5, 16, 0.6);
         }
@@ -971,27 +1094,68 @@
             transform: rotate(45deg);
         }
 
-        @media (max-width: 768px) {
-            .title-pixel { font-size: 2.2rem; }
-            .title-quest { font-size: 3.2rem; margin-top: -2px; }
-            .title-deluxe { font-size: 0.9rem; padding: 6px 16px; letter-spacing: 6px; margin-top: 10px; border-width: 2px;}
-            .logo-icon { width: 60px; height: 60px; margin-bottom: -15px; }
+        @keyframes rotateDevice {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(-90deg); }
+            100% { transform: rotate(-90deg); }
+        }
+        
+        #orientation-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle at center, #2c3e50, #000); z-index: 99999; 
+            flex-direction: column; justify-content: center; align-items: center;
+        }
+        .rotate-icon { animation: rotateDevice 2s infinite ease-in-out alternate; }
+
+        @media (max-width: 896px) and (orientation: portrait) {
+            #orientation-overlay { display: flex; }
+            #game-container { display: none !important; }
+        }
+
+        @media (max-width: 896px) {
+            .title-pixel { font-size: 2rem; letter-spacing: 6px; margin-right: -6px; }
+            .title-quest { font-size: 2.8rem; margin-top: 2px; }
+            .title-deluxe { font-size: 0.8rem; padding: 6px 12px; letter-spacing: 4px; margin-top: 5px; border-width: 2px;}
+            .logo-icon { width: 60px; height: 60px; margin-bottom: -10px; }
             
-            h1 { font-size: 1.8rem; }
-            p { font-size: 0.6rem; margin-bottom: 10px; }
+            h1 { font-size: 1.5rem; }
+            p { font-size: 0.7rem; margin-bottom: 10px; line-height: 1.4; }
             
-            .main-menu-buttons { max-width: 320px; gap: 8px; }
-            .menu-btn { font-size: 0.65rem; padding: 12px 8px; }
-            .menu-btn.primary { font-size: 0.9rem; padding: 14px 10px; }
+            .main-menu-buttons { max-width: 90%; gap: 12px; }
+            .menu-btn { font-size: 0.8rem; padding: 15px 10px; }
+            .menu-btn.primary { font-size: 1rem; padding: 18px 10px; }
             
-            .btn-control { width: 70px; height: 70px; font-size: 1.5rem; touch-action: none; margin: 0 5px; }
-            .control-group { gap: 10px; }
+            .btn-control { width: 60px; height: 60px; font-size: 1.2rem; touch-action: none; margin: 0 2px; }
+            .control-group { gap: 8px; }
             .controls-text { display: none; } 
-            #mobile-controls { bottom: max(30px, env(safe-area-inset-bottom)); padding: 0 10px; }
+            #mobile-controls { bottom: max(15px, env(safe-area-inset-bottom)); padding: 0 10px; }
+            
+            .storybook-wrapper { flex-direction: column; padding: 15px; border-radius: 12px; max-height: 65vh; overflow-y: auto;}
+            .storybook-spine { display: none; }
+            .storybook-page { margin: 5px 0; padding: 15px; min-height: 120px;}
+            .story-ch-title { font-size: 1.4rem; }
+            
+            #level-map-container { height: 300px; border-width: 4px; }
+            .map-node { width: 24px; height: 24px; font-size: 0.5rem; }
+            .map-node.boss { width: 34px; height: 34px; }
+            .map-tooltip { top: auto; bottom: 10px; left: 50%; transform: translateX(-50%); width: 90%; text-align: center; }
+
+            #dialogue-box { width: 95%; bottom: 15px; padding: 15px; gap: 10px; }
+            #dialogue-portrait { width: 48px; height: 48px; }
+            #dialogue-speaker { font-size: 0.7rem; }
+            #dialogue-text { font-size: 0.6rem; }
         }
     </style>
 </head>
 <body>
+    <div id="orientation-overlay">
+        <svg class="rotate-icon" viewBox="0 0 24 24" width="80" height="80" fill="none" stroke="#f1c40f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+        </svg>
+        <p style="margin-top: 20px; font-family: 'Press Start 2P', cursive; font-size: 1.2rem; color: #fff; text-shadow: 2px 2px 0 #000; text-align: center; line-height: 1.5;">PLEASE ROTATE<br>DEVICE</p>
+        <p style="font-family: 'Press Start 2P', cursive; font-size: 0.6rem; color: #bdc3c7; margin-top: 15px;">Landscape mode required.</p>
+    </div>
     <div id="game-container">
         <!-- Post-processing Overlays -->
         <div class="god-rays"></div>
@@ -1135,18 +1299,23 @@
         </div>
 
         <div id="chapter-select-screen" class="overlay hidden">
-            <h1 style="font-size: 2.5rem; color: #00f2fe; text-shadow: 2px 2px 0 #ff0844, 0 0 20px rgba(0,242,254,0.5); margin-bottom: 30px;">SELECT CHAPTER</h1>
-            <div style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 500px; margin-bottom: 40px;">
-                <button id="chapter-1-btn" class="chapter-btn">
-                    <span style="display:block; font-size:1.2rem; color:#f1c40f; margin-bottom:8px;">CHAPTER ONE</span>
-                    The Wizard of Darkness
-                </button>
-                <button id="chapter-2-btn" class="chapter-btn locked">
-                    <span style="display:block; font-size:1.2rem; margin-bottom:8px;">CHAPTER TWO</span>
-                    <span style="font-size:0.6rem; color:#f39c12;">Coming Soon...</span>
-                </button>
+            <h1 style="font-size: 2.5rem; color: #00f2fe; text-shadow: 2px 2px 0 #ff0844, 0 0 20px rgba(0,242,254,0.5); margin-bottom: 20px;">CHRONICLES</h1>
+            
+            <div class="storybook-wrapper">
+                <div class="storybook-spine"></div>
+                <div class="storybook-page" id="chapter-1-btn">
+                    <div class="story-ch-num">BOOK I</div>
+                    <div class="story-ch-title">The Wizard of Darkness</div>
+                    <div class="story-art">🌲</div>
+                </div>
+                <div class="storybook-page locked" id="chapter-2-btn">
+                    <div class="story-ch-num">BOOK II</div>
+                    <div class="story-ch-title">Coming Soon...</div>
+                    <div class="story-art" style="background: #34495e;">🔒</div>
+                </div>
             </div>
-            <button id="back-to-start-btn-chap" class="menu-btn danger" style="width: auto; padding: 15px 40px;">Back</button>
+            
+            <button id="back-to-start-btn-chap" class="menu-btn danger" style="width: auto; padding: 15px 40px;">Back to Title</button>
         </div>
 
         <div id="chapter-2-screen" class="overlay hidden">
@@ -1157,11 +1326,20 @@
 
         <div id="level-select-screen" class="overlay hidden">
             <h1 style="font-size: 2.5rem; color: #f1c40f; text-shadow: 2px 2px 0 #e74c3c, 0 0 20px rgba(241,196,15,0.5); margin-bottom: 5px;">CHAPTER 1</h1>
-            <p style="color: #00f2fe; font-size: 0.7rem; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 1px 1px 0px #000;">The Wizard of Darkness</p>
-            <div id="level-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; width: 100%; max-width: 700px; margin-bottom: 30px;">
-                <!-- Populated via JS -->
+            <p style="color: #00f2fe; font-size: 0.7rem; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 1px 1px 0px #000;">The Wizard of Darkness</p>
+            
+            <!-- STUNNING WORLD MAP CONTAINER -->
+            <div id="level-map-container">
+                <svg class="map-line-svg" id="map-lines"></svg>
+                <div id="map-nodes-container"></div>
+                
+                <div id="map-tooltip" class="map-tooltip">
+                    <h3 id="tt-title">Area Name</h3>
+                    <p id="tt-desc">Description or best time goes here.</p>
+                </div>
             </div>
-            <button id="back-to-start-btn" class="menu-btn danger" style="width: auto; padding: 15px 40px;">Back</button>
+
+            <button id="back-to-start-btn" class="menu-btn danger" style="width: auto; padding: 15px 40px;">Back to Chronicles</button>
         </div>
 
         <div id="char-select-screen" class="overlay hidden">
@@ -2594,9 +2772,56 @@
                 else if (item.type === 'goal') {
                     let active = crystalsCollected >= totalCrystalsInLevel; let cx = drawX + item.width/2; let cy = drawY + item.height/2;
                     ctx.save();
-                    if(active) { ctx.shadowBlur = 25; ctx.shadowColor = '#e056fd'; }
-                    ctx.fillStyle = active ? '#9b59b6' : '#34495e'; ctx.beginPath(); ctx.arc(cx, cy, item.width/2 - 3, 0, Math.PI * 2); ctx.fill();
-                    if(active) { ctx.translate(cx, cy); ctx.rotate(floatingTime * 3); ctx.fillStyle = '#e056fd'; for(let i=0; i<4; i++) { ctx.rotate(Math.PI / 2); ctx.beginPath(); ctx.arc(10, 0, 4 + Math.sin(floatingTime*10)*2, 0, Math.PI*2); ctx.fill(); } }
+                    ctx.translate(cx, cy);
+                    if(active) { 
+                        ctx.shadowBlur = 25 + Math.sin(floatingTime * 5) * 10; 
+                        ctx.shadowColor = '#e056fd'; 
+                        
+                        // Outer Ring
+                        ctx.save();
+                        ctx.rotate(floatingTime * 2);
+                        ctx.strokeStyle = 'rgba(155, 89, 182, 0.8)'; 
+                        ctx.lineWidth = 3;
+                        ctx.beginPath(); ctx.arc(0, 0, item.width/2 + 4, 0, Math.PI * 2);
+                        ctx.setLineDash([8, 6]); ctx.stroke();
+                        ctx.restore();
+
+                        // Inner Swirl
+                        ctx.save();
+                        ctx.rotate(-floatingTime * 3);
+                        let grad = ctx.createRadialGradient(0, 0, 0, 0, 0, item.width/2);
+                        grad.addColorStop(0, '#fff');
+                        grad.addColorStop(0.4, '#e056fd');
+                        grad.addColorStop(1, 'rgba(142, 68, 173, 0)');
+                        ctx.fillStyle = grad;
+                        ctx.beginPath(); ctx.arc(0, 0, item.width/2, 0, Math.PI * 2); ctx.fill();
+                        
+                        // Magical Star Core
+                        ctx.fillStyle = '#fff';
+                        for(let i=0; i<4; i++) {
+                            ctx.rotate(Math.PI / 2);
+                            ctx.beginPath();
+                            ctx.moveTo(0, -item.width/2 + 2);
+                            ctx.lineTo(2, -4);
+                            ctx.lineTo(item.width/2 - 2, 0);
+                            ctx.lineTo(2, 4);
+                            ctx.fill();
+                        }
+                        ctx.restore();
+                        
+                        // Floating energy particles
+                        for(let i=0; i<3; i++) {
+                            let px = Math.cos(floatingTime * 5 + i * 2) * (item.width/2 + 6);
+                            let py = Math.sin(floatingTime * 5 + i * 2) * (item.width/2 + 6);
+                            ctx.fillStyle = '#f1c40f';
+                            ctx.fillRect(px, py, 2, 2);
+                        }
+
+                    } else {
+                        ctx.fillStyle = '#2c3e50'; ctx.beginPath(); ctx.arc(0, 0, item.width/2 - 2, 0, Math.PI * 2); ctx.fill();
+                        ctx.strokeStyle = '#7f8c8d'; ctx.lineWidth = 2; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(0, 0, item.width/2, 0, Math.PI * 2); ctx.stroke();
+                        ctx.fillStyle = '#e74c3c'; ctx.fillRect(-2, -2, 4, 4);
+                    }
                     ctx.restore();
                 }
             });
@@ -2946,28 +3171,105 @@
         document.getElementById('resume-btn')?.addEventListener('click', () => { gameState = 'playing'; showScreen('none'); lastTime = performance.now(); });
         document.getElementById('quit-to-menu-btn')?.addEventListener('click', () => { stopAmbientMusic(); playAmbientMusic('menu'); gameState = 'start'; initMenuBackground(); performTransition(() => showScreen('start')); });
 
+        // Hardcoded stylish winding path coordinates for the world map (percentages)
+        const mapCoordinates = [
+            { x: 10, y: 80 }, { x: 25, y: 65 }, { x: 18, y: 40 }, { x: 38, y: 35 }, { x: 55, y: 55 },
+            { x: 75, y: 75 }, { x: 90, y: 50 }, { x: 70, y: 25 }, { x: 45, y: 15 }, { x: 85, y: 10 }
+        ];
+
         function populateLevelSelect() {
-            const grid = document.getElementById('level-grid'); 
-            if(!grid) return;
-            grid.innerHTML = '';
+            const linesSvg = document.getElementById('map-lines');
+            const nodesContainer = document.getElementById('map-nodes-container');
+            const tooltip = document.getElementById('map-tooltip');
             
+            if(!linesSvg || !nodesContainer) return;
+            linesSvg.innerHTML = '';
+            nodesContainer.innerHTML = '';
+            
+            // Draw Dashed Lines Connecting the Path
+            let pathD = "";
             levels.forEach((lvl, idx) => {
-                if (idx >= 10) return; // Hide Secret Levels from standard list
+                if (idx >= 10) return; // Hide Secret Levels
+                let cx = mapCoordinates[idx].x + "%";
+                let cy = mapCoordinates[idx].y + "%";
+                if(idx === 0) pathD += `M ${cx} ${cy} `;
+                else pathD += `L ${cx} ${cy} `;
+            });
+            
+            // Background dotted line path
+            const bgPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            bgPath.setAttribute('d', pathD);
+            bgPath.setAttribute('fill', 'none');
+            bgPath.setAttribute('stroke', 'rgba(139,90,43,0.3)');
+            bgPath.setAttribute('stroke-width', '4');
+            bgPath.setAttribute('stroke-dasharray', '8 8');
+            linesSvg.appendChild(bgPath);
 
-                const btn = document.createElement('div'); let isLocked = idx > unlockedLevel;
-                btn.className = `level-card ${isLocked ? 'locked' : ''}`;
-                let bestTime = bestTimes[idx]; 
-                let timeText = bestTime && !isLocked ? `<div style="color:#00f2fe; font-size:0.5rem; margin-top:8px;">Best: ${bestTime.toFixed(2)}s</div>` : '';
-                let lockIcon = isLocked ? '<div style="font-size:0.8rem; margin-top:8px;">🔒 Locked</div>' : '';
+            // Active solid path up to unlocked level
+            let activePathD = "";
+            levels.forEach((lvl, idx) => {
+                if (idx >= 10 || idx > unlockedLevel) return;
+                let cx = mapCoordinates[idx].x + "%";
+                let cy = mapCoordinates[idx].y + "%";
+                if(idx === 0) activePathD += `M ${cx} ${cy} `;
+                else activePathD += `L ${cx} ${cy} `;
+            });
+            if(activePathD) {
+                const activePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                activePath.setAttribute('d', activePathD);
+                activePath.setAttribute('fill', 'none');
+                activePath.setAttribute('stroke', '#3498db');
+                activePath.setAttribute('stroke-width', '6');
+                activePath.style.filter = "drop-shadow(0 0 5px rgba(52,152,219,0.8))";
+                linesSvg.appendChild(activePath);
+            }
+
+            // Draw Nodes
+            levels.forEach((lvl, idx) => {
+                if (idx >= 10) return; 
+
+                const btn = document.createElement('div'); 
+                let isLocked = idx > unlockedLevel;
+                let isBoss = idx === 9;
                 
-                btn.innerHTML = `
-                    <div style="font-size:1.2rem; color:#f1c40f; margin-bottom:8px; text-shadow:1px 1px 0 #000;">${idx + 1}</div>
-                    <div style="font-size:0.65rem; line-height:1.4; text-shadow:1px 1px 0 #000;">${lvl.name}</div>
-                    ${timeText}${lockIcon}
-                `;
+                let stateClass = 'locked';
+                if(idx < unlockedLevel) stateClass = 'completed';
+                else if(idx === unlockedLevel) stateClass = 'unlocked';
 
-                btn.addEventListener('click', () => { if (isLocked) return; initAudio(); currentLevelIndex = idx; showScreen('none'); loadLevel(currentLevelIndex); });
-                grid.appendChild(btn);
+                btn.className = `map-node ${stateClass} ${isBoss ? 'boss' : ''}`;
+                btn.style.left = mapCoordinates[idx].x + "%";
+                btn.style.top = mapCoordinates[idx].y + "%";
+                
+                btn.innerText = isBoss ? '☠' : (idx + 1);
+                if(isLocked) btn.innerText = '🔒';
+
+                // Interactive Tooltip Logic
+                btn.addEventListener('mouseenter', () => {
+                    tooltip.classList.add('active');
+                    let bestTime = bestTimes[idx];
+                    document.getElementById('tt-title').innerText = isLocked ? `???` : `Area ${idx+1}: ${lvl.name}`;
+                    
+                    let descHtml = "";
+                    if(isLocked) descHtml = "Area Locked.<br>Complete previous areas to unlock.";
+                    else if(bestTime) descHtml = `<span style="color:#2ecc71">Cleared!</span><br>Best Time: ${bestTime.toFixed(2)}s`;
+                    else descHtml = `<span style="color:#3498db">Ready to play.</span><br>Uncharted territory.`;
+                    
+                    document.getElementById('tt-desc').innerHTML = descHtml;
+                });
+                
+                btn.addEventListener('mouseleave', () => {
+                    tooltip.classList.remove('active');
+                });
+
+                btn.addEventListener('click', () => { 
+                    if (isLocked) return; 
+                    initAudio(); 
+                    currentLevelIndex = idx; 
+                    showScreen('none'); 
+                    loadLevel(currentLevelIndex); 
+                });
+                
+                nodesContainer.appendChild(btn);
             });
         }
 
