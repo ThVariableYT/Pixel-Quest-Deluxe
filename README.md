@@ -1,6 +1,8 @@
 # 🎮 Pixel Quest Deluxe
 
-![Pixel Quest Deluxe Banner](https://private-user-images.githubusercontent.com/174795668/607502088-8e963db4-f6f5-426e-a4c8-5c8ea61e32ca.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3ODEzNjExNDAsIm5iZiI6MTc4MTM2MDg0MCwicGF0aCI6Ii8xNzQ3OTU2NjgvNjA3NTAyMDg4LThlOTYzZGI0LWY2ZjUtNDI2ZS1hNGM4LTVjOGVhNjFlMzJjYS5wbmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjYwNjEzJTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI2MDYxM1QxNDI3MjBaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT00ZTg4MWI5NWJiOTViM2MzZTc0NmFjZDZhZjQwOWU4YWI0N2U5YmI4MjNmYjM5M2Q3M2JhODE1ZGZlZGVlYjdlJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCZyZXNwb25zZS1jb250ZW50LXR5cGU9aW1hZ2UlMkZwbmcifQ.2Z1ogYop_nn3yF_Q-4e6W1NAZnJw1HrRyReiCqcOijQ)
+![Pixel Quest Deluxe Banner]
+
+<img width="2816" height="1536" alt="logo" src="https://github.com/user-attachments/assets/c5f5781b-df60-4a2f-b5e5-29132552fe82" />
 
 A pixel-art style RPG platformer that runs entirely in the browser.
 
