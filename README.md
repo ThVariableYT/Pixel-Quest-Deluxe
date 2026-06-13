@@ -1,347 +1,202 @@
-# **🎮 Pixel Quest Deluxe**
+# 🎮 Pixel Quest Deluxe
 
-**A pixel-art style RPG platformer, playable entirely in your browser.**
+<img width="2816" height="1536" alt="logo" src="https://github.com/user-attachments/assets/8e963db4-f6f5-426e-a4c8-5c8ea61e32ca" />
 
-## **📖 Table of Contents**
+A pixel-art style RPG platformer that runs entirely in the browser. [page:1]
 
-- [About the Game](#-about-the-game)
-- [Features](#-features)
-- [How to Play](#-how-to-play)
-- [Controls](#-controls)
-- [Characters](#-characters)
-- [Levels](#-levels)
-- [Story](#-story)
-- [Technical Details](#-technical-details)
-- [Update History](#-update-history)
-- [Contributing](#-contributing)
-- [License](#-license)
+## Overview
 
-## **🕹️ About the Game**
+**Pixel Quest Deluxe** is a browser-based 2D platformer with a retro pixel-art aesthetic. Players explore a shattered realm, collect crystals, avoid hazards, and restore the Realm Core across multiple themed levels. [page:1]
 
-**Pixel Quest Deluxe** is a browser-based 2D platformer with a retro pixel-art aesthetic. Set in a shattered realm, you take on the role of a hero tasked with recovering fragments of the **Realm Core** scattered across 8 treacherous lands — from enchanted forests to volcanic keeps, icy caverns, and the void itself.
+The project runs from a single `index.html` file and uses HTML5 Canvas, vanilla JavaScript, Web Audio API, Tailwind CSS, and Google Fonts. [page:1]
 
-The game runs entirely in the browser using a single HTML file with no external dependencies beyond a font and Tailwind CSS. It features a procedurally rendered tile system, a dynamic lighting engine, a retro synth audio engine, and full mobile touch support.
+## Live Demo
 
-## **✨ Features**
+Play here: [Pixel Quest Deluxe](https://thvariableyt.github.io/Pixel-Quest-Deluxe/) [page:1]
 
-|
+## Features
 
-| **Feature** | **Description** |
+| Feature | Description |
+|---|---|
+| Pixel-art rendering | Canvas rendered at 640×360 and scaled for a crisp retro look. [page:1] |
+| Multiple themed levels | Each level has its own atmosphere, hazards, and music style. [page:1] |
+| Playable characters | Includes Knight, Ninja, and Mage in the character section of the current README. [page:1] |
+| Retro synth audio | Procedural audio built with the Web Audio API, with no audio files required. [page:1] |
+| Dynamic lighting | Darkness system with radial lighting effects around the player. [page:1] |
+| Story sequences | Dialogue scenes with a typewriter-style presentation. [page:1] |
+| Mobile support | On-screen controls for touch devices. [page:1] |
+| Remappable controls | Keyboard controls can be changed in-game. [page:1] |
+| Fullscreen support | Uses the Fullscreen API with fallback behavior. [page:1] |
+| Particle effects | Includes dust, dash trails, sparkles, and ambient effects. [page:1] |
+| Advanced movement | Supports coyote time, jump buffering, wall sliding, wall jumping, and air dashing. [page:1] |
+| Pause and timing systems | Includes pause controls and personal best time tracking. [page:1] |
 
-| 🖼️ Pixel Art Rendering | Canvas rendered at 640×360 and scaled with image-rendering: pixelated for a crisp retro look |
+## Gameplay
 
-| 🌍 8 Unique Levels | Each level has its own theme, atmosphere, music, and darkness level |
+### Objective
 
-| 🎭 3 Playable Characters | Knight, Ninja, and Mage — each with distinct speed, jump, and dash stats |
+Collect all crystals in each level and reach the goal tile to finish the stage. Spikes and lava are instant-kill hazards. [page:1]
 
-| 🎵 Retro Synth Audio | Fully procedural Web Audio API engine — no audio files needed |
+### Core Loop
 
-| 💡 Dynamic Lighting | Per-level darkness system with radial light effects around the player |
+1. Start the game from the main menu. [page:1]
+2. Select a character. [page:1]
+3. Traverse the level using movement mechanics like jumping, dashing, and wall-jumping. [page:1]
+4. Collect all crystals in the level. [page:1]
+5. Reach the goal to unlock the next stage. [page:1]
+6. Progress through story scenes between levels. [page:1]
 
-| 📖 Story & Dialogue | Typewriter-style dialogue system with character portraits |
+### Tips
 
-| 📱 Mobile Support | Full on-screen D-pad and action buttons for touch devices |
+- Use wall slide and wall jump to navigate tight vertical sections. [page:1]
+- Save your mid-air dash for gaps or hazard recovery. [page:1]
+- Coyote time and jump buffering make movement more forgiving. [page:1]
+- In darker levels, staying near lit areas improves visibility. [page:1]
 
-| 🎮 Remappable Controls | All keyboard controls can be remapped in-game |
+## Controls
 
-| ⛶ Fullscreen Mode | Native Fullscreen API with CSS fallback |
+### Keyboard Controls
 
-| 🌊 Particle Effects | Jump dust, dash trails, crystal sparkles, and ambient particles |
+| Action | Keys |
+|---|---|
+| Move Left | `ArrowLeft` / `A` [page:1] |
+| Move Right | `ArrowRight` / `D` [page:1] |
+| Jump | `Space` / `ArrowUp` / `W` [page:1] |
+| Dash | `Shift` / `Z` / `X` [page:1] |
+| Advance Dialogue | `Space` / jump key [page:1] |
 
-| 🏃 Advanced Movement | Coyote time, jump buffering, wall sliding, wall jumping, and air dashing |
+### Touch Controls
 
-| ⏸️ Pause Menu | Press Esc or P to pause/resume; mobile pause button included with Resume and Quit-to-Menu options |
+On touch-enabled devices, the game displays on-screen controls for movement, jump, and dash. [page:1]
 
-| 🏆 Best Time Tracking | Speedrun timer per level; personal bests saved to localStorage and shown on level select |
+### Remapping
 
-| ✨ Visual Effects | Damage flash on death, shockwave on crystal collect, and enhanced crystal/vortex animations |
+You can remap controls from the **Controls** screen in the main menu. [page:1]
 
-## **🎮 How to Play**
+## Characters
 
-### **Objective**
+### ⚔️ Knight
 
-Collect **all crystals** hidden in each level and reach the **Goal (G)** tile to clear the stage. Avoid spikes (S) and lava (\~) — touching them kills you instantly.
+A balanced default character recommended for beginners. [page:1]
 
-### **Game Loop**
+| Stat | Value |
+|---|---|
+| Speed | 220 [page:1] |
+| Jump Force | -400 [page:1] |
+| Dash Speed | 500 [page:1] |
+| Dash Duration | 0.25s [page:1] |
+| Dash Cooldown | 0.8s [page:1] |
 
-1. **Start the game** from the main menu.  
-2. **Select your hero** from the character selection screen.  
-3. **Navigate each level** using platforming skills — jump, dash, and wall-jump your way through hazards.  
-4. **Collect all crystals** scattered around the level.  
-5. **Reach the glowing Goal** to complete the level and unlock the next.  
-6. **Watch the story unfold** between levels via dialogue cutscenes.  
-7. **Beat all 8 levels** to restore the Realm Core and see the ending.
+### 🥷 Ninja
 
-### **Tips & Tricks**
+A fast character with a higher jump and a shorter dash cooldown. [page:1]
 
-* **Wall Slide \+ Wall Jump**: Press into a wall mid-air to slow your fall, then jump again to leap off.  
-* **Dash mid-air**: You get one dash per jump — use it to clear gaps or dodge hazards.  
-* **Coyote Time**: You have a short window to jump even after walking off a platform edge.  
-* **Jump Buffering**: Pressing jump just before landing will register the jump automatically.  
-* **Spring Pads (^)**: Land on them to launch up to great heights.  
-* **Darkness Levels**: In dark levels, stay close to lit areas — the further you go, the darker it gets.
+| Stat | Value |
+|---|---|
+| Speed | 250 [page:1] |
+| Jump Force | -450 [page:1] |
+| Dash Speed | 400 [page:1] |
+| Dash Duration | 0.2s [page:1] |
+| Dash Cooldown | 0.6s [page:1] |
 
-## **⌨️ Controls**
+### 🧙 Mage
 
-### **Default Keyboard Controls**
+A slower character with a stronger, longer dash. [page:1]
 
-| **Action** | **Keys** |
+| Stat | Value |
+|---|---|
+| Speed | 185 [page:1] |
+| Jump Force | -365 [page:1] |
+| Dash Speed | 565 [page:1] |
+| Dash Duration | 0.35s [page:1] |
+| Dash Cooldown | 0.5s [page:1] |
 
-| Move Left | Arrow Left / A |
+## Levels
 
-| Move Right | Arrow Right / D |
+The current README describes 8 handcrafted levels with different hazards, themes, and music. [page:1]
 
-| Jump | Space / Arrow Up / W |
+| # | Level Name | Theme | Darkness | Hazards | Music |
+|---|---|---|---|---|---|
+| 1 | The Green Valley | Forest | None | Spikes | Forest Drone [page:1] |
+| 2 | Echoing Caves | Cave | High (85%) | Spikes | Cave Drone [page:1] |
+| 3 | The Infernal Keep | Volcano | Low (30%) | Spikes, Lava, Springs | Volcano Synth [page:1] |
+| 4 | Crystal Caverns | Ice | Medium (60%) | Spikes, Lava, Springs | Ice Chimes [page:1] |
+| 5 | The Void | Void | Very High (90%) | Spikes, Lava, Springs | Void Bass [page:1] |
+| 6 | Sky Ruins | Sky | None | Spikes, Springs | Sky Bells [page:1] |
+| 7 | Swamp Depths | Swamp | High (70%) | Spikes, Lava, Springs | Swamp Tones [page:1] |
+| 8 | The True Core | Core | Medium (50%) | Spikes, Lava, Springs | Core Synth [page:1] |
 
-| Dash | Shift / Z / X |
+### Tile Legend
 
-| Advance Dialogue | Space / Jump Key |
+| Symbol | Meaning |
+|---|---|
+| `P` | Player start position [page:1] |
+| `#` | Solid platform tile [page:1] |
+| `C` | Crystal / collectible [page:1] |
+| `G` | Goal / exit [page:1] |
+| `^` | Spring pad [page:1] |
+| `S` | Spike [page:1] |
+| `~` | Lava [page:1] |
+| `.` | Empty space [page:1] |
 
-### **Mobile / Touch Controls**
+## Story
 
-On touch-enabled devices, an on-screen control pad is automatically shown:
+The Dark Wizard has shattered the Realm Core and scattered its fragments across dangerous lands. The player journeys through forests, caves, volcanic ruins, icy caverns, the void, sky ruins, swamps, and the core itself while story dialogue unfolds between stages. [page:1]
 
-* **Left / Right arrows** — D-pad for movement  
-* **⚡ (Dash button)** — Activates the dash ability  
-* **▲ (Jump button)** — Makes the character jump
+## Technical Details
 
-### **Remapping Controls**
+- Engine: Vanilla JavaScript with HTML5 Canvas. [page:1]
+- Internal resolution: 640×360. [page:1]
+- Audio: Procedural Web Audio API synthesis. [page:1]
+- Rendering: Offscreen canvas and dedicated light canvas. [page:1]
+- Physics: Custom gravity, acceleration, coyote time, jump buffering, wall sliding, and wall jumping. [page:1]
+- Styling: Tailwind CSS via CDN plus custom CSS. [page:1]
+- Fonts: Press Start 2P via Google Fonts. [page:1]
 
-You can remap any control from the **Controls** screen in the main menu:
+## Running Locally
 
-1. Go to **Controls** from the main menu.  
-2. Click **REMAP CONTROLS**.  
-3. Click the button for the action you want to remap (e.g., LEFT, RIGHT, JUMP, DASH).  
-4. Press any key on your keyboard to assign it.
+```bash
+git clone https://github.com/ThVariableYT/Pixel-Quest-Deluxe.git
+cd Pixel-Quest-Deluxe
+```
 
-## **🧙 Characters**
+Then open `index.html` in any modern browser. [page:1]
 
-Choose your hero before starting the game. Each character has unique movement stats that change the feel of gameplay.
+## Update History
 
-### **⚔️ Knight**
+The current README includes version history from `v1.0.0` through `v1.11.0`, covering the initial release, core engine work, character selection, fullscreen support, control remapping, speedrun timing, pause features, and an endgame expansion. [page:1]
 
-*"Balanced Stats"*
+You can keep the full changelog here, or move detailed version notes into a separate `CHANGELOG.md` for a shorter README. [page:1]
 
-| **Stat** | **Value** |
+## Contributing
 
-| Speed | 220 |
+Contributions, issues, and feature requests are welcome. [page:1]
 
-| Jump Force | \-400 |
+1. Fork the repository. [page:1]
+2. Create a feature branch:
+   ```bash
+   git checkout -b feature/your-feature
+   ```
+3. Commit your changes:
+   ```bash
+   git commit -m "Add your feature"
+   ```
+4. Push to your branch:
+   ```bash
+   git push origin feature/your-feature
+   ```
+5. Open a pull request. [page:1]
 
-| Dash Speed | 500 |
+## License
 
-| Dash Duration | 0.25s |
+This project is intended to be licensed under the MIT License, but the current README links to an incorrect Google Docs URL rather than a standard license file. Replace that link with a local `LICENSE` file once added. [page:1]
 
-| Dash Cooldown | 0.8s |
+Example:
 
-The default hero. Well-rounded and recommended for beginners.
+```md
+This project is licensed under the [MIT License](LICENSE).
+```
 
-### **🥷 Ninja**
-
-*"Fast & High Jump"*
-
-| **Stat** | **Value** |
-
-| Speed | 250 |
-
-| Jump Force | \-450 |
-
-| Dash Speed | 400 |
-
-| Dash Duration | 0.2s |
-
-| Dash Cooldown | 0.6s |
-
-The fastest character with the highest jump. Shorter dash but quicker cooldown. Great for expert players who want agility.
-
-### **🧙 Mage**
-
-*"Long Dash, Slower"*
-
-| **Stat** | **Value** |
-
-| Speed | 185 |
-
-| Jump Force | \-365 |
-
-| Dash Speed | 565 |
-
-| Dash Duration | 0.35s |
-
-| Dash Cooldown | 0.5s |
-
-Slower movement and lower jump, but possesses the most powerful and longest dash in the game with the fastest cooldown.
-
-## **🗺️ Levels**
-
-The game features **8 handcrafted levels**, each with a distinct environment, ambient music theme, and hazard configuration.
-
-| **\#** | **Level Name** | **Theme** | **Darkness** | **Hazards** | **Music** |
-
-| 1 | The Green Valley | 🌿 Forest | None | Spikes | Forest Drone |
-
-| 2 | Echoing Caves | 🪨 Cave | High (85%) | Spikes | Cave Drone |
-
-| 3 | The Infernal Keep | 🌋 Volcano | Low (30%) | Spikes, Lava, Springs | Volcano Synth |
-
-| 4 | Crystal Caverns | 🧊 Ice | Medium (60%) | Spikes, Lava, Springs | Ice Chimes |
-
-| 5 | The Void | 🌌 Void | Very High (90%) | Spikes, Lava, Springs | Void Bass |
-
-| 6 | Sky Ruins | ☁️ Sky | None | Spikes, Springs | Sky Bells |
-
-| 7 | Swamp Depths | 🌿 Swamp | High (70%) | Spikes, Lava, Springs | Swamp Tones |
-
-| 8 | The True Core | 🔥 Core | Medium (50%) | Spikes, Lava, Springs | Core Synth |
-
-### **Tile Legend**
-
-| **Symbol** | **Meaning** |
-
-| P | Player Start Position |
-
-| \# | Solid Platform Tile |
-
-| C | Crystal (Collectible) |
-
-| G | Goal (Level Exit) |
-
-| ^ | Spring Pad (Launches player upward) |
-
-| S | Spike (Instant Kill) |
-
-| \~ | Lava (Instant Kill) |
-
-| . | Empty Space |
-
-## **📜 Story**
-
-The realm has been shattered. The **Dark Wizard** has destroyed the **Realm Core**, scattering its fragments across eight dangerous lands. The sage **Eldor** reaches out to the last hero standing:
-
-*"Hero\! The Dark Wizard has shattered the Realm Core. Its fragments are scattered across treacherous lands."*
-
-Your mission takes you through dense forests, ancient caves, volcanic fortresses, crystalline ice caverns, the emptiness of the Void, ruined sky temples, toxic swamp depths, and finally the blazing True Core — recovering fragments one level at a time. Each cleared area is narrated through a short dialogue between Eldor and your chosen hero.
-
-## **🛠️ Technical Details**
-
-* **Engine**: Vanilla JavaScript with HTML5 Canvas API  
-* **Resolution**: Internal render at 640×360, scaled via CSS for pixel-perfect display  
-* **Audio**: Web Audio API — fully procedural synth, no audio files  
-* **Rendering**: Offscreen canvas for map pre-rendering \+ a dedicated light canvas for the darkness overlay  
-* **Physics**: Custom physics loop with gravity (1000 units/s²), acceleration, coyote time (0.15s), jump buffering (0.2s), wall sliding, and wall jumping  
-* **Particles**: Dynamic particle system for jump dust, dash trails, crystal collection sparks, and ambient environment particles  
-* **Fonts**: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) via Google Fonts  
-* **Styling**: Tailwind CSS (CDN) \+ custom CSS  
-* **No build step required** — open index.html directly in any modern browser
-
-### **Running Locally**
-
-git clone \[https://github.com/ThVariableYT/Pixel-Quest-Deluxe.git\](https://github.com/ThVariableYT/Pixel-Quest-Deluxe.git)  
-cd Pixel-Quest-Deluxe  
-\# Open index.html in your browser  
-open index.html
-
-## **📋 Update History**
-
-### **v1.0.0 — Initial Release *(May 15, 2026\)***
-
-* **Commit:** Initial  
-* Project scaffolding and repository setup.
-
-### **v1.1.0 — Core Game Engine *(May 16, 2026\)***
-
-* **Commit:** a8749b3  
-* Added the full **Epic Pixel Quest Deluxe** HTML game file.  
-* Implemented 8-level campaign with a tile-based map system.  
-* Built custom physics engine with gravity, acceleration, and collision detection.  
-* Added procedural pixel-art tile texture rendering per theme.  
-* Integrated story and dialogue system with typewriter effect.  
-* Created retro synth audio engine using Web Audio API.  
-* Implemented dynamic darkness/lighting overlay system and particle system.  
-* Added HUD display and menu screens.
-
-### **v1.2.0 — Character Selection & Player Tuning *(May 16, 2026\)***
-
-* **Commit:** ce333b9  
-* Added **character selection screen** with 3 playable heroes: Knight, Ninja, and Mage.  
-* Configured unique speed, jump force, dash stats, and color palettes for each character.  
-* Implemented dynamic player stat updates on selection.
-
-### **v1.3.0 — Gameplay Physics & UI Polish *(May 16, 2026\)***
-
-* **Commit:** bac3007  
-* Tuned gameplay physics for air control and player acceleration.  
-* Polished overall UI elements and mobile touch responsiveness.
-
-### **v1.4.0 — Fullscreen Support *(May 16, 2026\)***
-
-* **Commit:** c7054d3  
-* Added **fullscreen toggle button** leveraging the native Fullscreen API.  
-* Implemented CSS position: fixed fallback for unsupported browsers.  
-* Ensured fullscreen button is visible at top-right corner during gameplay and menus.
-
-### **v1.5.0 — Control Remapping & Touch D-Pad *(May 16, 2026\)***
-
-* **Commit:** 0be5d66  
-* Added **in-game control remapping** allowing players to remap Left, Right, Jump, and Dash.  
-* Improved touch D-pad with multi-touch slide support for smoother mobile movement.  
-* Designed and integrated Remap UI into the Controls screen in the main menu.
-
-### **v1.6.0 — General index.html Update *(May 16, 2026\)***
-
-* **Commit:** b69282e  
-* Performed general code updates to index.html.  
-* Improved overall stability and optimized internal logic.
-
-### **v1.7.0 — Refinements and Bug Fixes *(May 16, 2026\)***
-
-* **Commit:** 69c5944  
-* Applied further gameplay and UI refinements.  
-* Fixed miscellaneous bugs affecting rendering and state transitions.
-
-### **v1.8.0 — Final Polish Update *(May 16, 2026\)***
-
-* **Commit:** 4a49d37  
-* Final polish update to smooth out animations and UI quirks.  
-* Ensured consistent visual fidelity across varying display sizes.
-
-### **v1.9.0 — Speedrun Timer & Visual Polish *(May 16, 2026\)***
-
-* **Commit:** c040db0  
-* Added **speedrun timer** tracking level completion time (displayed in HUD).  
-* Implemented level transition effects between stages.  
-* Enhanced canvas particle effects including crystal sparkles and ambient particles.
-
-### **v1.10.0 — Pause System & Best Time Tracking *(May 16, 2026\)***
-
-* **Commit:** 1a22dd2  
-* Added **pause menu** accessed via Esc or P, and a mobile pause button.  
-* Included Resume and Quit to Menu options in the pause screen.  
-* Implemented speedrun best times saved locally and displayed on level select.  
-* Added **damage flash** and **shockwave** visual effects for death and crystal collection.  
-* Improved crystal inner pulse animation and vortex/goal rendering.
-
-### **v1.11.0 — The Deluxe Endgame Expansion *(May 16, 2026\)***
-
-* **Commit:** d7a10e9  
-* **Boss Battle Added:** Epic final scripted encounter against The Dark Wizard (Level 10\) featuring predictive projectiles and a custom boss HP HUD.  
-* **Level Expansion:** Expanded the standard campaign, adding Level 9 (The Ascension) and Level 10 (The Wizard's Throne).  
-* **New Hero (Scout):** Added a 4th playable character (Windwalker) possessing a unique Glide ability.  
-* **The Void Archives:** Introduced a secret developer menu containing 5 extreme-difficulty bonus levels (Glitch Dimension, Neon Speedway, Infernal Escape, Spike Maze, Crystal Tower).  
-* **Cinematic Post-Game Polish:** Implemented rich visual feedback upon beating the game, including God Rays, a Majestic Gold Pulse background, and a Platinum Crown logo transformation.
-
-## **🤝 Contributing**
-
-Contributions, issues, and feature requests are welcome\!
-
-1. Fork the repository.  
-2. Create your feature branch: git checkout \-b feature/your-feature  
-3. Commit your changes: git commit \-m 'Add your feature'  
-4. Push to the branch: git push origin feature/your-feature  
-5. Open a Pull Request.
-
-## **📄 License**
-
-This project is open source and available under the [MIT License](http://docs.google.com/LICENSE).
+---
 
 Made with ❤️ by [ThVariableYT](https://github.com/ThVariableYT)
