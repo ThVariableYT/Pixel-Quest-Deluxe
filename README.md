@@ -1,7 +1,5 @@
 # 🎮 Pixel Quest Deluxe
 
-![Pixel Quest Deluxe Banner]
-
 <img width="2816" height="1536" alt="logo" src="https://github.com/user-attachments/assets/c5f5781b-df60-4a2f-b5e5-29132552fe82" />
 
 A pixel-art style RPG platformer that runs entirely in the browser.
