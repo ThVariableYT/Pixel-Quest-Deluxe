@@ -12,6 +12,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [v1.12.0] — 2026-06-21
+
+### Added
+- **Chapter Select screen** — book-shelf UI organised by "Chronicles" (Books); each book is displayed as a `storybook-wrapper` card with a 3D perspective hover effect
+- **Level Select screen** — illustrated world map with dynamically generated SVG flow paths (`flow-path`, `bg-path`) connecting area nodes
+- Map nodes that indicate completion (⭐ star), unlock status (pulse animation), and boss presence (💀 skull)
+- `populateLevelSelect()` — builds the map dynamically from `mapCoordinates` data
+- `chronicles-shelf` layout with decorative `.shelf-bracket` elements
+- **Book I: The Wizard of Darkness** — the first Chronicle, containing all 10 main areas
+- `game-beaten` CSS state — triggers a majestic gold (`majesticGoldPulse`) animated background after completing the game
+
+### Changed
+- Title typography refactored into modular CSS components: `title-pixel`, `title-quest`, and `title-deluxe` for easier theming and maintenance
+- CSS consolidated and cleaned up for improved readability and performance
+- Game flow updated: main menu now routes through the Chapter Select screen before the Level Select screen
+
+---
+
 ## [v1.11.0] — 2026-05-19
 
 ### Added
@@ -91,9 +109,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - **Character selection screen** with three playable characters
-  - **Paladin** (Vanguard): speed 220, balanced stats, single jump
-  - **Assassin** (Shadow): speed 250, double jump, fast dash cooldown
-  - **Sorcerer** (Spellcaster): speed 185, extra-long dash, slowest movement
+- **Paladin** (Vanguard): speed 220, balanced stats, single jump
+- **Assassin** (Shadow): speed 250, double jump, fast dash cooldown
+- **Sorcerer** (Spellcaster): speed 185, extra-long dash, slowest movement
 - `applyCharacterStats()` — applies selected character's stats and colors to the player at game start
 - Character-specific pixel-art sprites with unique body, eye, and particle colors
 
@@ -103,9 +121,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - **Custom-built procedural soundtrack** using the Web Audio API (no audio files required)
-  - Forest Drone (Level 1), Cave Drone (Level 2), Volcano Synth (Level 3)
-  - Ice Chimes (Level 4), Void Bass (Level 5), Sky Bells (Level 6)
-  - Swamp Tones (Level 7), Core Synth (Level 8)
+- Forest Drone (Level 1), Cave Drone (Level 2), Volcano Synth (Level 3)
+- Ice Chimes (Level 4), Void Bass (Level 5), Sky Bells (Level 6)
+- Swamp Tones (Level 7), Core Synth (Level 8)
 - Retro logo rendered on the start screen using a canvas-drawn pixel banner
 
 ### Removed
@@ -180,7 +198,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-[Unreleased]: https://github.com/ThVariableYT/Pixel-Quest-Deluxe/compare/v1.11.0...HEAD
+[Unreleased]: https://github.com/ThVariableYT/Pixel-Quest-Deluxe/compare/v1.12.0...HEAD
+[v1.12.0]: https://github.com/ThVariableYT/Pixel-Quest-Deluxe/compare/v1.11.0...v1.12.0
 [v1.11.0]: https://github.com/ThVariableYT/Pixel-Quest-Deluxe/compare/v1.10.0...v1.11.0
 [v1.10.0]: https://github.com/ThVariableYT/Pixel-Quest-Deluxe/compare/v1.9.0...v1.10.0
 [v1.9.0]: https://github.com/ThVariableYT/Pixel-Quest-Deluxe/compare/v1.8.0...v1.9.0
