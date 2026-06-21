@@ -42,6 +42,24 @@
 
         body.game-beaten #game-container { animation: majesticGoldPulse 12s ease-in-out infinite; }
 
+        /* CSS fullscreen mode — used as a fallback when the native Fullscreen API
+           is unavailable (notably iOS Safari, which only allows fullscreen on
+           <video> elements, not arbitrary DOM nodes). When active, the game
+           container expands to fill the viewport using fixed positioning, and we
+           hide the browser chrome by scrolling to top. */
+        #game-container.css-fullscreen-mode {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 999999;
+        }
+        body.css-fullscreen-active {
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+
         canvas#gameCanvas {
             display: block;
             image-rendering: pixelated;
@@ -1110,6 +1128,110 @@
         /* For larger phones in portrait (e.g. tablets), still allow play */
         @media (max-width: 896px) and (orientation: portrait) and (min-height: 601px) {
             #orientation-overlay { display: none !important; }
+        }
+
+        /* ===== Mobile landscape (short height) — make all overlays fit ===== */
+        /* On landscape phones the viewport is very short (e.g. 360-414px), so the
+           centered overlay content gets clipped at top and bottom. We switch
+           overlays to flex-start (top-aligned) with vertical scrolling, and scale
+           down the content so it fits without clipping. */
+        @media (max-width: 896px) and (orientation: landscape) and (max-height: 500px) {
+            /* All overlays: top-align + scroll so nothing clips */
+            .overlay {
+                justify-content: flex-start !important;
+                padding-top: max(50px, env(safe-area-inset-top)) !important;
+                padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Start screen: compact logo + buttons */
+            .logo-container { margin-bottom: 12px !important; animation: none !important; }
+            .logo-icon { width: 40px !important; height: 40px !important; margin-bottom: -6px !important; }
+            .title-pixel { font-size: 1.4rem !important; letter-spacing: 3px !important; margin-right: -3px !important; }
+            .title-quest { font-size: 2rem !important; margin-top: 0 !important; }
+            .title-deluxe { font-size: 0.6rem !important; padding: 4px 8px !important; letter-spacing: 2px !important; margin-top: 2px !important; }
+            .main-menu-buttons { max-width: 320px !important; gap: 6px !important; }
+            .menu-btn { font-size: 0.55rem !important; padding: 8px 6px !important; }
+            .menu-btn.primary { font-size: 0.7rem !important; padding: 10px 6px !important; }
+
+            /* Controls screen: compact */
+            .controls-text { font-size: 0.55rem !important; padding: 14px !important; }
+            #remap-container { gap: 4px !important; max-width: 300px !important; }
+            .remap-btn { font-size: 0.45rem !important; padding: 6px !important; }
+
+            /* Chapter select: compact */
+            .chronicles-header { margin-bottom: 10px !important; animation: none !important; }
+            .chronicles-title { font-size: 1.2rem !important; letter-spacing: 3px !important; }
+            .chronicles-eyebrow { font-size: 0.6rem !important; margin-bottom: 2px !important; }
+            .chronicles-subtitle { font-size: 0.5rem !important; }
+            .chronicles-shelf { flex-direction: row !important; gap: 10px !important; padding: 0 4px !important; margin-bottom: 10px !important; }
+            .shelf-bracket { display: none !important; }
+            .candle { display: none !important; }
+            .storybook-wrapper { max-width: 100% !important; padding: 8px 12px 8px 6px !important; min-height: auto !important; }
+            .storybook-spine { width: 26px !important; }
+            .spine-emblem { font-size: 0.9rem !important; }
+            .storybook-page { padding: 10px 8px 8px !important; }
+            .story-ch-title { font-size: 1rem !important; margin-bottom: 6px !important; }
+            .story-ch-num { font-size: 0.45rem !important; margin-bottom: 4px !important; }
+            .story-art { width: 48px !important; height: 48px !important; margin-bottom: 6px !important; }
+            .story-art svg { width: 32px !important; height: 32px !important; }
+            .story-blurb { font-size: 0.5rem !important; line-height: 1.3 !important; padding: 6px 2px 0 !important; }
+            .story-tag { font-size: 0.32rem !important; padding: 2px 5px !important; }
+            .story-meta { margin-bottom: 6px !important; }
+
+            /* Level select: compact */
+            .ls-header { margin-bottom: 8px !important; }
+            .ls-header h1 { font-size: 1rem !important; }
+            .ls-header .subtitle { font-size: 0.45rem !important; }
+            .ls-wrap { flex-direction: row !important; gap: 8px !important; }
+            #level-map-container { min-height: 180px !important; }
+            .ls-info-panel { width: 200px !important; padding: 10px !important; gap: 8px !important; }
+            .ls-info-panel .ls-preview { height: 70px !important; }
+            .ls-info-panel h3 { font-size: 0.65rem !important; }
+            .ls-info-panel .ls-name { font-size: 0.6rem !important; }
+            .ls-info-panel .ls-desc { font-size: 0.45rem !important; line-height: 1.3 !important; }
+            .ls-info-panel .ls-stat { padding: 4px 6px !important; }
+            .ls-info-panel .ls-stat span:first-child { font-size: 0.38rem !important; }
+            .ls-info-panel .ls-stat span:last-child { font-size: 0.48rem !important; }
+            .ls-info-panel .ls-play-btn { font-size: 0.55rem !important; padding: 8px !important; }
+            .map-node { width: 24px !important; height: 24px !important; font-size: 0.38rem !important; }
+            .map-node.boss { width: 30px !important; height: 30px !important; }
+
+            /* Char select: compact */
+            .char-card { width: 140px !important; padding: 10px 8px !important; }
+            #char-grid { gap: 8px !important; }
+
+            /* Dialogue box: compact */
+            #dialogue-box { width: 94% !important; bottom: max(8px, env(safe-area-inset-bottom)) !important; padding: 8px !important; gap: 6px !important; }
+            #dialogue-portrait { width: 36px !important; height: 36px !important; }
+            #dialogue-speaker { font-size: 0.5rem !important; margin-bottom: 3px !important; }
+            #dialogue-text { font-size: 0.45rem !important; line-height: 1.4 !important; }
+
+            /* HUD: compact */
+            #hud { padding: 6px 10px !important; }
+            #standard-info > div { margin-bottom: 2px !important; }
+            #level-display, #timer-display { font-size: 0.45rem !important; }
+            #crystal-display { font-size: 0.55rem !important; }
+            #enemy-display { font-size: 0.5rem !important; }
+            .dash-bar-container { width: 70px !important; height: 7px !important; }
+
+            /* Mobile controls: slightly smaller */
+            .btn-control { width: 54px !important; height: 54px !important; font-size: 1rem !important; }
+            .control-group { gap: 6px !important; }
+            #mobile-controls { bottom: max(8px, env(safe-area-inset-bottom)) !important; padding-left: max(12px, env(safe-area-inset-left)) !important; padding-right: max(12px, env(safe-area-inset-right)) !important; }
+
+            /* Fullscreen + pause buttons: smaller, safe from notch */
+            #fullscreen-btn, #pause-btn-mobile { width: 32px !important; height: 32px !important; font-size: 0.9rem !important; top: max(8px, env(safe-area-inset-top)) !important; }
+            #fullscreen-btn { right: max(8px, env(safe-area-inset-right)) !important; }
+            #pause-btn-mobile { right: calc(max(8px, env(safe-area-inset-right)) + 38px) !important; }
+
+            /* h1 elements (generic overlays) */
+            h1 { font-size: 1rem !important; margin-bottom: 8px !important; }
+            p { font-size: 0.5rem !important; margin-bottom: 8px !important; }
+
+            /* Secret screen buttons */
+            #secret-screen .menu-btn { font-size: 0.5rem !important; padding: 8px 6px !important; }
         }
 
         @media (max-width: 896px) {
@@ -4657,31 +4779,76 @@
         const fullscreenBtn = document.getElementById('fullscreen-btn');
         const gameContainer = document.getElementById('game-container');
         let isCssFullscreen = false;
+
+        // Detect iOS — iOS Safari does NOT support the Fullscreen API on arbitrary
+        // DOM elements (only on <video>), so we must fall back to CSS fullscreen.
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        // Safari on desktop supports requestFullscreen but the prefix may differ
+        const supportsNativeFullscreen = !isIOS && (
+            document.fullscreenEnabled ||
+            document.webkitFullscreenEnabled ||
+            gameContainer.requestFullscreen ||
+            gameContainer.webkitRequestFullscreen
+        );
+
         function toggleFullscreen() {
-            try {
-                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                    let promise;
-                    if (gameContainer.requestFullscreen) promise = gameContainer.requestFullscreen();
-                    else if (gameContainer.webkitRequestFullscreen) promise = gameContainer.webkitRequestFullscreen();
-                    if (promise) promise.catch(err => { toggleCssFullscreen(); }); else toggleCssFullscreen();
-                    if (fullscreenBtn) fullscreenBtn.innerText = '⤬';
-                } else {
+            if (isCssFullscreen) {
+                // Currently in CSS fullscreen — exit it
+                toggleCssFullscreen();
+                return;
+            }
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                // Currently in native fullscreen — exit it
+                try {
                     if (document.exitFullscreen) document.exitFullscreen();
                     else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-                    if (fullscreenBtn) fullscreenBtn.innerText = '⛶';
+                } catch (e) {}
+                return;
+            }
+            // Not in any fullscreen — enter
+            if (supportsNativeFullscreen) {
+                try {
+                    let promise = null;
+                    if (gameContainer.requestFullscreen) promise = gameContainer.requestFullscreen();
+                    else if (gameContainer.webkitRequestFullscreen) promise = gameContainer.webkitRequestFullscreen();
+                    if (promise && promise.catch) {
+                        promise.catch(() => toggleCssFullscreen());
+                    } else if (!promise) {
+                        toggleCssFullscreen();
+                    }
+                } catch (e) {
+                    toggleCssFullscreen();
                 }
-            } catch (err) { toggleCssFullscreen(); }
+            } else {
+                // iOS / unsupported — use CSS fullscreen
+                toggleCssFullscreen();
+            }
         }
         function toggleCssFullscreen() {
             isCssFullscreen = !isCssFullscreen;
-            if (isCssFullscreen) { gameContainer.classList.add('css-fullscreen-mode'); if (fullscreenBtn) fullscreenBtn.innerText = '⤬'; }
-            else { gameContainer.classList.remove('css-fullscreen-mode'); if (fullscreenBtn) fullscreenBtn.innerText = '⛶'; }
-            window.dispatchEvent(new Event('resize'));
+            if (isCssFullscreen) {
+                gameContainer.classList.add('css-fullscreen-mode');
+                document.body.classList.add('css-fullscreen-active');
+                // Scroll to top to hide any browser chrome
+                window.scrollTo(0, 0);
+                if (fullscreenBtn) fullscreenBtn.innerText = '⤬';
+            } else {
+                gameContainer.classList.remove('css-fullscreen-mode');
+                document.body.classList.remove('css-fullscreen-active');
+                if (fullscreenBtn) fullscreenBtn.innerText = '⛶';
+            }
+            // Trigger a resize so the canvas re-adapts to the new viewport
+            setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
         }
-        fullscreenBtn?.addEventListener('click', toggleFullscreen);
-        fullscreenBtn?.addEventListener('touchstart', (e) => { e.preventDefault(); toggleFullscreen(); });
-        document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && !isCssFullscreen && fullscreenBtn) fullscreenBtn.innerText = '⛶'; });
-        document.addEventListener('webkitfullscreenchange', () => { if (!document.webkitFullscreenElement && !isCssFullscreen && fullscreenBtn) fullscreenBtn.innerText = '⛶'; });
+        fullscreenBtn?.addEventListener('click', (e) => { e.preventDefault(); toggleFullscreen(); });
+        fullscreenBtn?.addEventListener('touchend', (e) => { e.preventDefault(); toggleFullscreen(); });
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && !isCssFullscreen && fullscreenBtn) fullscreenBtn.innerText = '⛶';
+        });
+        document.addEventListener('webkitfullscreenchange', () => {
+            if (!document.webkitFullscreenElement && !isCssFullscreen && fullscreenBtn) fullscreenBtn.innerText = '⛶';
+        });
 
         // ============================================================
         // MENU BACKGROUND
