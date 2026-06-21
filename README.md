@@ -19,6 +19,8 @@ The project runs from a single `index.html` file and uses HTML5 Canvas, vanilla 
 | Feature | Description |
 |---|---|
 | Pixel-art rendering | Canvas rendered at 640×360 and scaled for a crisp retro look |
+| Chronicles (Chapter Select) | Book-shelf UI organised by story arcs; browse and select chapters |
+| Illustrated Level Select | World map with SVG flow paths, animated map nodes, completion stars, and boss markers |
 | Multiple themed levels | Each level has its own atmosphere, hazards, and music style |
 | 4 playable characters | Paladin, Assassin, Sorcerer, and Windwalker with unique stats and abilities |
 | Retro synth audio | Procedural audio built with the Web Audio API — no audio files required |
@@ -30,6 +32,7 @@ The project runs from a single `index.html` file and uses HTML5 Canvas, vanilla 
 | Particle effects | Includes dust, dash trails, sparkles, and ambient effects |
 | Advanced movement | Coyote time, jump buffering, wall sliding, wall jumping, and air dashing |
 | Pause & timing | Pause controls and personal best time tracking |
+| Game-beaten state | Majestic gold animated background unlocked after completing the game |
 
 ## Gameplay
 
@@ -40,11 +43,13 @@ Collect all crystals in each level and reach the goal tile to finish the stage. 
 ### Core Loop
 
 1. Start the game from the main menu
-2. Select a character
-3. Traverse the level using jumping, dashing, and wall-jumping
-4. Collect all crystals
-5. Reach the goal to unlock the next stage
-6. Progress through story scenes between levels
+2. Select a Chapter from the Chronicles shelf
+3. Choose a level from the illustrated world map
+4. Select a character
+5. Traverse the level using jumping, dashing, and wall-jumping
+6. Collect all crystals
+7. Reach the goal to unlock the next stage
+8. Progress through story scenes between levels
 
 ### Tips
 
@@ -82,7 +87,11 @@ Controls can be remapped from the **Controls** screen in the main menu.
 | 🧙 Sorcerer | Spellcaster | 185 | -365 | 565 | 0.35s | 0.5s | Long powerful dash |
 | 🍃 Windwalker | Scout | 230 | -380 | 450 | 0.2s | 0.7s | Hold jump to glide |
 
-## Levels
+## Chronicles
+
+The game is organised into **Chronicles** — story arcs selectable from the book-shelf Chapter Select screen.
+
+### Book I: The Wizard of Darkness
 
 | # | Level Name | Theme | Darkness | Hazards |
 |---|---|---|---|---|
@@ -96,6 +105,18 @@ Controls can be remapped from the **Controls** screen in the main menu.
 | 8 | The True Core | Core | 50% | Spikes, Lava, Springs |
 | 9 | The Ascension | Void | 80% | Spikes, Lava, Springs |
 | 10 | The Wizard's Throne | Core | None | Boss Fight |
+
+### Secret Levels
+
+Bonus challenge stages unlocked beyond the main campaign:
+
+| Level Name | Description |
+|---|---|
+| Glitch Dimension | Glitchy void environment |
+| Neon Speedway | High-speed neon track |
+| Infernal Escape | Lava-filled escape sequence |
+| Spike Maze | Dense spike obstacle course |
+| Crystal Tower | Vertical crystal climb |
 
 ### Tile Legend
 
@@ -121,8 +142,9 @@ The Dark Wizard has shattered the Realm Core and scattered its fragments across 
 - **Audio:** Procedural Web Audio API synthesis — no audio files needed
 - **Rendering:** Offscreen canvas + dedicated light canvas for darkness effects
 - **Physics:** Custom gravity, acceleration, coyote time, jump buffering, wall sliding, and wall jumping
-- **Styling:** Tailwind CSS via CDN + custom CSS
+- **Styling:** Tailwind CSS via CDN + custom CSS (modular title components: `title-pixel`, `title-quest`, `title-deluxe`)
 - **Fonts:** Press Start 2P via Google Fonts
+- **Navigation:** Chapter Select → Level Select (illustrated SVG map) → Character Select → Game
 
 ## Running Locally
 
